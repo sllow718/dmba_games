@@ -307,54 +307,18 @@ a.shop:hover .sign { text-decoration: underline; text-underline-offset: 3px; }
 .qfig { margin: 4px 0 12px; }
 .card .edge { background: var(--paper); }
 
-/* impurity meters, segmented toggles, split scores */
+/* impurity meters */
 .imp-row { display: grid; grid-template-columns: 4.5em minmax(0, 1fr) 3.4em; gap: 8px; align-items: center; font-size: 0.86rem; margin-top: 6px; }
 .imp-row .bar { margin-top: 0; }
 .imp-row b { text-align: right; font-variant-numeric: tabular-nums; }
-.seg { display: flex; flex-wrap: wrap; gap: 6px; }
-.seg .pick { padding: 3px 12px; }
-.calc { display: grid; gap: 2px; margin-top: 10px; font-variant-numeric: tabular-nums; }
-.board { margin: 6px 0 0; padding-left: 22px; display: grid; gap: 4px; font-variant-numeric: tabular-nums; }
-.meters.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-@media (max-width: 420px) { .meters.two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-
-/* income line-up with cut buttons between applicants */
-.line-up { display: flex; flex-wrap: wrap; align-items: stretch; gap: 4px 0; }
-.lu { display: flex; align-items: stretch; }
-.lu-dot { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 58px; padding: 6px 4px; border-radius: 10px; background: var(--paper); border: 2px solid var(--edge); font-size: 0.82rem; line-height: 1.25; transition: background-color .2s; }
-.lu-dot small { color: var(--sub); font-weight: 700; }
-.lu-dot.r small:last-child { color: var(--ok); }
-.lu-dot.d small:last-child { color: var(--brand-dk); }
-.lu-dot.left { background: var(--hl); }
-.lu-dot.right { background: #e3ecf4; }
-.lu-cut { display: grid; place-items: center; width: 34px; padding: 0; border: 0; background: transparent; cursor: pointer; position: relative; color: var(--sub); }
-.lu-cut::before { content: ""; position: absolute; top: 6px; bottom: 6px; left: 50%; border-left: 2px dashed var(--edge); }
-.lu-cut span { position: relative; background: var(--counter); font-size: 0.68rem; font-weight: 800; border-radius: 4px; padding: 1px 2px; writing-mode: vertical-rl; transform: rotate(180deg); }
-.lu-cut:hover::before { border-color: var(--sub); }
-.lu-cut.on::before { border-left: 3px solid var(--brand); }
-.lu-cut.on span { color: var(--brand-dk); }
-
-/* a formula whose terms wrap whole, never mid-term */
-.formula.terms { column-gap: 6px; row-gap: 2px; }
-.formula.terms span { white-space: nowrap; }
-@media (max-width: 420px) { .formula.terms { font-size: 0.86rem; padding: 10px 12px; } }
 
 /* small reference table inside review cards */
 .mini { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 4px 0 10px; }
 .mini th, .mini td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--edge); }
+@media (max-width: 420px) { .mini th, .mini td { padding: 5px 5px; } }
 .mini thead th { color: var(--sub); font-weight: 800; }
-.mini tbody th { font-weight: 700; }
+.mini tbody th { font-weight: 700; white-space: nowrap; }
 .mini td { font-variant-numeric: tabular-nums; font-weight: 800; }
-
-/* confusion matrix */
-.cm { width: 100%; border-collapse: separate; border-spacing: 4px; font-size: 0.86rem; background: var(--paper); border-radius: 12px; padding: 6px; box-shadow: 0 3px 0 rgba(35,48,42,.1); }
-.cm caption { text-align: left; font-family: var(--display); font-weight: 800; padding: 0 4px 4px; }
-.cm th { font-weight: 800; color: var(--sub); text-align: left; padding: 4px 6px; }
-.cm thead th { text-align: center; }
-.cm td { text-align: center; border-radius: 8px; padding: 8px 4px; font-family: var(--display); font-weight: 800; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
-.cm td small { display: block; font-family: var(--body); font-size: 0.72rem; font-weight: 700; color: var(--sub); }
-.cm td.ok { background: var(--ok-bg); }
-.cm td.bad { background: #fbe3da; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

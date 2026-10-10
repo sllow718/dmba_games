@@ -13,16 +13,12 @@ Browser games that teach data mining for business analytics to polytechnic stude
 | 5 | Apriori Climb | Apriori principle, pruning |
 | 6 | Manager's Meeting | support + confidence + lift → a store decision |
 
-**Loan Officer** (decision trees): students help Mr Lim, manager of Neighbourhood Bank, build a tree from 12 past loans and test it on 8 new applicants.
+**Loan Officer** (decision trees): students help Mr Lim, manager of Neighbourhood Bank, read the loan-approval tree he built from 12 past loans and interpret what its numbers mean.
 
 | Counter | Mission | Teaches |
 | --- | --- | --- |
 | 1 | Read the Tree | root, branches, leaves, classifying an applicant, leaf confidence |
-| 2 | Pure or Mixed? | impurity: Gini index and entropy |
-| 3 | Pick the Best Question | weighted impurity, Gini drop, information gain |
-| 4 | Where to Cut Income | numeric splits and candidate cut points |
-| 5 | Grow It, Stop It | recursive partitioning, stopping rules, overfitting, training vs test accuracy |
-| 6 | Prune and Report | pruning, confusion matrix, accuracy, trees as IF/THEN rules |
+| 2 | Pure or Mixed? | interpreting impurity: what Gini and entropy values say about a group (no calculation) |
 
 Each mission is its own page and has four stages:
 
@@ -69,9 +65,9 @@ src/
       explores.tsx      the hands-on task for each mission
       RuleBuilder.tsx   the shared rule builder
     decision-trees/
-      engine.ts         Gini, entropy, splits, cut points, growing, pruning, confusion matrix
-      data.ts           the 12 past loans (training) and 8 new applicants (test)
-      trees.ts          the full, pruned and one-split trees used in the lessons
+      engine.ts         Gini, entropy, splits, growing, pruning and accuracy (more than the two counters use, ready for later ones)
+      data.ts           the 12 past loans and 8 new applicants
+      trees.ts          Mr Lim's tree (grown from the 12 loans, then pruned)
       missions.tsx      review cards, briefs and checkpoint questions for all six missions
       explores.tsx      the hands-on task for each mission
       ui.tsx            applicant cards, the drawn tree, impurity meters

@@ -1,16 +1,15 @@
 import type { ActivityDef, MissionDef } from "../../core/types";
 import { Frac } from "../../components/ui";
 import type { Applicant } from "./data";
-import { TEST, TRAIN } from "./data";
+import { TRAIN } from "./data";
 import { has } from "./engine";
-import { ExploreCut, ExploreGrow, ExploreImpurity, ExploreReadTree, ExplorePrune, ExploreSplits } from "./explores";
-import { BANK_TREE, FULL_TREE } from "./trees";
+import { ExploreImpurity, ExploreReadTree } from "./explores";
+import { BANK_TREE } from "./trees";
 import { Applicants, Tree } from "./ui";
 
 type Mission = MissionDef<Applicant>;
 
 const PAST = "Neighbourhood Bank · 12 past loans";
-const NEW = "Neighbourhood Bank · 8 new applicants (test set)";
 const good = "credit=Good", poor = "credit=Poor", repaid = "outcome=Repaid", defaulted = "outcome=Default";
 
 const m1: Mission = {
@@ -109,45 +108,46 @@ const m2: Mission = {
   badge: "Purity Inspector",
   data: TRAIN,
   dataLabel: PAST,
-  brief: "A good leaf is one where everyone had the same outcome. I need a number for how mixed a group is.",
-  card: { formula: "Gini = 1 − (share repaid)² − (share defaulted)² · Entropy = − Σ share × log₂(share)", example: "5 repaid, 1 defaulted: Gini 0.278, entropy 0.650" },
+  brief: "A good leaf is one where everyone had the same outcome. Gini and entropy tell me how mixed a group is. You won't need to work them out, just read them.",
+  card: { formula: "Gini runs 0 to 0.5 · entropy runs 0 to 1 · 0 = pure, highest = evenly mixed", example: "5 repaid, 1 defaulted: Gini 0.28, entropy 0.65, mostly one outcome" },
   review: {
     title: "Impurity: Gini and entropy",
     what: (
       <>
         <p>A group is <b>pure</b> when everyone in it had the same outcome. The more mixed it is, the higher its <b>impurity</b>.</p>
         <p>Trees try to end up with pure leaves, because a pure leaf makes a confident prediction.</p>
-        <p style={{ color: "var(--sub)" }}>Two common measures: the <b>Gini index</b> and <b>entropy</b>.</p>
+        <p style={{ color: "var(--sub)" }}>Two common ways to measure impurity: the <b>Gini index</b> and <b>entropy</b>. They give different numbers but tell the same story.</p>
       </>
     ),
+    howHeading: ["How to read it", "The impurity scale"],
     how: (
       <>
-        <div className="formula terms"><span>Gini =</span><span>1</span><span>− (share repaid)²</span><span>− (share defaulted)²</span></div>
-        <div className="formula terms"><span>Entropy =</span><span>− share repaid × log₂(share repaid)</span><span>− share defaulted × log₂(share defaulted)</span></div>
-        <p><b>Share</b> = how many had that outcome ÷ how many are in the group. 5 repaid out of 6 gives a share of 5/6.</p>
         <table className="mini">
-          <thead><tr><th scope="col">Group</th><th scope="col">Gini</th><th scope="col">Entropy</th></tr></thead>
+          <thead><tr><th scope="col">Group</th><th scope="col">Gini</th><th scope="col">Entropy</th><th scope="col">What it means</th></tr></thead>
           <tbody>
-            <tr><th scope="row">Pure: 6 repaid, 0 defaulted</th><td>0</td><td>0</td></tr>
-            <tr><th scope="row">Even: 3 repaid, 3 defaulted</th><td>0.5 (highest)</td><td>1 (highest)</td></tr>
+            <tr><th scope="row">6 ✓ 0 ✗</th><td>0</td><td>0</td><td>Pure: everyone the same</td></tr>
+            <tr><th scope="row">5 ✓ 1 ✗</th><td>0.28</td><td>0.65</td><td>Mostly one outcome</td></tr>
+            <tr><th scope="row">4 ✓ 2 ✗</th><td>0.44</td><td>0.92</td><td>Leaning one way</td></tr>
+            <tr><th scope="row">3 ✓ 3 ✗</th><td>0.5</td><td>1</td><td>Evenly mixed: as unsure as it gets</td></tr>
           </tbody>
         </table>
-        <p style={{ color: "var(--sub)", fontSize: "0.9rem" }}>If a share is 0, leave that part out of the entropy.</p>
+        <p><b>Lower is purer.</b> Gini tops out at 0.5 and entropy at 1, so only compare Gini with Gini, and entropy with entropy.</p>
+        <p style={{ color: "var(--sub)", fontSize: "0.88rem" }}>Behind the numbers: Gini = 1 − (share repaid)² − (share defaulted)². Entropy = − Σ share × log₂(share). Both are 0 when one share is 100%, and highest when the shares are equal.</p>
       </>
     ),
-    exampleTitle: "Impurity of the good-credit group",
+    exampleTitle: "Read the impurity of Mr Lim's groups",
     steps: [
-      { text: "Count the outcomes: 5 repaid, 1 defaulted, 6 in total.", eq: "p(repaid) = 5/6 · p(default) = 1/6", say: "Mostly repaid, with Dev the one default.", highlight: { lit: [good], both: [repaid] } },
-      { text: "Gini: square each share, add them, subtract from 1.", eq: "1 − (5/6)² − (1/6)² = 1 − 0.694 − 0.028 = 0.278", say: "Low, because the group is mostly one outcome.", highlight: { lit: [good], both: [repaid] } },
-      { text: "Entropy: multiply each share by its log₂, add, and flip the sign.", eq: "−(5/6)(−0.263) − (1/6)(−2.585) = 0.219 + 0.431 = 0.650", say: "Entropy runs from 0 to 1, so 0.65 is moderately mixed.", highlight: { lit: [good], both: [repaid] } },
+      { text: "The Repaid leaf: 5 repaid, 0 defaulted.", eq: "Gini 0 · entropy 0 → pure", say: "Every one of them paid us back. A very confident leaf.", highlight: { lit: [good, "income>30"] } },
+      { text: "The poor-credit leaf: 1 repaid, 5 defaulted.", eq: "Gini 0.28 · entropy 0.65 → mostly Default", say: "Grace is the exception, so this leaf is a little mixed.", highlight: { lit: [poor], both: [defaulted] } },
+      { text: "All 12 loans, before the tree asks anything: 6 and 6.", eq: "Gini 0.5 · entropy 1 → as mixed as it gets", say: "That's why the tree asks questions: to push impurity down towards 0.", highlight: { lit: [repaid] } },
     ],
     remember: [
-      "Pure group: Gini 0 and entropy 0.",
-      "Two outcomes split 50/50: Gini 0.5 and entropy 1, the most mixed possible.",
-      "Gini and entropy rise and fall together. They rarely disagree on which group is purer.",
-      "A tree wants splits that make its groups purer.",
+      "Impurity 0 means pure: everyone in the group had the same outcome.",
+      "The highest values, Gini 0.5 and entropy 1, mean an even 50/50 mix.",
+      "Lower impurity means a more confident prediction.",
+      "Gini and entropy use different scales but agree on which group is purer.",
     ],
-    says: ["One idea: how mixed is a group?", "Two formulas that measure the same thing.", "Let's score my good-credit customers.", "Now you try."],
+    says: ["One idea: how mixed is a group?", "Read the scale. No calculating needed.", "Let's read a few of my groups.", "Now you try."],
   },
   explore: { goal: "Build groups of applicants and watch their Gini and entropy.", Component: ExploreImpurity },
   questions: [
@@ -163,412 +163,56 @@ const m2: Mission = {
       explain: "Aisha, Ben and Chloe all repaid, so the group is pure: Gini 0, entropy 0.",
     },
     {
-      id: "t2-root", type: "num", kind: "decimal", prompt: "All 12 past loans: 6 repaid, 6 defaulted. What is the Gini index?", answer: 0.5,
-      traps: [{ value: 0, hint: "0 means pure. This group is as mixed as it gets." }, { value: 1, hint: "1 is the entropy of a 50/50 group. Gini tops out at 0.5." }],
-      first: "Work out each share, square it, and subtract both squares from 1.",
-      ladder: ["Each share is 6/12 = 0.5.", "1 − 0.5² − 0.5² = 1 − 0.25 − 0.25 = …?"],
-      explain: "1 − 0.25 − 0.25 = 0.5, the highest Gini possible with two outcomes.",
-      highlight: { lit: [repaid] },
+      id: "t2-zero", type: "mc", prompt: "A leaf has a Gini index of 0. What does that tell Mr Lim?", layout: "list",
+      options: [
+        { text: "Nobody in it repaid", hint: "Gini 0 could also mean everyone repaid. It's about being all the same." },
+        { text: "Everyone in it had the same outcome", correct: true },
+        { text: "The leaf is half repaid, half defaulted", hint: "That's the most mixed case, Gini 0.5." },
+        { text: "The tree made a mistake", hint: "A Gini of 0 is the best a leaf can be." },
+      ],
+      ladder: ["0 is the bottom of the scale.", "The bottom of the scale means pure."],
+      explain: "Gini 0 means pure: everyone in the leaf had the same outcome, so its prediction is as sure as it can be.",
     },
     {
-      id: "t2-poor", type: "num", kind: "decimal", prompt: "Poor-credit group: 1 repaid, 5 defaulted. What is the Gini index?", answer: 10 / 36,
-      traps: [{ value: 26 / 36, hint: "That's the sum of the squares. Subtract it from 1." }, { value: 5 / 6, hint: "That's the share who defaulted. Gini needs the squares." }],
-      first: "Shares: 1/6 and 5/6. Square them, add, subtract from 1.",
-      ladder: ["(1/6)² = 0.028 and (5/6)² = 0.694.", "1 − 0.028 − 0.694 = …?"],
-      explain: "1 − 0.028 − 0.694 ≈ 0.278: the same as the good-credit group, just the other way round.",
+      id: "t2-one", type: "mc", prompt: "A group has an entropy of 1. What does it look like?", layout: "list",
+      options: [
+        { text: "Everyone repaid", hint: "That group is pure, so its entropy is 0." },
+        { text: "Mostly repaid, one default", hint: "That leans one way, so its entropy is below 1." },
+        { text: "Half repaid, half defaulted", correct: true },
+        { text: "Everyone defaulted", hint: "That group is pure too: entropy 0." },
+      ],
+      ladder: ["1 is the top of the entropy scale.", "The top of the scale is the most mixed group."],
+      explain: "Entropy 1 is the most mixed a group of two outcomes can be: an even 50/50 split.",
+    },
+    {
+      id: "t2-leaf", type: "mc", prompt: "Which leaf in Mr Lim's tree has the highest impurity?", layout: "list", figure: <Tree node={BANK_TREE} />,
+      options: [
+        { text: "The Repaid leaf (5 of 5 repaid)", hint: "Everyone there repaid. That's pure." },
+        { text: "The Default leaf for income ≤ $30k (1 of 1)", hint: "One applicant, one outcome. That's pure." },
+        { text: "The poor-credit leaf (5 of 6 defaulted)", correct: true },
+      ],
+      ladder: ["Look for the leaf that is not 100% one outcome.", "Grace repaid in a leaf where everyone else defaulted."],
+      explain: "The poor-credit leaf mixes 5 defaults with 1 repaid (Gini 0.28). The other two leaves are pure (Gini 0).",
       highlight: { lit: [poor], both: [defaulted] },
     },
     {
-      id: "t2-ent", type: "num", kind: "decimal", prompt: "A group has 3 repaid and 1 defaulted. What is its entropy?", answer: 0.8113,
-      traps: [{ value: 0.375, hint: "That's the Gini index. Entropy uses log₂." }, { value: 1, hint: "1 is for a 50/50 group. This one leans towards repaid." }],
-      first: "Shares are 3/4 and 1/4. Entropy = −(3/4)log₂(3/4) − (1/4)log₂(1/4).",
-      ladder: ["log₂(3/4) ≈ −0.415 and log₂(1/4) = −2.", "0.75 × 0.415 + 0.25 × 2 = 0.311 + 0.5 = …?"],
-      explain: "0.311 + 0.5 ≈ 0.811. Fairly mixed, but not 50/50.",
-    },
-    {
-      id: "t2-most", type: "mc", prompt: "Which group is the most mixed?", layout: "list",
+      id: "t2-compare", type: "mc", prompt: "Group A has a Gini of 0.10. Group B has a Gini of 0.45. Which would make the more confident leaf?",
       options: [
-        { text: "5 repaid, 1 defaulted", hint: "That group leans clearly one way." },
-        { text: "3 repaid, 3 defaulted", correct: true },
-        { text: "4 repaid, 0 defaulted", hint: "That group is pure." },
-        { text: "1 repaid, 3 defaulted", hint: "Leaning towards defaulted. Is any option an even split?" },
+        { text: "Group B", hint: "0.45 is close to the 0.5 maximum, so Group B is nearly 50/50." },
+        { text: "Group A", correct: true },
       ],
-      ladder: ["The most mixed group has the outcomes as even as possible.", "Look for a 50/50 split."],
-      explain: "3 and 3 is 50/50: Gini 0.5 and entropy 1, the most mixed possible.",
-    },
-  ],
-};
-
-const m3: Mission = {
-  n: 3,
-  title: "Pick the Best Question",
-  concept: "Choosing a split",
-  badge: "Question Picker",
-  data: TRAIN,
-  dataLabel: PAST,
-  brief: "I could ask about credit, collateral or job first. Which question sorts my applicants best?",
-  card: { formula: "drop = I(parent) − Σ (nᵢ ÷ n) × I(branchᵢ)", example: "Credit = Good?: Gini 0.5 − 0.278 = 0.222 · information gain 0.350" },
-  review: {
-    title: "Weighted impurity and information gain",
-    what: (
-      <>
-        <p>To choose a question, try each one and see how pure the two branches become.</p>
-        <p>Branches can be different sizes, so each branch counts in proportion to how many applicants it holds. That's the <b>weighted impurity</b>.</p>
-        <p>The best question gives the <b>biggest drop</b> in impurity.</p>
-      </>
-    ),
-    how: (
-      <>
-        <div className="formula">weighted impurity = <Frac top="n yes" bottom="n" /> × I(yes) + <Frac top="n no" bottom="n" /> × I(no)</div>
-        <div className="formula">drop = I(before) − weighted impurity</div>
-        <p>I is Gini or entropy. With entropy, the drop is called <b>information gain</b>.</p>
-      </>
-    ),
-    exampleTitle: "Score the question Collateral = Yes?",
-    steps: [
-      { text: "Split the 12 by collateral: 6 with, 6 without.", eq: "Yes: 4 ✓ 2 ✗ · No: 2 ✓ 4 ✗", say: "Outlined: the six with collateral. Green: the ones who repaid.", highlight: { lit: ["collateral=Yes"], both: [repaid] } },
-      { text: "Gini of each branch.", eq: "1 − (4/6)² − (2/6)² = 0.444, both branches", say: "Both branches are still quite mixed.", highlight: { lit: ["collateral=Yes"], both: [repaid] } },
-      { text: "Weight each branch by its size.", eq: "6/12 × 0.444 + 6/12 × 0.444 = 0.444", say: "Equal sizes, so each counts half.", highlight: { lit: ["collateral=Yes"], both: [repaid] } },
-      { text: "Compare with the Gini before splitting.", eq: "drop = 0.5 − 0.444 = 0.056", say: "A small drop. Collateral doesn't help much.", highlight: { lit: ["collateral=Yes"], both: [repaid] } },
-    ],
-    remember: [
-      "Score every possible question the same way, then pick the biggest drop.",
-      "Weight each branch by its share of the applicants. Big branches count more.",
-      "Information gain is the drop in entropy. Gini and entropy usually pick the same question.",
-      "This greedy choice happens again at every node as the tree grows.",
-    ],
-    says: ["Before we start: how do we compare questions?", "Weight, then subtract.", "Let's score collateral.", "Now find the best question."],
-  },
-  explore: { goal: "Try each first question and find the one with the biggest impurity drop.", Component: ExploreSplits },
-  questions: [
-    {
-      id: "t3-weighted", type: "num", kind: "decimal", prompt: "Credit = Good? splits the 12 into 5 ✓ 1 ✗ and 1 ✓ 5 ✗. Each branch has Gini 0.278. What is the weighted Gini?", answer: 10 / 36,
-      traps: [{ value: 20 / 36, hint: "You added the two Ginis. Weight each by its share: 6/12." }, { value: 0.5, hint: "0.5 is the Gini before splitting." }],
-      first: "Weighted Gini = 6/12 × 0.278 + 6/12 × 0.278.",
-      ladder: ["Each branch holds 6 of the 12 applicants.", "0.5 × 0.278 + 0.5 × 0.278 = …?"],
-      explain: "Half of 0.278 plus half of 0.278 is 0.278.",
-      highlight: { lit: [good], both: [repaid] },
+      ladder: ["Lower impurity means purer.", "Which number is closer to 0?"],
+      explain: "Group A is nearer 0, so it's mostly one outcome. Group B is close to 0.5, nearly evenly mixed.",
     },
     {
-      id: "t3-drop", type: "num", kind: "decimal", prompt: "Gini before splitting is 0.5. What is the drop in Gini for Credit = Good?", answer: 0.5 - 10 / 36,
-      traps: [{ value: 10 / 36, hint: "That's the Gini after splitting. The drop is before minus after." }],
-      first: "Drop = Gini before − weighted Gini after.",
-      ladder: ["Before: 0.5. After: 0.278.", "0.5 − 0.278 = …?"],
-      explain: "0.5 − 0.278 = 0.222, four times the drop from collateral.",
-    },
-    {
-      id: "t3-root", type: "mc", prompt: "Collateral drops Gini by 0.056. Credit drops it by 0.222. Which should be the root question?",
+      id: "t2-scales", type: "mc", prompt: "The good-credit group has Gini 0.28 and entropy 0.65. Is it purer by Gini or by entropy?", layout: "list",
       options: [
-        { text: "Collateral = Yes?", hint: "The best question has the bigger drop." },
-        { text: "Credit = Good?", correct: true },
+        { text: "By Gini, because 0.28 is lower", hint: "The two measures use different scales. Gini tops out at 0.5, entropy at 1." },
+        { text: "By entropy, because 0.65 is higher", hint: "Higher impurity means more mixed, not purer." },
+        { text: "Neither: it's the same group measured on two scales", correct: true },
       ],
-      ladder: ["The tree wants the purest branches.", "A bigger drop means purer branches."],
-      explain: "Credit gives the bigger drop, so it goes at the root.",
-    },
-    {
-      id: "t3-gain", type: "num", kind: "decimal", prompt: "Entropy before splitting is 1. After Credit = Good?, each branch has entropy 0.650. What is the information gain?", answer: 0.35,
-      traps: [{ value: 0.65, hint: "That's the weighted entropy after the split. Subtract it from 1." }, { value: 1.3, hint: "Weight each branch by 6/12 before adding." }],
-      first: "Information gain = entropy before − weighted entropy after.",
-      ladder: ["Weighted entropy after = 6/12 × 0.650 + 6/12 × 0.650 = 0.650.", "1 − 0.650 = …?"],
-      explain: "1 − 0.650 = 0.350. Entropy agrees with Gini: credit is the best first question.",
-    },
-    {
-      id: "t3-why", type: "mc", prompt: "Why is each branch weighted by its size?", layout: "list",
-      options: [
-        { text: "Small branches are always pure", hint: "Not always. A branch of 3 can still be mixed." },
-        { text: "So that Gini and entropy give the same number", hint: "They still give different numbers after weighting." },
-        { text: "A big branch affects more applicants, so its purity matters more", correct: true },
-        { text: "Because the root has to be pure", hint: "The root holds everyone and is usually mixed." },
-      ],
-      ladder: ["Imagine a split that puts 1 applicant on one side and 11 on the other.", "Should a pure branch of 1 count as much as a mixed branch of 11?"],
-      explain: "Weighting stops a tiny pure branch from making a poor split look good.",
-    },
-  ],
-};
-
-const m4: Mission = {
-  n: 4,
-  title: "Where to Cut Income",
-  concept: "Splitting on a number",
-  badge: "Cut Finder",
-  data: TRAIN,
-  dataLabel: PAST,
-  brief: "Income is a number, not a yes/no. Where should the tree draw the line?",
-  card: { formula: "candidate cut = (xᵢ + xᵢ₊₁) ÷ 2 · keep the lowest weighted impurity", example: "Good credit: Income ≤ $30k → weighted Gini 0" },
-  review: {
-    title: "Numeric splits",
-    what: (
-      <>
-        <p>For a number like income, the question becomes <b>Income ≤ c?</b> The tree has to choose the cut point c.</p>
-        <p>Sort the applicants by income and only try cuts that fall <b>between neighbours</b>. Any cut inside the same gap gives the same two groups.</p>
-      </>
-    ),
-    how: (
-      <>
-        <div className="formula">candidate cut = <Frac top="lower income + next income" bottom="2" /></div>
-        <p>Score each candidate cut like any other question, using weighted impurity. Keep the cut with the lowest.</p>
-      </>
-    ),
-    exampleTitle: "Best income cut for the good-credit group",
-    steps: [
-      { text: "Sort the six good-credit applicants by income.", eq: "$22k ✗ · $38k ✓ · $42k ✓ · $58k ✓ · $66k ✓ · $75k ✓", say: "Dev, the only default, earns the least.", highlight: { lit: [good] } },
-      { text: "Find the halfway points between neighbours.", eq: "$30k · $40k · $50k · $62k · $70.5k", say: "Five gaps, so five candidate cuts.", highlight: { lit: [good] } },
-      { text: <>Try <b>Income ≤ $40k</b>: Dev and Ella against the other four.</>, eq: "2/6 × 0.5 + 4/6 × 0 = 0.167", say: "The low side mixes Dev and Ella.", highlight: { lit: [good], both: ["income<=40"] } },
-      { text: <>Try <b>Income ≤ $30k</b>: Dev alone against five who repaid.</>, eq: "1/6 × 0 + 5/6 × 0 = 0", say: "Both sides pure. That's the best possible cut.", highlight: { lit: [good], both: ["income<=30"] } },
-    ],
-    remember: [
-      "With k different values there are k − 1 candidate cuts.",
-      "Cuts go halfway between neighbouring values.",
-      "A number can be cut again further down the tree, at a different point.",
-      "Numeric cuts compete with yes/no questions. The biggest drop wins.",
-    ],
-    says: ["Numbers need a cut point.", "Halfway between neighbours, every time.", "Let's cut my good-credit customers.", "Over to you."],
-  },
-  explore: { goal: "Try income cuts in each credit group and find the best ones.", Component: ExploreCut },
-  questions: [
-    {
-      id: "t4-cand", type: "mc", prompt: "The poor-credit incomes, sorted, are $28k, $31k, $47k, $52k, $66k and $84k. Which of these is a candidate cut?",
-      options: [
-        { text: "$60k", hint: "Cuts go exactly halfway between two neighbours. $52k and $66k give $59k." },
-        { text: "$75k", correct: true },
-        { text: "$84k", hint: "That's an income itself. Cuts go between incomes." },
-        { text: "$100k", hint: "That's above everyone, so it doesn't divide the group." },
-      ],
-      ladder: ["Add two neighbouring incomes and halve the total.", "($66k + $84k) ÷ 2 = …?"],
-      explain: "($66k + $84k) ÷ 2 = $75k, halfway between Ivy and Grace.",
-      highlight: { lit: [poor] },
-    },
-    {
-      id: "t4-count", type: "num", kind: "count", prompt: "Six applicants with six different incomes. How many candidate cuts are there?", answer: 5,
-      traps: [{ value: 6, hint: "Cuts sit between neighbours. Six values have one fewer gap." }],
-      first: "Count the gaps between six sorted values.",
-      ladder: ["Write six dots in a row. How many gaps between them?", "6 values → 6 − 1 gaps."],
-      explain: "Six values leave five gaps, so five candidate cuts.",
-    },
-    {
-      id: "t4-50", type: "num", kind: "decimal", prompt: "Good-credit group, Income ≤ $50k: Dev ✗, Ella ✓, Ben ✓ on one side; Aisha, Farid, Chloe ✓ on the other. What is the weighted Gini?", answer: (3 / 6) * (4 / 9),
-      traps: [{ value: 4 / 9, hint: "That's the Gini of the low side. Weight it by 3/6 and add the high side." }],
-      first: "Gini of each side, then weight by 3/6 each.",
-      ladder: ["Low side: 2 ✓ 1 ✗ → Gini 0.444. High side is pure → 0.", "3/6 × 0.444 + 3/6 × 0 = …?"],
-      explain: "Half of 0.444 is 0.222. Better than not splitting, but not as good as cutting at 30.",
-      highlight: { lit: [good], both: ["income<=50"] },
-    },
-    {
-      id: "t4-best", type: "mc", prompt: "Which cut is best for the good-credit group?",
-      options: [
-        { text: "Income ≤ $70.5k", hint: "That leaves Dev mixed in with four who repaid." },
-        { text: "Income ≤ $50k", hint: "Weighted Gini 0.222. Is there a cleaner cut?" },
-        { text: "Income ≤ $40k", hint: "That leaves Dev and Ella mixed together: weighted Gini 0.167." },
-        { text: "Income ≤ $30k", correct: true },
-      ],
-      ladder: ["The best cut has the lowest weighted Gini.", "Can any cut make both sides pure?"],
-      explain: "Income ≤ $30k puts Dev alone and the five who repaid together: weighted Gini 0.",
-      highlight: { lit: [good], both: ["income<=30"] },
-    },
-    {
-      id: "t4-root", type: "mc", prompt: "Across all 12 applicants, the best income cut (≤ $34.5k) has weighted Gini 0.333. Credit = Good? has 0.278. Which goes at the root?",
-      options: [
-        { text: "Income ≤ $34.5k?", hint: "Lower weighted Gini is better. Compare 0.333 with 0.278." },
-        { text: "Credit = Good?", correct: true },
-      ],
-      ladder: ["Numeric cuts compete with every other question.", "Pick the lower weighted Gini."],
-      explain: "Credit has the lower weighted Gini, so it stays at the root. Income comes in one level down.",
-    },
-  ],
-};
-
-const m5: Mission = {
-  n: 5,
-  title: "Grow It, Stop It",
-  concept: "Growing & overfitting",
-  badge: "Tree Grower",
-  data: TRAIN,
-  dataLabel: PAST,
-  brief: "Now grow a whole tree. But careful: a tree can learn my past customers so well it gets new ones wrong.",
-  card: { formula: "grow: split the best question, repeat on each branch · stop: pure, too small or too deep", example: "Full tree: training 12/12, test 5/8" },
-  review: {
-    title: "Recursive partitioning",
-    what: (
-      <>
-        <p>To grow a tree, split the root on its best question. Then treat each branch as a new group and find <b>its</b> best question. Repeat. This is <b>recursive partitioning</b>.</p>
-        <p>If you keep going until every leaf is pure, the tree fits the training data perfectly. But it may learn one-off cases that won't happen again. That's <b>overfitting</b>.</p>
-      </>
-    ),
-    how: (
-      <>
-        <p><b>Stopping rules</b>: stop splitting a node when</p>
-        <ul>
-          <li>it is already pure,</li>
-          <li>a split would leave a leaf smaller than the <b>minimum leaf size</b>,</li>
-          <li>the tree has reached its <b>maximum depth</b>, or</li>
-          <li>no question reduces impurity.</li>
-        </ul>
-        <div className="formula" style={{ marginTop: 12 }}>accuracy = <Frac top="correct predictions" bottom="applicants" /> · check it on a <b>test set</b> the tree never saw</div>
-      </>
-    ),
-    exampleTitle: "Growing Mr Lim's tree all the way",
-    steps: [
-      { text: <>Root: <b>Credit = Good?</b> is the best question.</>, eq: "5 ✓ 1 ✗ | 1 ✓ 5 ✗", say: "We worked this out at Counter 3.", highlight: { lit: [good], both: [repaid] } },
-      { text: <>Good-credit branch: best question is <b>Income ≤ $30k?</b></>, eq: "Dev ✗ | 5 ✓ → both pure", say: "That one makes sense: very low income, harder to repay.", highlight: { lit: [good], both: ["income<=30"] } },
-      { text: <>Poor-credit branch: best question is <b>Income ≤ $75k?</b></>, eq: "5 ✗ | Grace ✓ → both pure", say: "This split exists just for Grace. She was a one-off.", highlight: { lit: [poor], both: ["income>75"] } },
-      { text: "Every leaf is pure. Now score it.", eq: "training 12/12 = 100% · test 5/8 = 62.5%", say: "Perfect on the past, poor on the new. That's overfitting." },
-    ],
-    remember: [
-      "Recursive partitioning: split, then split each branch the same way.",
-      "Pure leaves on the training data don't mean good predictions.",
-      "Always judge a tree on a test set it hasn't seen.",
-      "Stopping rules keep the tree small. A minimum leaf size of 2 would have refused the Grace split.",
-    ],
-    says: ["Time to grow a full tree.", "Know when to stop.", "Watch what happens to Grace.", "Your turn to grow one."],
-  },
-  explore: { goal: "Grow the tree until every leaf is pure, then compare it with a one-split tree.", Component: ExploreGrow },
-  questions: [
-    {
-      id: "t5-next", type: "mc", prompt: "After the root split, what does the tree do with each branch?", layout: "list",
-      options: [
-        { text: "Asks the root question again", hint: "Everyone in a branch already gave the same answer to the root question." },
-        { text: "Stops straight away", hint: "It only stops when a stopping rule says so." },
-        { text: "Treats it as a new group and finds its best question", correct: true },
-        { text: "Picks any question at random", hint: "Each split is chosen the same way as the root: biggest drop." },
-      ],
-      ladder: ["Think about the word recursive.", "The same process runs again inside each branch."],
-      explain: "Each branch is split on its own best question, which is why it's called recursive partitioning.",
-    },
-    {
-      id: "t5-rule", type: "mc", prompt: "Which of these is NOT a stopping rule?", layout: "list",
-      options: [
-        { text: "The leaf is pure", hint: "That's a stopping rule: a pure leaf can't get purer." },
-        { text: "A split would leave fewer applicants than the minimum leaf size", hint: "That's the minimum leaf size rule." },
-        { text: "The tree has reached its maximum depth", hint: "That's the maximum depth rule." },
-        { text: "The leaf has more repaid than defaulted", correct: true },
-      ],
-      ladder: ["Stopping rules are about purity, size and depth.", "Which option is about the prediction instead?"],
-      explain: "A leaf's majority decides its prediction, not whether to keep splitting.",
-    },
-    {
-      id: "t5-over", type: "mc", prompt: "The full tree scores 12/12 on training and 5/8 on test. What is going on?", layout: "list",
-      options: [
-        { text: "The test set must contain mistakes", hint: "The test applicants are real outcomes. The tree is the problem." },
-        { text: "Overfitting: it learnt one-off cases that don't hold for new applicants", correct: true },
-        { text: "The tree is too small", hint: "It's grown as far as it can. A smaller tree does better on test." },
-        { text: "Gini should have been entropy", hint: "Both measures grow the same tree here." },
-      ],
-      ladder: ["Compare how it does on loans it learnt from with loans it never saw.", "Which split was made for just one person?"],
-      explain: "The Income ≤ $75k split fits Grace, a one-off. New high-income, poor-credit applicants default.",
-    },
-    {
-      id: "t5-min", type: "mc", prompt: "With a minimum leaf size of 2, could the tree split Grace off on her own?",
-      options: [
-        { text: "Yes", hint: "Grace would be a leaf of one, below the minimum of 2." },
-        { text: "No", correct: true },
-      ],
-      ladder: ["How many applicants would be in Grace's leaf?", "A leaf of 1 is smaller than 2."],
-      explain: "A leaf of one breaks the minimum leaf size, so that split isn't allowed.",
-      highlight: { lit: [poor], both: ["income>75"] },
-    },
-    {
-      id: "t5-acc", type: "num", kind: "proportion", prompt: "The credit-only tree gets 6 of the 8 test applicants right. What is its test accuracy?", answer: 0.75,
-      traps: [{ value: 0.5, hint: "Use the 8 test applicants, not the 12 past loans." }],
-      first: "Accuracy = correct ÷ total.",
-      ladder: ["6 right out of 8.", "6 ÷ 8 = …?"],
-      explain: "6 ÷ 8 = 75%: better than the full tree's 62.5%, with just one question.",
-    },
-  ],
-};
-
-const m6: Mission = {
-  n: 6,
-  title: "Prune and Report",
-  concept: "Pruning & the confusion matrix",
-  badge: "Loan Officer",
-  data: TEST,
-  dataLabel: NEW,
-  brief: "Last job: trim the tree so it works on new applicants, check its mistakes, and give me rules I can use at the counter.",
-  card: { formula: "accuracy = (caught + cleared) ÷ total · prune branches that don't help on the test set", example: "Pruned tree: (4 + 3) ÷ 8 = 87.5%" },
-  review: {
-    title: "Pruning and the confusion matrix",
-    what: (
-      <>
-        <p><b>Pruning</b> cuts a branch back to a single leaf. Prune a branch when the tree does as well or better on the test set without it.</p>
-        <p>A <b>confusion matrix</b> counts each kind of right and wrong answer, so you can see <b>which</b> mistakes a tree makes, not just how many.</p>
-      </>
-    ),
-    how: (
-      <>
-        <table className="cm">
-          <thead><tr><th /><th scope="col">Predicted Default</th><th scope="col">Predicted Repaid</th></tr></thead>
-          <tbody>
-            <tr><th scope="row">Actually defaulted</th><td className="ok">caught</td><td className="bad">missed</td></tr>
-            <tr><th scope="row">Actually repaid</th><td className="bad">false alarm</td><td className="ok">cleared</td></tr>
-          </tbody>
-        </table>
-        <div className="formula" style={{ marginTop: 12 }}>accuracy = <Frac top="caught + cleared" bottom="total" /> · error rate = 1 − accuracy</div>
-      </>
-    ),
-    exampleTitle: "Score the pruned tree on 8 new applicants",
-    steps: [
-      { text: <>The pruned tree: good credit and income over $30k → Repaid. Everyone else → Default.</>, eq: "predicted Repaid: Mei, Omar, Pooja", say: "Outlined: the three it would lend to.", highlight: { lit: [good, "income>30"] } },
-      { text: "Who actually defaulted? Nikhil, Oscar, Priya and Quinn. The tree predicted Default for all four.", eq: "caught 4 · missed 0", say: "No defaulter slips through.", highlight: { lit: [defaulted] } },
-      { text: "Who actually repaid? Mei, Omar and Pooja were cleared. Rosa was declined.", eq: "cleared 3 · false alarm 1", say: "Rosa had poor credit but paid us back.", highlight: { lit: [repaid], both: [good] } },
-      { text: "Add up the right answers.", eq: "accuracy = (4 + 3) ÷ 8 = 87.5%", say: "Better than the full tree's 5 of 8." },
-    ],
-    remember: [
-      "Prune a branch if the tree does as well or better on the test set without it.",
-      "A missed default costs the bank the loan. A false alarm costs it a good customer.",
-      "Read each path from root to leaf as an IF … THEN rule.",
-      "The root question is usually the most important variable.",
-    ],
-    says: ["Last counter: trim and report.", "Four boxes, two kinds of mistake.", "Let's score the pruned tree.", "Let's finish the report."],
-  },
-  explore: { goal: "Prune the full tree, read its confusion matrix, and write the rules.", Component: ExplorePrune },
-  questions: [
-    {
-      id: "t6-full", type: "num", kind: "count", prompt: "Use the full tree below. How many of the 8 new applicants does it get right?", answer: 5, figure: <Tree node={FULL_TREE} />,
-      traps: [{ value: 7, hint: "That's the pruned tree. The full tree also lends to anyone with poor credit and income over $75k." }, { value: 8, hint: "Check Oscar and Priya: poor credit, income over $75k." }],
-      first: "Send each applicant down the tree and compare with their stamp.",
-      ladder: ["The full tree lends to poor-credit applicants earning over $75k.", "Oscar and Priya earn over $75k with poor credit, and both defaulted. Rosa is declined but repaid."],
-      explain: "It gets Oscar, Priya and Rosa wrong, so 5 of 8.",
-      highlight: { lit: [poor] },
-    },
-    {
-      id: "t6-acc", type: "num", kind: "proportion", prompt: "The pruned tree caught 4, missed 0, raised 1 false alarm and cleared 3. What is its accuracy?", answer: 7 / 8,
-      traps: [{ value: 0.5, hint: "Add the caught and the cleared." }, { value: 1 / 8, hint: "That's the error rate. Accuracy is the right answers." }],
-      first: "Accuracy = (caught + cleared) ÷ total.",
-      ladder: ["Right answers: caught 4 + cleared 3.", "7 ÷ 8 = …?"],
-      explain: "7 ÷ 8 = 87.5%. The one mistake is Rosa, a false alarm.",
-    },
-    {
-      id: "t6-cost", type: "mc", prompt: "Which mistake costs the bank more?", layout: "list",
-      options: [
-        { text: "A false alarm: the bank turns away someone who would have repaid", hint: "That loses some interest and a customer, but not the whole loan." },
-        { text: "A missed default: the bank lends and loses the money", correct: true },
-      ],
-      ladder: ["Which mistake means money goes out and doesn't come back?", "A missed default is a loan that isn't repaid."],
-      explain: "A missed default loses the loan itself, so the bank cares most about catching defaults.",
-    },
-    {
-      id: "t6-prune", type: "mc", prompt: "Which branch of the full tree should be pruned?", layout: "list", figure: <Tree node={FULL_TREE} />,
-      options: [
-        { text: "Income ≤ $30k? on the good-credit side", hint: "Without it, the tree also lends to Nikhil, who defaulted. Test accuracy falls to 4 of 8." },
-        { text: "Income ≤ $75k? on the poor-credit side", correct: true },
-        { text: "Credit = Good? at the root", hint: "Pruning the root leaves one leaf that predicts the same for everyone." },
-        { text: "None. The full tree is best", hint: "The full tree only gets 5 of 8 test applicants right." },
-      ],
-      ladder: ["Which split was made for just one past applicant?", "The Income ≤ $75k split exists for Grace, and it lends to Oscar and Priya."],
-      explain: "Pruning Income ≤ $75k lifts test accuracy from 5 of 8 to 7 of 8.",
-      highlight: { lit: [poor], both: ["income>75"] },
-    },
-    {
-      id: "t6-rule", type: "mc", prompt: "Which rule should Mr Lim use at the counter?", layout: "list",
-      options: [
-        { text: "IF income over $75k THEN lend", hint: "That's the Grace branch we pruned. Oscar and Priya defaulted." },
-        { text: "IF collateral THEN lend", hint: "Collateral was a weak question. It never made it into the tree." },
-        { text: "IF good credit AND income over $30k THEN lend", correct: true },
-        { text: "IF student THEN decline", hint: "Job isn't in the pruned tree at all." },
-      ],
-      ladder: ["Read the Repaid leaf's path in the pruned tree.", "Good credit, then income over $30k."],
-      explain: "That's the pruned tree's only Repaid leaf, written as a rule.",
-      highlight: { lit: [good, "income>30"] },
+      ladder: ["Both numbers describe the same six applicants.", "Gini runs 0 to 0.5 and entropy runs 0 to 1. Only compare like with like."],
+      explain: "It's one group on two different scales. Both say the same thing: mostly one outcome, a little mixed.",
     },
   ],
 };
@@ -583,9 +227,9 @@ export const loanOfficer: ActivityDef<Applicant> = {
     stop: "Counter",
     rows: ["applicant", "applicants"],
     intro: "Decision trees at Mr Lim's bank branch. Each counter is one mission: a quick review, a hands-on task and a checkpoint.",
-    greeting: "Hi, I'm Mr Lim, manager at Neighbourhood Bank. I've got twelve past loans and a queue of new applicants. Help me build a tree that tells me who'll pay us back.",
-    finale: "That's every counter done. You read, built, tested and pruned a real decision tree. You're my new loan officer.",
+    greeting: "Hi, I'm Mr Lim, manager at Neighbourhood Bank. I've got a decision tree built from twelve past loans and a queue of new applicants. Help me read it and understand what it's telling me.",
+    finale: "That's every counter done. You can read my tree and tell how sure each leaf is. You're my new loan officer.",
   },
   view: { Grid: Applicants, has },
-  missions: [m1, m2, m3, m4, m5, m6],
+  missions: [m1, m2],
 };

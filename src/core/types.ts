@@ -28,6 +28,8 @@ export interface ReviewDef {
   exampleTitle: string;
   steps: ReviewStep[];
   remember: ReactNode[];
+  /** Label and title for card 2 when it isn't about calculating, e.g. ["How to read it", "The scale"]. */
+  howHeading?: [string, string];
   /** What Mrs Tan says on each of the four cards before any step is shown. */
   says: [string, string, string, string];
 }

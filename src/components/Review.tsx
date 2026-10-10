@@ -44,8 +44,8 @@ export function Review({ def, data, dataLabel, compact, brief, finishLabel, onFi
         )}
         {card === 1 && (
           <>
-            <span className="k">2 · How to calculate it</span>
-            <h2>The formula</h2>
+            <span className="k">2 · {def.howHeading?.[0] ?? "How to calculate it"}</span>
+            <h2>{def.howHeading?.[1] ?? "The formula"}</h2>
             {def.how}
           </>
         )}
