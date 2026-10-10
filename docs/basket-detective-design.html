@@ -88,6 +88,38 @@ header.top { display: grid; gap: 10px; padding-bottom: 28px; border-bottom: 2px 
 .tile .s { font-size: 0.85rem; opacity: 0.8; margin-top: auto; }
 .tile.locked { opacity: 0.55; }
 
+/* page flow */
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin-top: 16px; }
+.flow .pg { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; flex: 1 1 150px; min-width: 0; }
+.flow .pg .k { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); display: block; word-break: break-all; }
+.flow .pg b { font-family: var(--font-display); }
+.flow .pg.mission { border: 2px solid var(--accent); flex: 2 1 280px; }
+.flow .arr { align-self: center; font-family: var(--font-mono); color: var(--muted); }
+.stages { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.stages span { font-family: var(--font-mono); font-size: 0.72rem; border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; }
+
+/* mission map */
+.urlbar { font-family: var(--font-mono); font-size: 0.78rem; background: var(--screen-line); border-radius: 6px; padding: 6px 10px; margin-bottom: 14px; overflow-x: auto; white-space: nowrap; }
+.map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .map { grid-template-columns: 1fr; } }
+.mnode { font: inherit; text-align: left; color: var(--screen-fg); background: transparent; border: 1px solid var(--screen-line); border-radius: 10px; padding: 14px; display: grid; gap: 4px; cursor: pointer; min-width: 0; }
+.mnode:focus-visible { outline: 3px solid var(--tag); outline-offset: 2px; }
+.mnode .k { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+.mnode h3 { font-size: 1.05rem; }
+.mnode .st { font-size: 0.85rem; opacity: 0.85; }
+.mnode.done { border-color: #4cc493; }
+.mnode.done .k { color: #4cc493; opacity: 1; }
+.mnode.current { background: var(--tag); color: var(--tag-ink); border-color: var(--tag); }
+.mnode.locked { opacity: 0.5; cursor: not-allowed; border-style: dashed; }
+.banner { margin-bottom: 14px; border-radius: 8px; padding: 10px 12px; font-size: 0.92rem; border: 1px solid var(--tag); }
+.banner.lock { border-color: #ef7d72; }
+.mpage { display: grid; gap: 14px; }
+.mstages { display: flex; flex-wrap: wrap; gap: 6px; }
+.mstages span { font-family: var(--font-mono); font-size: 0.78rem; border: 1px solid var(--screen-line); border-radius: 999px; padding: 4px 10px; }
+.mstages span.done { border-color: #4cc493; color: #4cc493; }
+.mstages span.now { background: var(--tag); color: var(--tag-ink); border-color: var(--tag); font-weight: 700; }
+.mstages span.todo { opacity: 0.5; }
+
 /* playable demo */
 .play { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; }
 @media (max-width: 760px) { .play { grid-template-columns: 1fr; } }
@@ -290,8 +322,34 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
     </tbody>
   </table></div>
 
+  <section class="col">
+    <h2>Pages and unlocking</h2>
+    <p>The game is not one long page. Each mission is a separate page with its own address, and students reach it from the activity's mission map. A student can only open the next mission after completing the one before it.</p>
+  </section>
+  <div class="flow" aria-label="Page flow">
+    <div class="pg"><span class="k">/</span><b>Hub</b><br>All activities</div>
+    <span class="arr">→</span>
+    <div class="pg"><span class="k">/basket-detective</span><b>Mission map</b><br>6 missions: done, current or locked</div>
+    <span class="arr">→</span>
+    <div class="pg mission"><span class="k">/basket-detective/mission-3</span><b>Mission page</b> (one per mission)
+      <div class="stages"><span>1 Review</span><span>2 Explore</span><span>3 Checkpoint</span><span>4 Results</span></div></div>
+    <span class="arr">→</span>
+    <div class="pg"><span class="k">back to map</span><b>Next mission unlocked</b><br>"Go to Mission 4"</div>
+  </div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Rule</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr><td><b>Completing a mission</b></td><td>A mission is complete when every checkpoint question has been answered correctly. Hints and retries are unlimited, so this is always reachable; any star rating counts.</td></tr>
+      <tr><td><b>Unlocking</b></td><td>Completing Mission <i>n</i> unlocks Mission <i>n</i>+1 straight away. The results page shows a <b>Go to Mission <i>n</i>+1</b> button, and the map marks it as new.</td></tr>
+      <tr><td><b>Locked missions</b></td><td>Shown on the map with a lock and the reason ("Finish Mission 3 to unlock"). Opening a locked mission's address directly sends the student back to the map with the same message.</td></tr>
+      <tr><td><b>Stages inside a mission</b></td><td>Stages run in order: review, explore, checkpoint, results. On the first play a student can't skip ahead to the checkpoint. On replays the review can be skipped.</td></tr>
+      <tr><td><b>Leaving mid-mission</b></td><td>The stage and answers so far are saved. Returning to the mission resumes where the student left off.</td></tr>
+      <tr><td><b>Replaying</b></td><td>Completed missions stay open for replay at any time. The best star score is kept, and replays never lock anything again.</td></tr>
+    </tbody>
+  </table></div>
+
   <h2>Screen designs</h2>
-  <p class="col">Mockups of the main screens. Screens A2, B and B2 are playable and run on the real 10-receipt dataset the first missions use.</p>
+  <p class="col">Mockups of the main screens. They are shown together here for review, but in the game each one is its own page. Screens A2, A3, B and B2 are playable and run on the real 10-receipt dataset the first missions use.</p>
 
   <h3 style="margin-top:28px">A · Activity hub</h3>
   <div class="screen" role="img" aria-label="Mockup of the activity hub">
@@ -306,7 +364,15 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
   </div>
   <p class="caption">Later activities are placeholders to show how the hub scales; the topics follow a typical DMBA syllabus.</p>
 
-  <h3 style="margin-top:36px">A2 · Quick review: Mission 2, Support (playable)</h3>
+  <h3 style="margin-top:36px">A2 · Mission map (playable)</h3>
+  <div class="screen">
+    <div class="urlbar" id="mapUrl">dmba-games/basket-detective</div>
+    <div class="screen-bar"><span class="title" id="mapTitle">Basket Detective · Missions</span><div class="hud"><span>Completed <b id="mapDone">2 / 6</b></span><span>Stars <b id="mapStars">5 / 18</b></span></div></div>
+    <div id="mapBody" aria-live="polite"></div>
+  </div>
+  <p class="caption">Open Mission 3, step through its stages and finish it to unlock Mission 4. Clicking a locked mission shows why it's locked. <button type="button" class="btn ghost" id="mapReset" style="color:var(--ink);border-color:var(--line);padding:3px 10px;font-size:.85rem">Reset demo</button></p>
+
+  <h3 style="margin-top:36px">A3 · Quick review: Mission 2, Support (playable)</h3>
   <div class="screen">
     <div class="screen-bar"><span class="title">Mission 2 · Support Hunt · Quick review</span><div class="hud"><span>Card <b id="rvNum">1 / 4</b></span><span>About <b>1 min</b></span></div></div>
     <div class="review">
@@ -456,21 +522,25 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
     <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
     <tbody>
       <tr><td class="id">F-01</td><td>Hub page lists all activities, shows lock state and the student's stars per activity.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-02</td><td>Activity 01 has six missions that unlock in sequence; completed missions can be replayed.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-03</td><td>Receipts render as tappable cards; selecting items highlights matching receipts live.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-04</td><td>A rule engine computes support, confidence and lift for any rule on any dataset, and runs Apriori with a given min support.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-05</td><td>Every mission opens with a quick review of 3–4 cards (what it is, how to calculate it, a step-by-step worked example on the receipts, key points). It is required on the first play and skippable on replays; a Review button reopens it from any mission screen.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-06</td><td>Every mission ends with a checkpoint of 3–5 questions on what it taught. Question types: multiple choice, numeric, tap-the-receipts, sort/match.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-07</td><td>A wrong answer shows a hint and lets the student retry, with no limit. The mission completes only when every question is correct.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-08</td><td>Hints escalate per question: targeted nudge for that wrong option → point to the data → worked step. The answer itself is never revealed.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-09</td><td>Wrong multiple-choice options stay crossed out; every correct answer shows a one-line explanation.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-10</td><td>Numeric answers accept a fraction, decimal or percent, with a small rounding tolerance.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-11</td><td>Scoring: 3 / 2 / 1 points for a correct answer on the first / second / later try; stars per mission, XP total and badges.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-12</td><td>Progress, including the attempt count for each question, saves in the browser and survives a page reload.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-13</td><td>A "formula card" glossary unlocks each concept after the mission that teaches it.</td><td><span class="pri">Should</span></td></tr>
-      <tr><td class="id">F-14</td><td>Sandbox mode after Mission 6: students paste or build their own receipts and explore rules freely.</td><td><span class="pri">Should</span></td></tr>
-      <tr><td class="id">F-15</td><td>Missions 2–6 draw from several datasets (grocery, bookshop, café, streaming playlists) so replays get new numbers; questions and hints are templates filled from the dataset.</td><td><span class="pri">Should</span></td></tr>
-      <tr><td class="id">F-16</td><td>Teacher view: class code, per-student progress, the questions needing the most attempts, CSV export.</td><td><span class="pri">Could</span></td></tr>
+      <tr><td class="id">F-02</td><td>Activity 01 has a mission map page showing its six missions as done (with stars), current or locked.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-03</td><td>Each mission is a separate page with its own address, containing its stages in order: review → explore → checkpoint → results.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-04</td><td>A mission unlocks only when the previous one is complete (all checkpoint questions correct). Opening a locked mission sends the student back to the map with the reason.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-05</td><td>Completed missions can be replayed at any time; the best score is kept and nothing re-locks.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-06</td><td>Leaving a mission midway saves the current stage and answers so the student can resume.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-07</td><td>Receipts render as tappable cards; selecting items highlights matching receipts live.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-08</td><td>A rule engine computes support, confidence and lift for any rule on any dataset, and runs Apriori with a given min support.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-09</td><td>Every mission opens with a quick review of 3–4 cards (what it is, how to calculate it, a step-by-step worked example on the receipts, key points). It is required on the first play and skippable on replays; a Review button reopens it from any mission screen.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-10</td><td>Every mission ends with a checkpoint of 3–5 questions on what it taught. Question types: multiple choice, numeric, tap-the-receipts, sort/match.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-11</td><td>A wrong answer shows a hint and lets the student retry, with no limit. The mission completes only when every question is correct.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-12</td><td>Hints escalate per question: targeted nudge for that wrong option → point to the data → worked step. The answer itself is never revealed.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-13</td><td>Wrong multiple-choice options stay crossed out; every correct answer shows a one-line explanation.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-14</td><td>Numeric answers accept a fraction, decimal or percent, with a small rounding tolerance.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-15</td><td>Scoring: 3 / 2 / 1 points for a correct answer on the first / second / later try; stars per mission, XP total and badges.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-16</td><td>Progress, including the attempt count for each question, saves in the browser and survives a page reload.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-17</td><td>A "formula card" glossary unlocks each concept after the mission that teaches it.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-18</td><td>Sandbox mode after Mission 6: students paste or build their own receipts and explore rules freely.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-19</td><td>Missions 2–6 draw from several datasets (grocery, bookshop, café, streaming playlists) so replays get new numbers; questions and hints are templates filled from the dataset.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-20</td><td>Teacher view: class code, per-student progress, the questions needing the most attempts, CSV export, and an "unlock all missions" switch for demos in class.</td><td><span class="pri">Could</span></td></tr>
     </tbody>
   </table></div>
 
@@ -761,5 +831,94 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
     const s = $("rvStep"); if (s) s.onclick = () => { step++; draw(); const n = $("rvStep") || $("rvNext"); n.focus(); };
   }
   draw();
+})();
+</script>
+<script>
+(function () {
+  const M = [
+    { t: "Read the Receipts", c: "Transactions & itemsets" },
+    { t: "Support Hunt", c: "Support" },
+    { t: "If This, Then That", c: "Confidence" },
+    { t: "The Lift Lens", c: "Lift" },
+    { t: "Apriori Climb", c: "Apriori principle" },
+    { t: "Manager's Meeting", c: "Full pipeline" }
+  ];
+  const STAGES = [
+    { n: "Review", d: "Four cards: what it is, how to calculate it, a worked example, key points.", go: "Start the activity" },
+    { n: "Explore", d: "Hands-on work with the receipts on the interactive board.", go: "Go to the checkpoint" },
+    { n: "Checkpoint", d: "Answer every question correctly. Wrong answers show a hint and you try again.", go: "Submit final answer" },
+    { n: "Results", d: "", go: "" }
+  ];
+  const $ = (id) => document.getElementById(id);
+  let stars, open, stage, banner, newly;
+  function reset() { stars = [3, 2, null, null, null, null]; open = null; stage = 0; banner = ""; newly = null; draw(); }
+  const doneCount = () => stars.filter((s) => s !== null).length;
+  const isOpen = (i) => i === 0 || stars[i - 1] !== null;
+  const starStr = (s) => "★".repeat(s) + "☆".repeat(3 - s);
+
+  function drawMap() {
+    $("mapUrl").textContent = "dmba-games/basket-detective";
+    $("mapTitle").textContent = "Basket Detective · Missions";
+    let html = banner;
+    html += `<div class="map">` + M.map((m, i) => {
+      const done = stars[i] !== null, cur = !done && isOpen(i);
+      const cls = done ? "done" : cur ? "current" : "locked";
+      const k = done ? `Mission ${i + 1} · done ${starStr(stars[i])}` : cur ? `Mission ${i + 1} · ${newly === i ? "new · " : ""}play now` : `Mission ${i + 1} · locked`;
+      const st = done ? "Replay any time" : cur ? "Next up" : `Finish Mission ${i} to unlock`;
+      return `<button type="button" class="mnode ${cls}" id="mnode${i}" data-i="${i}"${cls === "locked" ? ` aria-disabled="true"` : ""}>
+        <span class="k">${k}</span><h3>${m.t}</h3><span class="st">${m.c} · ${st}</span></button>`;
+    }).join("") + `</div>`;
+    if (doneCount() === 6) html += `<div class="banner" style="margin-top:14px">All six missions complete. <b>Sandbox mode</b> is now unlocked.</div>`;
+    $("mapBody").innerHTML = html;
+    $("mapBody").querySelectorAll(".mnode").forEach((b) => b.onclick = () => {
+      const i = +b.dataset.i;
+      if (!isOpen(i)) { banner = `<div class="banner lock">🔒 Mission ${i + 1} is locked. Finish Mission ${i}, <b>${M[i - 1].t}</b>, to unlock it.</div>`; draw(); return; }
+      openMission(i);
+    });
+  }
+  function openMission(i) { open = i; stage = 0; banner = ""; draw(); }
+  function drawMission() {
+    const i = open, replay = stars[i] !== null;
+    $("mapUrl").textContent = `dmba-games/basket-detective/mission-${i + 1}`;
+    $("mapTitle").textContent = `Mission ${i + 1} · ${M[i].t}`;
+    const pills = STAGES.map((s, k) => `<span class="${k < stage ? "done" : k === stage ? "now" : "todo"}">${k < stage ? "✓ " : ""}${k + 1} ${s.n}</span>`).join("");
+    let body;
+    if (stage < 3) {
+      const s = STAGES[stage];
+      body = `<div class="rv-card" style="min-height:0"><span class="hk" style="color:var(--tag)">Stage ${stage + 1} of 4 · ${s.n}</span>
+        <h3>${s.n}: ${M[i].c}</h3><p>${s.d}</p>
+        <p style="opacity:.75;font-size:.9rem">${stage === 0 && !replay ? "First play: the review can't be skipped." : stage === 2 ? "In this demo, the button stands in for answering all the questions." : "Later stages unlock as you go."}</p>
+        <div class="rv-nav"><button type="button" class="btn ghost" id="mBack">← Mission map</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">${stage === 0 && replay ? `<button type="button" class="btn ghost" id="mSkip">Skip review</button>` : ""}
+        <button type="button" class="btn" id="mNext">${s.go}</button></div></div></div>`;
+    } else {
+      const got = stars[i];
+      const next = i + 1 < M.length ? i + 1 : null;
+      body = `<div class="rv-card" style="min-height:0"><span class="hk" style="color:#4cc493">Mission complete</span>
+        <h3>${M[i].t}</h3><div class="stars">${starStr(got)}</div>
+        <p>${next !== null ? (newly === next ? `<b>Mission ${next + 1}, ${M[next].t}, is now unlocked.</b>` : `Mission ${next + 1} is already open.`) : "That was the last mission of Basket Detective."}</p>
+        <div class="rv-nav"><button type="button" class="btn ghost" id="mBack">← Mission map</button>
+        ${next !== null ? `<button type="button" class="btn" id="mGo">Go to Mission ${next + 1} →</button>` : ""}</div></div>`;
+    }
+    $("mapBody").innerHTML = `<div class="mpage"><div class="mstages">${pills}</div>${body}</div>`;
+    $("mBack").onclick = () => { open = null; draw(); };
+    const nx = $("mNext"); if (nx) nx.onclick = () => {
+      if (stage === 2) {
+        const first = stars[i] === null;
+        stars[i] = Math.max(stars[i] ?? 0, 2);
+        newly = first && i + 1 < M.length ? i + 1 : newly;
+      }
+      stage++; draw();
+    };
+    const sk = $("mSkip"); if (sk) sk.onclick = () => { stage = 1; draw(); };
+    const g = $("mGo"); if (g) g.onclick = () => openMission(i + 1);
+  }
+  function draw() {
+    $("mapDone").textContent = `${doneCount()} / 6`;
+    $("mapStars").textContent = `${stars.reduce((a, s) => a + (s || 0), 0)} / 18`;
+    open === null ? drawMap() : drawMission();
+  }
+  $("mapReset").onclick = reset;
+  reset();
 })();
 </script>
