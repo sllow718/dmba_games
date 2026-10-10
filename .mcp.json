@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "firebase": {
+      "command": "sh",
+      "args": ["scripts/firebase-mcp.sh"]
+    }
+  }
+}

@@ -35,6 +35,13 @@ npm run build      # static site in dist/
 
 `.github/workflows/ci.yml` runs the type check, the tests and the build on every pull request. It publishes `main` to GitHub Pages; enable that once under **Settings → Pages → Source: GitHub Actions**. The build uses relative paths and hash routing, so `dist/` also works on any other static host.
 
+### Firebase MCP
+
+`.mcp.json` registers Firebase's MCP server (`scripts/firebase-mcp.sh`, which runs `firebase-tools mcp`), so Claude Code sessions in this repo can create, configure and deploy Firebase projects. It needs Firebase credentials:
+
+- **On your own machine:** run `npx firebase-tools login` once.
+- **In a Claude Code cloud session:** add an environment variable `FIREBASE_SERVICE_ACCOUNT` containing a service account key (JSON) with the Firebase Hosting Admin role. The script writes it to a private temp file for the server.
+
 ## Project layout
 
 ```
