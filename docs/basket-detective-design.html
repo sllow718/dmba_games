@@ -1,0 +1,396 @@
+<title>Basket Detective Game Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: single reading column (~72ch) with wide "screen" mockups that break out to 1100px; receipts look like thermal paper. */
+:root {
+  --bg: #eef1ee;
+  --surface: #ffffff;
+  --paper: #fbfbf7;
+  --ink: #17232a;
+  --muted: #56646b;
+  --line: #d3dad6;
+  --accent: #1d7a55;        /* grocery green */
+  --accent-ink: #ffffff;
+  --tag: #f4c430;           /* price-tag yellow */
+  --tag-ink: #2a2200;
+  --hit-a: #fdeeb0;         /* receipt has antecedent */
+  --hit-ab: #cdeedc;        /* receipt has both */
+  --good: #1d7a55;
+  --bad: #b8433a;
+  --screen: #14262c;        /* game screen background */
+  --screen-fg: #e8f0ec;
+  --screen-line: #2c444b;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101a1d; --surface: #172428; --paper: #1d2c30; --ink: #e4ece8; --muted: #9aaba6;
+    --line: #2d3f43; --accent: #4cc493; --accent-ink: #062016; --tag: #f4c430; --tag-ink: #2a2200;
+    --hit-a: #4a4114; --hit-ab: #173f2e; --good: #4cc493; --bad: #ef7d72;
+    --screen: #0b1417; --screen-fg: #e8f0ec; --screen-line: #2a3d42; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101a1d; --surface: #172428; --paper: #1d2c30; --ink: #e4ece8; --muted: #9aaba6;
+  --line: #2d3f43; --accent: #4cc493; --accent-ink: #062016; --tag: #f4c430; --tag-ink: #2a2200;
+  --hit-a: #4a4114; --hit-ab: #173f2e; --good: #4cc493; --bad: #ef7d72;
+  --screen: #0b1417; --screen-fg: #e8f0ec; --screen-line: #2a3d42; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.6; }
+.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 80px; }
+.col { max-width: 72ch; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.75rem; font-weight: 700; margin-top: 64px; margin-bottom: 12px; }
+h3 { font-size: 1.15rem; font-weight: 700; }
+p { margin: 0 0 14px; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.2rem; color: var(--muted); margin-top: 16px; }
+code, .mono { font-family: var(--font-mono); font-size: 0.9em; }
+.tag { display: inline-block; background: var(--tag); color: var(--tag-ink); font-family: var(--font-mono); font-weight: 600; font-size: 0.78rem; padding: 2px 8px; border-radius: 3px; letter-spacing: 0.04em; }
+
+header.top { display: grid; gap: 10px; padding-bottom: 28px; border-bottom: 2px solid var(--ink); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-family: var(--font-mono); font-size: 0.82rem; color: var(--muted); margin-top: 10px; }
+
+/* objectives */
+.objectives { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 18px; }
+.obj { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; min-width: 0; }
+.obj .formula { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); margin-top: 6px; display: block; }
+
+/* mission ladder */
+.ladder { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 0; }
+.ladder li { display: grid; grid-template-columns: 56px 1fr; gap: 16px; padding: 18px 0; border-top: 1px solid var(--line); }
+.ladder li:last-child { border-bottom: 1px solid var(--line); }
+.ladder .n { font-family: var(--font-display); font-weight: 800; font-size: 2rem; color: var(--accent); line-height: 1; }
+.ladder .body { min-width: 0; }
+.ladder .mech { font-size: 0.95rem; color: var(--muted); margin: 4px 0 0; }
+.ladder .teach { font-family: var(--font-mono); font-size: 0.8rem; margin-top: 6px; }
+
+/* screens */
+.screen { background: var(--screen); color: var(--screen-fg); border-radius: 14px; padding: 18px; margin-top: 18px; overflow: hidden; }
+.screen-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--screen-line); margin-bottom: 16px; }
+.screen-bar .title { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
+.hud { display: flex; gap: 14px; font-family: var(--font-mono); font-size: 0.8rem; flex-wrap: wrap; }
+.hud span b { color: var(--tag); }
+.caption { font-size: 0.9rem; color: var(--muted); margin-top: 8px; }
+
+/* hub */
+.hub { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.tile { border: 1px solid var(--screen-line); border-radius: 10px; padding: 14px; min-height: 140px; display: flex; flex-direction: column; gap: 6px; }
+.tile.live { background: var(--tag); color: var(--tag-ink); border-color: var(--tag); }
+.tile .k { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
+.tile h3 { font-size: 1.05rem; }
+.tile .s { font-size: 0.85rem; opacity: 0.8; margin-top: auto; }
+.tile.locked { opacity: 0.55; }
+
+/* playable demo */
+.play { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 760px) { .play { grid-template-columns: 1fr; } }
+.receipts { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+.receipt { background: var(--paper); color: var(--ink); font-family: var(--font-mono); font-size: 0.74rem; padding: 10px 10px 14px; border-radius: 2px; position: relative; transition: background .2s;
+  -webkit-mask: radial-gradient(circle 4px at 50% 100%, transparent 98%, #000) 0 0 / 10px 100% repeat-x;
+          mask: radial-gradient(circle 4px at 50% 100%, transparent 98%, #000) 0 0 / 10px 100% repeat-x; }
+.receipt .no { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--muted); padding-bottom: 4px; margin-bottom: 4px; color: var(--muted); }
+.receipt.a { background: var(--hit-a); }
+.receipt.ab { background: var(--hit-ab); }
+.receipt .it { display: block; }
+.receipt .it.on { font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.panel { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.picker { display: grid; gap: 6px; }
+.picker .lbl { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 0.88rem; background: transparent; color: var(--screen-fg); border: 1px solid var(--screen-line); padding: 5px 11px; border-radius: 999px; cursor: pointer; }
+.chip:hover { border-color: var(--screen-fg); }
+.chip[aria-pressed="true"] { background: var(--tag); color: var(--tag-ink); border-color: var(--tag); font-weight: 700; }
+.chip:disabled { opacity: 0.3; cursor: not-allowed; }
+.chip:focus-visible, .btn:focus-visible { outline: 3px solid var(--tag); outline-offset: 2px; }
+.rule { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; min-height: 1.6em; }
+.rule .arrow { color: var(--tag); padding-inline: 6px; }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.metric { border: 1px solid var(--screen-line); border-radius: 8px; padding: 10px; min-width: 0; }
+.metric .m { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
+.metric .v { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.metric .w { font-family: var(--font-mono); font-size: 0.72rem; opacity: 0.8; font-variant-numeric: tabular-nums; }
+.verdict { border-radius: 8px; padding: 10px 12px; font-size: 0.92rem; border: 1px solid var(--screen-line); }
+.verdict.good { border-color: #4cc493; }
+.verdict.bad { border-color: #ef7d72; }
+.verdict b.g { color: #4cc493; } .verdict b.r { color: #ef7d72; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.8rem; margin-top: 10px; opacity: 0.85; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
+
+/* apriori lattice */
+.lattice { display: grid; gap: 14px; }
+.lvl { display: grid; grid-template-columns: 90px 1fr; gap: 12px; align-items: start; }
+.lvl .lk { font-family: var(--font-mono); font-size: 0.75rem; opacity: 0.75; padding-top: 6px; }
+.nodes { display: flex; flex-wrap: wrap; gap: 6px; }
+.node { font-family: var(--font-mono); font-size: 0.78rem; border: 1px solid var(--screen-line); border-radius: 6px; padding: 5px 9px; }
+.node.ok { border-color: #4cc493; }
+.node.cut { text-decoration: line-through; opacity: 0.55; }
+.node.pruned { border-style: dashed; opacity: 0.55; }
+.node b { font-weight: 600; color: var(--tag); }
+
+/* boss */
+.boss { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.card { border: 1px solid var(--screen-line); border-radius: 10px; padding: 14px; min-width: 0; }
+.card .opt { display: block; margin-top: 6px; font-size: 0.9rem; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--screen-line); }
+.card .opt.sel { background: var(--tag); color: var(--tag-ink); border-color: var(--tag); font-weight: 700; }
+.stars { font-size: 1.5rem; letter-spacing: 4px; color: var(--tag); }
+
+/* tables */
+.tbl-wrap { overflow-x: auto; margin-top: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: none; }
+td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; color: var(--accent); }
+.pri { font-family: var(--font-mono); font-size: 0.75rem; padding: 1px 6px; border-radius: 3px; border: 1px solid var(--line); white-space: nowrap; }
+.pri.must { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+.arch { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 14px; }
+.arch .obj h3 { font-size: 1rem; }
+.arch ul { margin: 6px 0 0; padding-left: 18px; font-size: 0.92rem; }
+.qs { counter-reset: q; list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; }
+.qs li { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--tag); border-radius: 4px; padding: 12px 14px; }
+.qs li b { display: block; }
+.qs li span { color: var(--muted); font-size: 0.93rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">DMBA Games · Activity 01 · Design proposal v0.1</span>
+    <h1>Basket Detective</h1>
+    <p class="lede col">Students work as the data analyst for a small neighbourhood grocery, <em>Corner Mart</em>. They read till receipts, find which products are bought together, and learn to tell a useful rule from a misleading one. Along the way they compute support, confidence and lift, and use the Apriori principle to skip work.</p>
+    <div class="meta"><span>Audience: intro data-mining / business analytics students</span><span>Session: 20–30 min</span><span>Platform: browser, desktop + tablet + phone</span></div>
+  </header>
+
+  <section class="col">
+    <h2>What students should walk away with</h2>
+    <p>Each mission targets one idea. The game never shows a formula before the student has done the counting by hand, so the formula arrives as a shortcut for something they already did.</p>
+  </section>
+  <div class="objectives">
+    <div class="obj"><h3>Transactions &amp; itemsets</h3>A receipt is a transaction. Any group of items is an itemset.<span class="formula">{Bread, Butter}</span></div>
+    <div class="obj"><h3>Support</h3>How common is this combination across all receipts?<span class="formula">supp(X) = count(X) / N</span></div>
+    <div class="obj"><h3>Confidence</h3>Of the receipts with X, how many also have Y?<span class="formula">conf(X→Y) = supp(X∪Y) / supp(X)</span></div>
+    <div class="obj"><h3>Lift</h3>Does X actually raise the chance of Y, compared with Y on its own?<span class="formula">lift = conf(X→Y) / supp(Y)</span></div>
+    <div class="obj"><h3>Apriori principle</h3>If an itemset is rare, every bigger set containing it is rare too, so it can be pruned without counting.<span class="formula">supp(X∪Y) ≤ supp(X)</span></div>
+    <div class="obj"><h3>Business judgement</h3>Turn a strong rule into an action: bundle, shelf placement or promotion. Reject rules with lift ≤ 1.</div>
+  </div>
+
+  <section class="col">
+    <h2>Game structure</h2>
+    <p>A hub page lists every activity. Activity 01 is a run of six missions that unlock in order. Each mission follows the same loop: <b>brief</b> from the store owner → <b>try it</b> with the receipts → <b>instant feedback</b> with a worked explanation → <b>score</b> (up to 3 stars). Hints are free but cost one star.</p>
+  </section>
+  <ol class="ladder col">
+    <li><span class="n">1</span><div class="body"><h3>Read the Receipts</h3><p class="mech">Sort 10 till receipts. Tap every receipt that contains Bread. Count them. The game names what they just did: that is the <em>support count</em>.</p><div class="teach">teaches: transactions, itemsets, support count</div></div></li>
+    <li><span class="n">2</span><div class="body"><h3>Support Hunt</h3><p class="mech">The owner only cares about combinations bought in at least 30% of baskets. Students drag a minimum-support slider and predict which itemsets survive before the game reveals them.</p><div class="teach">teaches: support as a percentage, min-support threshold</div></div></li>
+    <li><span class="n">3</span><div class="body"><h3>If This, Then That</h3><p class="mech">Build a rule by picking items for the "if" side and the "then" side. Receipts light up as they match. Students type the confidence before the meter reveals it.</p><div class="teach">teaches: rules X → Y, confidence, direction matters (Bread→Butter ≠ Butter→Bread)</div></div></li>
+    <li><span class="n">4</span><div class="body"><h3>The Lift Lens</h3><p class="mech">The owner's nephew claims "half of bread buyers buy milk, put them together!" Students compare that 50% with how often anyone buys milk (60%) and decide whether the rule is real.</p><div class="teach">teaches: lift, baseline, why high confidence can mislead</div></div></li>
+    <li><span class="n">5</span><div class="body"><h3>Apriori Climb</h3><p class="mech">Climb an itemset lattice level by level. Students cross out rare itemsets, and the game rewards them for pruning bigger sets without counting them. A counter tracks "receipts scanned" so efficiency is visible.</p><div class="teach">teaches: Apriori principle, candidate generation, pruning</div></div></li>
+    <li><span class="n">6</span><div class="body"><h3>Manager's Meeting</h3><p class="mech">The final challenge uses a bigger 30-receipt dataset. Students find the top three rules that pass support ≥ 20%, confidence ≥ 60% and lift &gt; 1, then pick a store action for each and defend it in one sentence.</p><div class="teach">teaches: the full pipeline, interpretation, business recommendation</div></div></li>
+  </ol>
+
+  <h2>Screen designs</h2>
+  <p class="col">Mockups of the four main screens. Screen B is playable: it runs on the real 10-receipt dataset the first missions use.</p>
+
+  <h3 style="margin-top:28px">A · Activity hub</h3>
+  <div class="screen" role="img" aria-label="Mockup of the activity hub">
+    <div class="screen-bar"><span class="title">DMBA Games</span><div class="hud"><span>Player <b>Alex T.</b></span><span>XP <b>340</b></span><span>Stars <b>11 / 18</b></span></div></div>
+    <div class="hub">
+      <div class="tile live"><span class="k">Activity 01 · open</span><h3>Basket Detective</h3><span>Association rules</span><span class="s">Mission 4 of 6 · ★★★ ★★☆ ★★★</span></div>
+      <div class="tile locked"><span class="k">Activity 02 · planned</span><h3>Customer Tribes</h3><span>k-means clustering</span><span class="s">Coming soon</span></div>
+      <div class="tile locked"><span class="k">Activity 03 · planned</span><h3>Loan Officer</h3><span>Classification trees</span><span class="s">Coming soon</span></div>
+      <div class="tile locked"><span class="k">Activity 04 · planned</span><h3>Nearest Neighbours</h3><span>k-NN classification</span><span class="s">Coming soon</span></div>
+      <div class="tile locked"><span class="k">Activity 05 · planned</span><h3>Price Predictor</h3><span>Linear regression</span><span class="s">Coming soon</span></div>
+    </div>
+  </div>
+  <p class="caption">Later activities are placeholders to show how the hub scales; the topics follow a typical DMBA syllabus.</p>
+
+  <h3 style="margin-top:36px">B · Mission screen: build a rule (playable)</h3>
+  <div class="screen">
+    <div class="screen-bar"><span class="title">Mission 3 · If This, Then That</span><div class="hud"><span>Receipts <b>10</b></span><span>Hints <b>1 left</b></span><span>Score <b>★★☆</b></span></div></div>
+    <div class="play">
+      <div>
+        <div class="receipts" id="receipts"></div>
+        <div class="legend"><span><i class="sw" style="background:var(--hit-a)"></i>has the "if" items</span><span><i class="sw" style="background:var(--hit-ab)"></i>has "if" and "then" items</span></div>
+      </div>
+      <div class="panel">
+        <div class="picker"><span class="lbl">If a customer buys</span><div class="chips" id="pickA"></div></div>
+        <div class="picker"><span class="lbl">Then they also buy</span><div class="chips" id="pickB"></div></div>
+        <div class="rule" id="rule" aria-live="polite"></div>
+        <div class="metrics">
+          <div class="metric"><div class="m">Support</div><div class="v" id="vS">–</div><div class="w" id="wS"></div></div>
+          <div class="metric"><div class="m">Confidence</div><div class="v" id="vC">–</div><div class="w" id="wC"></div></div>
+          <div class="metric"><div class="m">Lift</div><div class="v" id="vL">–</div><div class="w" id="wL"></div></div>
+        </div>
+        <div class="verdict" id="verdict">Pick at least one item on each side.</div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">In the real mission the meters stay hidden until the student types an answer. Try <b>Bread → Milk</b> (50% confidence, lift 0.83) against <b>Coffee → Cookies</b> (67%, lift 2.22).</p>
+
+  <h3 style="margin-top:36px">C · Mission screen: Apriori Climb</h3>
+  <div class="screen" role="img" aria-label="Mockup of the Apriori lattice at minimum support 30 percent">
+    <div class="screen-bar"><span class="title">Mission 5 · Apriori Climb</span><div class="hud"><span>Min support <b>30%</b> (3 of 10)</span><span>Receipts scanned <b>220</b> / naïve 630</span></div></div>
+    <div class="lattice">
+      <div class="lvl"><span class="lk">1 item</span><div class="nodes">
+        <span class="node ok">Bread <b>6</b></span><span class="node ok">Milk <b>6</b></span><span class="node ok">Butter <b>5</b></span><span class="node ok">Eggs <b>4</b></span><span class="node ok">Coffee <b>3</b></span><span class="node ok">Cookies <b>3</b></span></div></div>
+      <div class="lvl"><span class="lk">2 items</span><div class="nodes">
+        <span class="node ok">Bread·Butter <b>5</b></span><span class="node ok">Bread·Milk <b>3</b></span><span class="node ok">Bread·Eggs <b>3</b></span><span class="node ok">Butter·Milk <b>3</b></span>
+        <span class="node cut">Butter·Eggs 2</span><span class="node cut">Milk·Eggs 2</span><span class="node cut">Milk·Coffee 2</span><span class="node cut">Milk·Cookies 2</span><span class="node cut">Coffee·Cookies 2</span><span class="node cut">…6 more ≤1</span></div></div>
+      <div class="lvl"><span class="lk">3 items</span><div class="nodes">
+        <span class="node ok">Bread·Butter·Milk <b>3</b></span><span class="node pruned">Bread·Butter·Eggs · pruned, Butter·Eggs is rare</span><span class="node pruned">Bread·Milk·Eggs · pruned, Milk·Eggs is rare</span></div></div>
+    </div>
+    <div class="legend"><span>solid green = frequent</span><span>struck through = counted, too rare</span><span>dashed = pruned without counting (bonus points)</span></div>
+  </div>
+
+  <h3 style="margin-top:36px">D · Manager's Meeting and results</h3>
+  <div class="screen" role="img" aria-label="Mockup of the final challenge and results screen">
+    <div class="screen-bar"><span class="title">Mission 6 · Manager's Meeting</span><div class="hud"><span>Rule 2 of 3</span><span>Time <b>04:12</b></span></div></div>
+    <div class="boss">
+      <div class="card"><span class="tag">YOUR RULE</span><h3 style="margin-top:8px">{Pasta, Tomato sauce} → Parmesan</h3><p class="mono" style="font-size:.85rem;margin-top:8px">supp 23% · conf 78% · lift 2.4</p></div>
+      <div class="card"><span class="tag">WHAT SHOULD CORNER MART DO?</span>
+        <span class="opt">Discount parmesan for everyone</span>
+        <span class="opt sel">Shelve parmesan next to the pasta aisle</span>
+        <span class="opt">Stop stocking tomato sauce</span>
+        <span class="opt">Nothing, the rule is not reliable</span></div>
+      <div class="card"><span class="tag">MISSION RESULT</span><div class="stars" style="margin-top:8px">★★★</div><p style="font-size:.9rem;margin:6px 0 0">3 of 3 rules valid · 0 hints · +120 XP<br>Badge earned: <b>Apriori Ace</b></p></div>
+    </div>
+  </div>
+
+  <section class="col">
+    <h2>The starter dataset</h2>
+    <p>Ten receipts, small enough to count by hand and built so every key lesson appears in them: a strong rule, a direction-dependent rule, a rule with lift below 1, a rule with lift exactly 1, and an itemset the Apriori principle prunes.</p>
+  </section>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Rule</th><th>Support</th><th>Confidence</th><th>Lift</th><th>Lesson it carries</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Butter → Bread</td><td>50%</td><td>100%</td><td>1.67</td><td>Strong rule</td></tr>
+      <tr><td class="mono">Bread → Butter</td><td>50%</td><td>83%</td><td>1.67</td><td>Same itemset, different confidence: direction matters</td></tr>
+      <tr><td class="mono">Coffee → Cookies</td><td>20%</td><td>67%</td><td>2.22</td><td>Rare but very strong: shows the trade-off with min support</td></tr>
+      <tr><td class="mono">Bread → Milk</td><td>30%</td><td>50%</td><td>0.83</td><td>Looks useful, but milk is bought 60% of the time anyway</td></tr>
+      <tr><td class="mono">{Bread, Butter} → Milk</td><td>30%</td><td>60%</td><td>1.00</td><td>Independence: lift exactly 1</td></tr>
+    </tbody>
+  </table></div>
+
+  <section class="col">
+    <h2>Requirements</h2>
+    <p><span class="pri must">Must</span> is in the first playable release. <span class="pri">Should</span> and <span class="pri">Could</span> follow once the core loop is tested with students.</p>
+  </section>
+  <h3 style="margin-top:18px">Functional</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td class="id">F-01</td><td>Hub page lists all activities, shows lock state and the student's stars per activity.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-02</td><td>Activity 01 has six missions that unlock in sequence; completed missions can be replayed.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-03</td><td>Receipts render as tappable cards; selecting items highlights matching receipts live.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-04</td><td>A rule engine computes support, confidence and lift for any rule on any dataset, and runs Apriori with a given min support.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-05</td><td>Questions accept numeric answers as fraction, decimal or percent, with a small rounding tolerance.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-06</td><td>Every wrong answer gets a worked explanation using the student's own numbers ("You counted 4 receipts with Bread, there are 6: T1, T2…").</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-07</td><td>Scoring: up to 3 stars per mission from accuracy and hints used; XP total and badges.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-08</td><td>Progress saves in the browser and survives a page reload.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-09</td><td>A "formula card" glossary unlocks each concept after the mission that teaches it.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-10</td><td>Sandbox mode after Mission 6: students paste or build their own receipts and explore rules freely.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-11</td><td>Missions 2–6 draw from several datasets (grocery, bookshop, café, streaming playlists) so replays differ.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-12</td><td>Teacher view: class code, per-student progress, CSV export.</td><td><span class="pri">Could</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 style="margin-top:24px">Non-functional</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td class="id">N-01</td><td>Runs in a browser with no install or login; loads in under 3 s on school Wi-Fi and works on Chromebooks.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">N-02</td><td>Responsive from 360 px phones to projector screens; touch and mouse both work.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">N-03</td><td>Accessible: keyboard play, visible focus, colour is never the only signal, WCAG AA contrast, reduced-motion respected.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">N-04</td><td>No personal data collected in the first release; only a display name stored locally.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">N-05</td><td>Each activity is a self-contained module so new activities plug into the hub without touching others.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">N-06</td><td>Mission text and datasets live in data files, so a teacher can edit wording or numbers without changing code.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">N-07</td><td>Rule engine has unit tests covering every number shown in the missions.</td><td><span class="pri must">Must</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <section class="col">
+    <h2>Proposed build</h2>
+    <p>A static web app, so it can be hosted for free on GitHub Pages or Vercel straight from this repository.</p>
+  </section>
+  <div class="arch">
+    <div class="obj"><h3>Stack</h3><ul><li>Vite + React + TypeScript</li><li>Plain CSS with design tokens</li><li>Vitest for the rule engine</li></ul></div>
+    <div class="obj"><h3>Shared core</h3><ul><li>Hub, routing, player profile</li><li>Scoring, stars, XP, badges</li><li>Progress store (localStorage)</li></ul></div>
+    <div class="obj"><h3>Activity module</h3><ul><li><code>activities/association-rules/</code></li><li><code>engine.ts</code>: support, confidence, lift, Apriori</li><li><code>missions/*.json</code>, <code>datasets/*.json</code></li></ul></div>
+    <div class="obj"><h3>Milestones</h3><ul><li>M1: engine + tests, Missions 1–3</li><li>M2: Missions 4–6, scoring, hub</li><li>M3: sandbox, extra datasets, polish</li></ul></div>
+  </div>
+
+  <section class="col">
+    <h2>Decisions I need from you</h2>
+  </section>
+  <ol class="qs col">
+    <li><b>Who are the students?</b><span>The design assumes university or polytechnic students in an intro data-mining or business analytics course. Younger students would need simpler wording and fewer formulas.</span></li>
+    <li><b>Does the store theme work for your class?</b><span>Corner Mart grocery is the default. Alternatives: a bookshop, a bubble-tea shop, or an online store.</span></li>
+    <li><b>Do you need teacher tracking in the first release?</b><span>Without it the game is a static site with no server. With it we need accounts and a small backend.</span></li>
+    <li><b>Is the React + TypeScript stack fine?</b><span>A plain HTML/JS version is also possible if you or other teachers want to edit the code without a build step.</span></li>
+  </ol>
+</div>
+
+<script>
+(function () {
+  const ITEMS = ["Bread", "Butter", "Milk", "Eggs", "Coffee", "Cookies"];
+  const T = [
+    ["Bread", "Butter", "Milk"], ["Bread", "Butter"], ["Milk", "Coffee", "Cookies"],
+    ["Bread", "Butter", "Eggs"], ["Milk", "Eggs"], ["Bread", "Milk", "Butter", "Cookies"],
+    ["Coffee", "Cookies"], ["Bread", "Eggs"], ["Milk", "Coffee"], ["Bread", "Butter", "Milk", "Eggs"]
+  ];
+  const N = T.length;
+  const A = new Set(["Bread"]), B = new Set(["Milk"]);
+  const $ = (id) => document.getElementById(id);
+  const has = (t, set) => [...set].every((i) => t.includes(i));
+  const pct = (x) => Math.round(x * 100) + "%";
+
+  function chips(el, own, other) {
+    el.innerHTML = "";
+    ITEMS.forEach((it) => {
+      const b = document.createElement("button");
+      b.className = "chip"; b.type = "button"; b.id = el.id + "-" + it; b.textContent = it;
+      b.setAttribute("aria-pressed", own.has(it));
+      b.disabled = other.has(it);
+      b.onclick = () => { own.has(it) ? own.delete(it) : own.add(it); render(); };
+      el.appendChild(b);
+    });
+  }
+
+  function render() {
+    chips($("pickA"), A, B); chips($("pickB"), B, A);
+    const rc = $("receipts"); rc.innerHTML = "";
+    T.forEach((t, i) => {
+      const d = document.createElement("div");
+      const a = A.size && has(t, A), ab = a && B.size && has(t, B);
+      d.className = "receipt" + (ab ? " ab" : a ? " a" : "");
+      d.innerHTML = `<div class="no"><span>T${i + 1}</span><span>CORNER MART</span></div>` +
+        t.map((it) => `<span class="it${A.has(it) || B.has(it) ? " on" : ""}">${it}</span>`).join("");
+      rc.appendChild(d);
+    });
+    const ok = A.size && B.size;
+    $("rule").innerHTML = ok ? `${[...A].join(" + ")}<span class="arrow">→</span>${[...B].join(" + ")}` : "";
+    if (!ok) { ["vS","vC","vL"].forEach((k) => $(k).textContent = "–"); ["wS","wC","wL"].forEach((k) => $(k).textContent = "");
+      $("verdict").className = "verdict"; $("verdict").textContent = "Pick at least one item on each side."; return; }
+    const nA = T.filter((t) => has(t, A)).length;
+    const nB = T.filter((t) => has(t, B)).length;
+    const nAB = T.filter((t) => has(t, A) && has(t, B)).length;
+    const conf = nA ? nAB / nA : 0, lift = nB && nA ? conf / (nB / N) : 0;
+    $("vS").textContent = pct(nAB / N); $("wS").textContent = `${nAB} of ${N} receipts`;
+    $("vC").textContent = nA ? pct(conf) : "–"; $("wC").textContent = `${nAB} of ${nA} "if" receipts`;
+    $("vL").textContent = nA && nB ? lift.toFixed(2) : "–"; $("wL").textContent = `${pct(conf)} vs ${pct(nB / N)} baseline`;
+    const v = $("verdict");
+    if (nAB === 0) { v.className = "verdict bad"; v.innerHTML = "<b class='r'>No receipt has both.</b> This rule has zero support."; }
+    else if (lift > 1.05) { v.className = "verdict good"; v.innerHTML = `<b class='g'>Real pattern.</b> Buying ${[...A].join(" + ")} makes ${[...B].join(" + ")} ${lift.toFixed(1)}× more likely than usual.`; }
+    else if (lift >= 0.95) { v.className = "verdict"; v.innerHTML = `<b>No effect.</b> ${[...B].join(" + ")} is bought just as often without ${[...A].join(" + ")}.`; }
+    else { v.className = "verdict bad"; v.innerHTML = `<b class='r'>Misleading.</b> ${pct(conf)} sounds high, but ${pct(nB / N)} of all customers buy ${[...B].join(" + ")} anyway.`; }
+  }
+  render();
+})();
+</script>
