@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ACTIVITIES, COMING_SOON } from "../activities";
+import { ACTIVITIES } from "../activities";
 import { resetProgress, useProgress } from "../core/progress";
 import { activitySummary } from "../core/unlock";
 import { Owner, Stars, TopBar } from "../components/ui";
@@ -41,16 +41,6 @@ export function Hub() {
               </a>
             );
           })}
-          {COMING_SOON.map((c) => (
-            <div key={c.shop} className="shop closed" aria-label={`${c.shop}: opening soon`}>
-              <div className="awning" />
-              <div className="in">
-                <span className="sign">{c.shop}</span>
-                <span className="topic">{c.title} · {c.topic.toLowerCase()}</span>
-                <span className="st">Opening soon</span>
-              </div>
-            </div>
-          ))}
         </div>
         <div className="footer-note row">
           <span>Progress is saved in this browser only.</span>
