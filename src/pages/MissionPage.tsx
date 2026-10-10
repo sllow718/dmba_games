@@ -107,12 +107,10 @@ export function MissionPage({ activity, n }: { activity: ActivityDef; n: number 
         </div>
 
         {view !== null && view !== 0 && (
-          <div className="row end" style={{ marginBottom: 16 }}>
-            <span className="worth" style={{ marginTop: 0 }}>
-              {view === 2 ? "Practice run: your stars and score won't change." : `Looking back at ${STAGES[view].toLowerCase()}. Your progress is saved.`}
-            </span>
-            <button type="button" className="btn alt small" onClick={back}>{backLabel}</button>
-          </div>
+          <p className="worth" style={{ margin: "0 0 16px" }}>
+            {view === 2 ? "Practice run: your stars and score won't change." : `Looking back at ${STAGES[view].toLowerCase()}. Your progress is saved.`}
+            {` Tap ${STAGES[stage]} to carry on.`}
+          </p>
         )}
 
         {view === 0 ? (
