@@ -15,7 +15,8 @@ export function MissionPage({ activity, n }: { activity: ActivityDef; n: number 
   const key = missionKey(activity.id, n);
   const mp = getMission(p, key);
   const open = !!m && isOpen(p, activity, n);
-  const [peek, setPeek] = useState(false);
+  /** A finished stage opened from the stage tabs, shown without changing saved progress. */
+  const [view, setView] = useState<number | null>(null);
   const [exploreDone, setExploreDone] = useState(false);
   const completing = useRef(false);
   // A reload after the last checkpoint answer but before "See results" lands on a finished checkpoint.
@@ -38,7 +39,7 @@ export function MissionPage({ activity, n }: { activity: ActivityDef; n: number 
 
   const stage = Math.min(mp.stage, 3);
   const replay = mp.completed;
-  const setStage = (s: number) => { completing.current = false; patchMission(key, { stage: s }); window.scrollTo(0, 0); };
+  const setStage = (s: number) => { completing.current = false; setView(null); patchMission(key, { stage: s }); window.scrollTo(0, 0); };
   const compact = m.data.length > 12;
   const mapPath = "/" + activity.id;
 
@@ -76,23 +77,53 @@ export function MissionPage({ activity, n }: { activity: ActivityDef; n: number 
   if (finishedUnseen && stage === 2) return null;
 
   const next = activity.missions.find((x) => x.n === n + 1);
+  // Stages already finished on this run, or any stage once the aisle has been completed before.
+  const canView = (i: number) => i !== stage && (i < stage || (replay && (i < 3 || !!mp.last)));
+  const shown = view ?? stage;
+  const openView = (i: number) => { setView(i === stage ? null : i); window.scrollTo(0, 0); };
+  const back = () => openView(stage);
+  const backLabel = `Back to ${STAGES[stage].toLowerCase()}`;
 
   return (
     <>
-      <TopBar title={`Aisle ${n} · ${m.title}`} sub={peek ? "Review" : STAGES[stage]} home={mapPath}>
+      <TopBar title={`Aisle ${n} · ${m.title}`} sub={STAGES[shown]} home={mapPath}>
         <span className="pips" aria-hidden="true">{STAGES.map((_, i) => <i key={i} className={i < stage ? "d" : i === stage ? "n" : ""} />)}</span>
-        {stage > 0 && stage < 3 && <button type="button" className="link" onClick={() => setPeek(!peek)}>{peek ? "Close review" : "Review ↺"}</button>}
+        {stage > 0 && stage < 3 && <button type="button" className="link" onClick={() => openView(view === 0 ? stage : 0)}>{view === 0 ? "Close review" : "Review ↺"}</button>}
         <a className="link" href={"#" + mapPath}>Mission map</a>
       </TopBar>
       <main>
         <div className="stage-row" aria-label="Mission stages">
-          {STAGES.map((s, i) => (
-            <span key={s} className={i < stage ? "d" : i === stage ? "n" : "t"} aria-current={i === stage ? "step" : undefined}>{i < stage ? "✓ " : ""}{s}</span>
-          ))}
+          {STAGES.map((s, i) => {
+            const cls = (i < stage || (replay && i !== stage) ? "d" : i === stage ? "n" : "t") + (view !== null && i === shown ? " on" : "");
+            const label = <>{i < stage || (replay && i !== stage) ? "✓ " : ""}{s}</>;
+            return view !== null && i === stage ? (
+              <button key={s} type="button" className={cls} onClick={back} aria-current="step">{label}</button>
+            ) : canView(i) ? (
+              <button key={s} type="button" className={cls} onClick={() => openView(i)} aria-pressed={i === shown}>{label}</button>
+            ) : (
+              <span key={s} className={cls} aria-current={i === stage ? "step" : undefined}>{label}</span>
+            );
+          })}
         </div>
 
-        {peek ? (
-          <Review def={m.review} data={m.data} dataLabel={m.dataLabel} compact={compact} finishLabel={`Back to ${STAGES[stage].toLowerCase()}`} onFinish={() => setPeek(false)} />
+        {view !== null && view !== 0 && (
+          <div className="row end" style={{ marginBottom: 16 }}>
+            <span className="worth" style={{ marginTop: 0 }}>
+              {view === 2 ? "Practice run: your stars and score won't change." : `Looking back at ${STAGES[view].toLowerCase()}. Your progress is saved.`}
+            </span>
+            <button type="button" className="btn alt small" onClick={back}>{backLabel}</button>
+          </div>
+        )}
+
+        {view === 0 ? (
+          <Review def={m.review} data={m.data} dataLabel={m.dataLabel} compact={compact} finishLabel={backLabel} onFinish={back} />
+        ) : view === 1 ? (
+          <m.explore.Component data={m.data} done={exploreDone} onDone={() => setExploreDone(true)} />
+        ) : view === 2 ? (
+          <Checkpoint key="practice" questions={m.questions} data={m.data} dataLabel={m.dataLabel} compact={compact}
+            onProgress={() => {}} onComplete={back} finishLabel={backLabel} />
+        ) : view === 3 ? (
+          <Results mission={m} last={mp.last} best={mp.bestStars} next={next} activity={activity} onReplay={() => setStage(0)} />
         ) : stage === 0 ? (
           <>
             {replay && (

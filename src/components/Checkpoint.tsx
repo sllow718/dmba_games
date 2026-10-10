@@ -14,13 +14,15 @@ interface Props {
   initial?: CheckpointState;
   onProgress: (s: CheckpointState) => void;
   onComplete: (r: { points: number; firstTry: number; attempts: Record<string, number> }) => void;
+  /** Label for the button after the last question. */
+  finishLabel?: string;
 }
 
 const LEVELS = ["Hint 1 · a nudge", "Hint 2 · look at the receipts", "Hint 3 · nearly there"];
 const listNums = (xs: number[]) => xs.map((i) => "#" + (i + 1)).join(", ");
 
 /** Checkpoint questions with escalating hints and unlimited retries. */
-export function Checkpoint({ questions, data, dataLabel, compact, initial, onProgress, onComplete }: Props) {
+export function Checkpoint({ questions, data, dataLabel, compact, initial, onProgress, onComplete, finishLabel = "See results" }: Props) {
   const [qi, setQi] = useState(initial?.qi ?? 0);
   const [points, setPoints] = useState(initial?.points ?? 0);
   const [firstTry, setFirstTry] = useState(initial?.firstTry ?? 0);
@@ -173,7 +175,7 @@ export function Checkpoint({ questions, data, dataLabel, compact, initial, onPro
           <>
             <Owner tone="ok">Right. {q.explain}</Owner>
             <div className="row">
-              <button type="button" className="btn" ref={nextRef} onClick={next}>{qi + 1 >= questions.length ? "See results" : "Next question"}</button>
+              <button type="button" className="btn" ref={nextRef} onClick={next}>{qi + 1 >= questions.length ? finishLabel : "Next question"}</button>
             </div>
           </>
         )}

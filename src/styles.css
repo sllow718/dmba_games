@@ -172,10 +172,13 @@ a.shop:hover .sign { text-decoration: underline; text-underline-offset: 3px; }
 .aisle .new { position: absolute; top: -11px; right: 10px; background: #f3cf4a; color: var(--ink); font-family: var(--display); font-weight: 800; font-size: 0.8rem; padding: 0 9px; border-radius: 999px; }
 .lock-ic { width: 14px; height: 14px; flex: 0 0 auto; }
 .stage-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-.stage-row span { font-weight: 800; font-size: 0.86rem; background: var(--paper); border: 2px solid var(--edge); border-radius: 999px; padding: 3px 12px; }
-.stage-row span.d { border-color: var(--ok); color: var(--ok); }
-.stage-row span.n { background: var(--brand); border-color: var(--brand); color: #fff; }
+.stage-row span, .stage-row button { font-family: inherit; font-weight: 800; font-size: 0.86rem; background: var(--paper); border: 2px solid var(--edge); border-radius: 999px; padding: 3px 12px; }
+.stage-row .d { border-color: var(--ok); color: var(--ok); }
+.stage-row .n { background: var(--brand); border-color: var(--brand); color: #fff; }
 .stage-row span.t { opacity: 0.6; }
+.stage-row button { cursor: pointer; }
+.stage-row button.d:hover { background: var(--ok-bg); }
+.stage-row .on { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
 
 /* review */
 .rv-card { min-height: 320px; display: flex; flex-direction: column; }
