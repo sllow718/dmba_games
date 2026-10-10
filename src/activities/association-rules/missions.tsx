@@ -78,7 +78,7 @@ const m1: MissionDef = {
       first: "Count receipts that have coffee and cookies together.",
       ladder: ["Coffee is on #3, #7 and #9. Which of those also have cookies?", "#3 and #7 have both. #9 has coffee but no cookies."],
       explain: "Only #3 and #7 have both, so the count is 2.",
-      highlight: { lit: ["Coffee"], both: ["Cookies"] },
+      highlight: { lit: ["Coffee"], both: ["Cookies"], only: true },
     },
   ],
 };
@@ -134,7 +134,7 @@ const m2: MissionDef = {
       first: "Count the receipts with both, then divide by the total number of receipts.",
       ladder: ["#3 and #7 have coffee and cookies. How many receipts are there in total?", "2 receipts out of 10. So 2 ÷ 10 is…?"],
       explain: "2 ÷ 10 = 20%. One in five customers bought coffee and cookies together.",
-      highlight: { lit: ["Coffee"], both: ["Cookies"] },
+      highlight: { lit: ["Coffee"], both: ["Cookies"], only: true },
     },
     {
       id: "m2-cut", type: "mc", prompt: "Minimum support is 30%. Does {Milk, Eggs} make the cut?", layout: "list",
@@ -146,7 +146,7 @@ const m2: MissionDef = {
       ],
       ladder: ["Eggs are on #4, #5, #8 and #10. Which of those also have milk?", "#5 and #10 have both: 2 of 10 receipts."],
       explain: "Only #5 and #10 have both: 20%, which is below the 30% cut-off.",
-      highlight: { lit: ["Eggs"], both: ["Milk"] },
+      highlight: { lit: ["Eggs"], both: ["Milk"], only: true },
     },
     {
       id: "m2-never", type: "mc", prompt: "Can {Bread, Butter} have higher support than {Butter} on its own?", layout: "list",
@@ -165,7 +165,7 @@ const m2: MissionDef = {
       first: "Count the receipts with all three, then divide by 10.",
       ladder: ["Bread and butter are together on #1, #2, #4, #6 and #10. Which of those also have milk?", "#1, #6 and #10 have all three. So 3 ÷ 10 is…?"],
       explain: "3 ÷ 10 = 30%, exactly on Mrs Tan's cut-off, so it stays.",
-      highlight: { lit: ["Bread", "Butter"], both: ["Milk"] },
+      highlight: { lit: ["Bread", "Butter"], both: ["Milk"], only: true },
     },
   ],
 };
@@ -407,7 +407,7 @@ const m5: MissionDef = {
       ],
       ladder: ["Can a triple be more common than a pair inside it?", "At most 2 receipts can have Bread, Butter and Eggs, because only 2 have Butter and Eggs."],
       explain: "A superset of a rare itemset is always rare, so it's pruned without counting.",
-      highlight: { lit: ["Butter"], both: ["Eggs"] },
+      highlight: { lit: ["Butter"], both: ["Eggs"], only: true },
     },
     {
       id: "m5-cand", type: "mc", prompt: "The frequent pairs are Bread·Butter, Bread·Milk, Bread·Eggs and Butter·Milk. Which triple is worth counting?", layout: "list",
@@ -426,7 +426,7 @@ const m5: MissionDef = {
       first: "Look for receipts with all three tokens.",
       ladder: ["Bread and butter are together on #1, #2, #4, #6 and #10. Which also have milk?", "#1, #6 and #10."],
       explain: "Three receipts: exactly the minimum, so it's frequent.",
-      highlight: { lit: ["Bread", "Butter"], both: ["Milk"] },
+      highlight: { lit: ["Bread", "Butter"], both: ["Milk"], only: true },
     },
     {
       id: "m5-why", type: "mc", prompt: "Why does Apriori save work?", layout: "list",
