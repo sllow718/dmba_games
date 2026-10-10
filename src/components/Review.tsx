@@ -24,6 +24,8 @@ export function Review({ def, data, dataLabel, compact, brief, finishLabel, onFi
   }, [card, step]);
 
   const last = card === 3;
+  // The worked example must be stepped through before moving on.
+  const stepsLeft = card === 2 && step < def.steps.length;
   const highlight = card === 2 && step > 0 ? def.steps[step - 1].highlight : null;
   const say = card === 2 && step > 0 ? def.steps[step - 1].say : card === 0 && brief ? brief : def.says[card];
   const go = (c: number) => { moved.current = true; setCard(c); };
@@ -61,6 +63,7 @@ export function Review({ def, data, dataLabel, compact, brief, finishLabel, onFi
                 <button type="button" className="btn alt" ref={focusRef} onClick={() => { moved.current = true; setStep(step + 1); }}>
                   Show next step ({step + 1} of {def.steps.length})
                 </button>
+                <p className="worth">Show every step to unlock Next.</p>
               </div>
             )}
           </>
@@ -79,7 +82,7 @@ export function Review({ def, data, dataLabel, compact, brief, finishLabel, onFi
             {last ? (
               <button type="button" className="btn" onClick={onFinish}>{finishLabel}</button>
             ) : (
-              <button type="button" className="btn" ref={card === 2 && step >= def.steps.length ? focusRef : undefined} onClick={() => go(card + 1)}>Next</button>
+              <button type="button" className="btn" disabled={stepsLeft} ref={card === 2 && !stepsLeft ? focusRef : undefined} onClick={() => go(card + 1)}>Next</button>
             )}
           </span>
         </div>
