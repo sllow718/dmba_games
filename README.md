@@ -40,7 +40,7 @@ npm run build      # static site in dist/
 `.mcp.json` registers Firebase's MCP server (`scripts/firebase-mcp.sh`, which runs `firebase-tools mcp`), so Claude Code sessions in this repo can create, configure and deploy Firebase projects. It needs Firebase credentials:
 
 - **On your own machine:** run `npx firebase-tools login` once.
-- **In a Claude Code cloud session:** add an environment variable `FIREBASE_SERVICE_ACCOUNT` containing a service account key (JSON) with the Firebase Hosting Admin role. The script writes it to a private temp file for the server.
+- **In a Claude Code cloud session:** add an environment variable `FIREBASE_SERVICE_ACCOUNT` containing a service account key with the Firebase Hosting Admin role, base64-encoded so it fits on one line (`base64 -i key.json | tr -d '\n'`). One-line JSON also works. The script writes it to a private temp file for the server.
 
 ## Project layout
 
