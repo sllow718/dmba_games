@@ -334,6 +334,18 @@ a.shop:hover .sign { text-decoration: underline; text-underline-offset: 3px; }
 .lu-cut.on::before { border-left: 3px solid var(--brand); }
 .lu-cut.on span { color: var(--brand-dk); }
 
+/* a formula whose terms wrap whole, never mid-term */
+.formula.terms { column-gap: 6px; row-gap: 2px; }
+.formula.terms span { white-space: nowrap; }
+@media (max-width: 420px) { .formula.terms { font-size: 0.86rem; padding: 10px 12px; } }
+
+/* small reference table inside review cards */
+.mini { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 4px 0 10px; }
+.mini th, .mini td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--edge); }
+.mini thead th { color: var(--sub); font-weight: 800; }
+.mini tbody th { font-weight: 700; }
+.mini td { font-variant-numeric: tabular-nums; font-weight: 800; }
+
 /* confusion matrix */
 .cm { width: 100%; border-collapse: separate; border-spacing: 4px; font-size: 0.86rem; background: var(--paper); border-radius: 12px; padding: 6px; box-shadow: 0 3px 0 rgba(35,48,42,.1); }
 .cm caption { text-align: left; font-family: var(--display); font-weight: 800; padding: 0 4px 4px; }

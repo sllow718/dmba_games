@@ -110,7 +110,7 @@ const m2: Mission = {
   data: TRAIN,
   dataLabel: PAST,
   brief: "A good leaf is one where everyone had the same outcome. I need a number for how mixed a group is.",
-  card: { formula: "Gini = 1 − p₁² − p₂² · Entropy = −p₁ log₂ p₁ − p₂ log₂ p₂", example: "5 repaid, 1 defaulted: Gini 0.278, entropy 0.650" },
+  card: { formula: "Gini = 1 − (share repaid)² − (share defaulted)² · Entropy = − Σ share × log₂(share)", example: "5 repaid, 1 defaulted: Gini 0.278, entropy 0.650" },
   review: {
     title: "Impurity: Gini and entropy",
     what: (
@@ -122,9 +122,17 @@ const m2: Mission = {
     ),
     how: (
       <>
-        <div className="formula">Gini = 1 − p<sub>repaid</sub>² − p<sub>default</sub>²</div>
-        <div className="formula">Entropy = − p<sub>repaid</sub> log₂ p<sub>repaid</sub> − p<sub>default</sub> log₂ p<sub>default</sub></div>
-        <p>p is the share of the group with that outcome. A pure group scores 0 on both. A 50/50 group scores the most: Gini 0.5, entropy 1. (Treat 0 × log₂ 0 as 0.)</p>
+        <div className="formula terms"><span>Gini =</span><span>1</span><span>− (share repaid)²</span><span>− (share defaulted)²</span></div>
+        <div className="formula terms"><span>Entropy =</span><span>− share repaid × log₂(share repaid)</span><span>− share defaulted × log₂(share defaulted)</span></div>
+        <p><b>Share</b> = how many had that outcome ÷ how many are in the group. 5 repaid out of 6 gives a share of 5/6.</p>
+        <table className="mini">
+          <thead><tr><th scope="col">Group</th><th scope="col">Gini</th><th scope="col">Entropy</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Pure: 6 repaid, 0 defaulted</th><td>0</td><td>0</td></tr>
+            <tr><th scope="row">Even: 3 repaid, 3 defaulted</th><td>0.5 (highest)</td><td>1 (highest)</td></tr>
+          </tbody>
+        </table>
+        <p style={{ color: "var(--sub)", fontSize: "0.9rem" }}>If a share is 0, leave that part out of the entropy.</p>
       </>
     ),
     exampleTitle: "Impurity of the good-credit group",
