@@ -1,0 +1,297 @@
+<title>Basket Detective Visual Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400&family=Public+Sans:wght@400;600;700&family=Baloo+2:wght@600;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,700&display=swap">
+<style>
+/* Layout: a review page. Chrome is quiet and theme-aware; each direction's mockup is a fixed light "screen" with its own palette, shown as the real product would look. */
+:root {
+  --bg: #f3f3f1; --fg: #1c1c1b; --muted: #66665f; --line: #d9d9d3; --surface: #ffffff; --mark: #1c1c1b;
+  --sans: "Public Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #151514; --fg: #ecebe6; --muted: #a3a29a; --line: #34342f; --surface: #1e1e1c; --mark: #ecebe6; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #151514; --fg: #ecebe6; --muted: #a3a29a; --line: #34342f; --surface: #1e1e1c; --mark: #ecebe6; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 90px; }
+.col { max-width: 70ch; }
+h1 { font-family: var(--sans); font-weight: 700; font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 12px; text-wrap: balance; }
+h2 { font-weight: 700; font-size: 1.45rem; line-height: 1.2; margin: 72px 0 8px; text-wrap: balance; }
+h3 { font-size: 1rem; margin: 0 0 6px; }
+p { margin: 0 0 12px; }
+.muted { color: var(--muted); }
+.diag { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 32px; margin-top: 18px; padding: 0; list-style: none; }
+.diag li { border-top: 1px solid var(--line); padding: 12px 0; min-width: 0; }
+.diag b { display: block; }
+.dir-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.dir-head .tagline { color: var(--muted); }
+.rec { display: inline-block; font-size: 0.8rem; font-weight: 700; border: 1.5px solid var(--mark); padding: 1px 8px; border-radius: 2px; }
+.frame { margin-top: 16px; overflow-x: auto; border-radius: 6px; box-shadow: 0 1px 0 var(--line), 0 12px 32px -18px rgba(0,0,0,.35); }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-top: 18px; }
+.notes > div { min-width: 0; }
+.notes h3 { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.notes ul { margin: 0; padding-left: 18px; }
+.sw { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.sw i { width: 28px; height: 28px; border-radius: 3px; border: 1px solid var(--line); }
+.cmp { overflow-x: auto; margin-top: 16px; }
+.cmp table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.95rem; }
+.cmp th, .cmp td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cmp th { font-weight: 600; color: var(--muted); font-size: 0.85rem; }
+
+/* ===== Direction 1: Workbook ===== */
+.wb { --paper: #ffffff; --ink: #1d1d1f; --pencil: #6e6e73; --rule: #e6e6e6; --red: #c4302b; --hl: #ffe45c; --tick: #2f7d32;
+  background: var(--paper); color: var(--ink); font-family: "Public Sans", sans-serif; min-width: 860px; padding: 0 0 32px; }
+.wb-top { display: flex; justify-content: space-between; align-items: center; padding: 14px 32px; border-bottom: 1px solid var(--rule); font-size: 0.88rem; }
+.wb-top .crumb b { font-weight: 700; }
+.wb-top .crumb span { color: var(--pencil); }
+.wb-top a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.wb-prog { display: flex; gap: 4px; padding: 0 32px; margin-top: -1px; }
+.wb-prog i { height: 3px; flex: 1; background: var(--rule); }
+.wb-prog i.d { background: var(--ink); }
+.wb-body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; padding: 36px 32px 0; }
+.wb-q .num { font-family: "Newsreader", serif; font-style: italic; color: var(--pencil); font-size: 1.05rem; }
+.wb-q h4 { font-family: "Newsreader", serif; font-weight: 500; font-size: 2rem; line-height: 1.2; margin: 4px 0 26px; letter-spacing: -0.01em; }
+.wb-ans { display: flex; align-items: flex-end; gap: 16px; }
+.wb-ans .field { font-family: "Newsreader", serif; font-size: 1.6rem; border-bottom: 2px solid var(--ink); width: 180px; padding: 0 4px 2px; position: relative; }
+.wb-ans .field s { text-decoration-color: var(--red); text-decoration-thickness: 2px; color: var(--pencil); }
+.wb-ans .field em { position: absolute; right: 4px; bottom: 6px; font-style: normal; color: var(--red); font-family: "Public Sans"; font-size: .8rem; font-weight: 700; }
+.wb-btn { background: var(--ink); color: #fff; border: 0; font: 600 0.95rem "Public Sans"; padding: 11px 20px; border-radius: 2px; }
+.wb-note { margin-top: 30px; border-left: 2px solid var(--red); padding: 2px 0 2px 16px; max-width: 46ch; }
+.wb-note .who { font-size: .8rem; font-weight: 700; color: var(--red); }
+.wb-note p { font-family: "Newsreader", serif; font-size: 1.15rem; line-height: 1.45; margin: 2px 0 0; }
+.wb-data h5 { font-size: .8rem; font-weight: 600; color: var(--pencil); margin: 0 0 10px; }
+.wb-data table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+.wb-data td { padding: 6px 4px; border-bottom: 1px solid var(--rule); }
+.wb-data td:first-child { color: var(--pencil); width: 44px; font-variant-numeric: tabular-nums; }
+.wb-data mark { background: linear-gradient(100deg, transparent 2%, var(--hl) 4%, var(--hl) 94%, transparent 97%); padding: 0 3px; color: inherit; }
+.wb-data tr.out td { color: var(--pencil); }
+.wb-data .tally { margin-top: 10px; font-family: "Newsreader", serif; font-style: italic; color: var(--pencil); }
+
+/* ===== Direction 2: Matrix ===== */
+.mx { --bg: #f5f6f8; --card: #ffffff; --ink: #111418; --sub: #5d6570; --grid: #e1e4e9; --sel: #eaf0fb; --err: #c2382b;
+  --bread: #c4862a; --butter: #e2bf3b; --milk: #3b7bd6; --eggs: #df6c36; --coffee: #6a4835; --cookies: #8957c2;
+  background: var(--bg); color: var(--ink); font-family: "Archivo", sans-serif; min-width: 900px; }
+.mx-top { display: flex; justify-content: space-between; align-items: flex-end; padding: 22px 32px 18px; border-bottom: 1px solid var(--grid); background: var(--card); }
+.mx-title { display: flex; align-items: flex-end; gap: 14px; }
+.mx-title .n { font-weight: 800; font-stretch: 75%; font-size: 3rem; line-height: .8; font-variant-numeric: tabular-nums; }
+.mx-title .t { font-weight: 700; font-size: 1.25rem; line-height: 1.1; }
+.mx-title .t small { display: block; font-weight: 400; font-size: .85rem; color: var(--sub); }
+.mx-steps { display: flex; gap: 22px; font-size: .9rem; color: var(--sub); }
+.mx-steps .on { color: var(--ink); font-weight: 700; box-shadow: inset 0 -2px 0 var(--ink); padding-bottom: 4px; }
+.mx-steps .dn::before { content: "✓ "; }
+.mx-body { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; padding: 26px 32px 32px; }
+.mx-matrix { background: var(--card); border: 1px solid var(--grid); }
+.mx-matrix table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.mx-matrix th { font-weight: 600; font-size: .78rem; padding: 10px 4px 8px; text-align: center; vertical-align: bottom; border-bottom: 1px solid var(--grid); }
+.mx-matrix th .role { display: block; font-weight: 800; font-stretch: 85%; font-size: .68rem; letter-spacing: .08em; margin-bottom: 3px; }
+.mx-matrix th.if, .mx-matrix td.if { background: var(--sel); }
+.mx-matrix td { text-align: center; padding: 6px 4px; border-bottom: 1px solid var(--grid); }
+.mx-matrix td.r { text-align: left; padding-left: 14px; color: var(--sub); font-size: .85rem; width: 48px; }
+.mx-matrix tr.dim td { opacity: .32; }
+.mx-matrix .c { display: inline-block; width: 18px; height: 18px; border-radius: 3px; }
+.mx-matrix tfoot td { font-weight: 700; font-size: .85rem; border-bottom: 0; padding: 8px 4px; }
+.mx-q { display: grid; gap: 16px; align-content: start; }
+.mx-q .qn { font-size: .85rem; color: var(--sub); display: flex; gap: 6px; align-items: center; }
+.mx-q .qn i { width: 26px; height: 4px; background: var(--grid); }
+.mx-q .qn i.d { background: var(--ink); }
+.mx-q h4 { font-weight: 700; font-size: 1.6rem; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
+.mx-rule { display: inline-flex; gap: 6px; align-items: center; }
+.mx-rule .c { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.mx-in { display: flex; gap: 10px; }
+.mx-in .f { flex: 1; border: 1.5px solid var(--err); background: var(--card); padding: 10px 12px; font-size: 1.15rem; font-variant-numeric: tabular-nums; border-radius: 4px; }
+.mx-in .b { background: var(--ink); color: #fff; font-weight: 700; padding: 10px 18px; border-radius: 4px; }
+.mx-err { color: var(--err); font-size: .9rem; font-weight: 600; margin-top: -8px; }
+.mx-hint { background: var(--card); border: 1px solid var(--grid); border-top: 3px solid var(--ink); padding: 14px 16px; }
+.mx-hint .h { font-size: .8rem; font-weight: 800; font-stretch: 85%; letter-spacing: .06em; }
+.mx-hint p { margin: 4px 0 0; }
+.mx-calc { display: flex; gap: 16px; align-items: center; font-variant-numeric: tabular-nums; }
+.mx-calc .fr { display: inline-grid; text-align: center; font-weight: 800; font-stretch: 80%; font-size: 1.9rem; line-height: 1.05; }
+.mx-calc .fr span:first-child { border-bottom: 2px solid var(--ink); padding: 0 6px; }
+.mx-calc .fr .q { color: var(--sub); }
+.mx-calc small { color: var(--sub); font-size: .85rem; line-height: 1.4; }
+
+/* ===== Direction 3: Shop counter ===== */
+.sc { --counter: #d9e2d3; --counter-2: #cbd6c4; --paper: #fffdf7; --ink: #23302a; --sub: #5d6b63; --brand: #e4572e; --brand-dk: #b4401f; --ok: #2c8a57;
+  --bread: #d39a3c; --butter: #f0cc4a; --milk: #4f8fdf; --eggs: #ec8a4e; --coffee: #7a5640; --cookies: #9b6bd3;
+  background: var(--counter); background-image: radial-gradient(var(--counter-2) 1px, transparent 1.5px); background-size: 14px 14px;
+  color: var(--ink); font-family: "Nunito Sans", sans-serif; min-width: 900px; padding: 0 0 30px; }
+.sc-top { display: flex; justify-content: space-between; align-items: center; padding: 14px 28px; background: var(--ink); color: #fff; }
+.sc-top .logo { font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 1.35rem; }
+.sc-top .pips { display: flex; gap: 6px; }
+.sc-top .pips i { width: 30px; height: 10px; border-radius: 5px; background: rgba(255,255,255,.25); }
+.sc-top .pips i.d { background: #8fd3a9; } .sc-top .pips i.n { background: var(--butter); }
+.sc-body { display: grid; grid-template-columns: 1.2fr 1fr; gap: 26px; padding: 24px 28px 0; }
+.sc-slips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.slip { background: var(--paper); padding: 8px 8px 12px; box-shadow: 0 2px 0 rgba(0,0,0,.08); font-size: .74rem; }
+.slip:nth-child(odd) { transform: rotate(-1.4deg); } .slip:nth-child(3n) { transform: rotate(1.2deg); }
+.slip .no { font-weight: 700; color: var(--sub); border-bottom: 1px dashed #c9c9bd; margin-bottom: 6px; padding-bottom: 2px; }
+.slip .tok { display: flex; flex-wrap: wrap; gap: 4px; }
+.tok i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: .62rem; color: #fff; }
+.slip.lit { outline: 3px solid var(--brand); outline-offset: 2px; }
+.slip.dim { opacity: .45; }
+.sc-key { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; font-size: .8rem; }
+.sc-key span { display: inline-flex; gap: 5px; align-items: center; }
+.sc-q { display: grid; gap: 14px; align-content: start; }
+.sc-card { background: var(--paper); border-radius: 14px; padding: 18px; box-shadow: 0 3px 0 rgba(0,0,0,.08); }
+.sc-card .k { font-family: "Baloo 2"; font-weight: 600; color: var(--sub); }
+.sc-card h4 { font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 1.55rem; line-height: 1.15; margin: 0 0 12px; }
+.sc-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sc-opts span { border: 2px solid #d7d3c4; border-bottom-width: 4px; border-radius: 10px; padding: 8px; text-align: center; font-weight: 700; font-size: 1.05rem; }
+.sc-opts span.x { border-color: #e9b4a6; color: #b9a49d; text-decoration: line-through; }
+.sc-owner { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; }
+.sc-owner .av { width: 52px; height: 52px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-family: "Baloo 2"; font-weight: 800; font-size: 1.2rem; }
+.sc-bubble { background: var(--paper); border-radius: 14px; border-top-left-radius: 2px; padding: 12px 14px; box-shadow: 0 3px 0 rgba(0,0,0,.08); }
+.sc-bubble b { color: var(--brand-dk); font-family: "Baloo 2"; }
+.sc-btn { justify-self: start; background: var(--brand); color: #fff; font-family: "Baloo 2"; font-weight: 800; font-size: 1.1rem; padding: 8px 22px; border-radius: 12px; box-shadow: 0 4px 0 var(--brand-dk); }
+</style>
+
+<div class="wrap">
+  <header class="col">
+    <p class="muted" style="margin:0 0 6px">Basket Detective · visual design review</p>
+    <h1>Three directions for the game's look</h1>
+    <p>All three show the same moment so they can be compared directly. The moment is Mission 3, question 2: "What is the confidence of Bread → Butter?" The student has answered 50% (wrong), and a hint is showing.</p>
+  </header>
+
+  <h2>Why the current mockups look generated</h2>
+  <ul class="diag">
+    <li><b>Everything is a bordered, rounded box.</b> Panels, cards, chips, metrics and receipts all get the same treatment, so nothing stands out.</li>
+    <li><b>A dark slate panel with one yellow accent.</b> This is the default "AI dashboard" look and doesn't come from the subject.</li>
+    <li><b>Small uppercase monospace labels everywhere.</b> "MISSION 3 · CHECKPOINT" on every block adds noise without adding meaning.</li>
+    <li><b>Ornaments instead of information.</b> Pills, ★★☆ stars and emoji locks fill space but don't explain anything.</li>
+    <li><b>Items have no visual identity.</b> Bread and Milk look the same, so students can't <em>see</em> a pattern. Seeing patterns is the whole point of association rules.</li>
+    <li><b>The receipts are decoration.</b> The jagged paper edge is cute, but it hides the structure the course teaches: transactions × items.</li>
+  </ul>
+
+  <!-- Direction 1 -->
+  <h2>1 · Workbook</h2>
+  <div class="dir-head"><span class="tagline">A calm, printed-worksheet feel. The question gets the space and the hint reads like a tutor's note in the margin.</span></div>
+  <div class="frame"><div class="wb" role="img" aria-label="Workbook direction mockup">
+    <div class="wb-top"><span class="crumb"><b>Basket Detective</b> <span>/ Mission 3: If this, then that</span></span><span><a>Review the concept</a> &nbsp;·&nbsp; Question 2 of 3</span></div>
+    <div class="wb-prog"><i class="d"></i><i></i><i></i></div>
+    <div class="wb-body">
+      <div class="wb-q">
+        <span class="num">Question 2</span>
+        <h4>What is the confidence of the rule Bread → Butter?</h4>
+        <div class="wb-ans"><span class="field"><s>50%</s><em>Not quite</em></span><span class="wb-btn">Check answer</span></div>
+        <div class="wb-note"><span class="who">Hint</span>
+          <p>50% is 5 out of all 10 receipts. That's the support. Confidence only counts the receipts that contain Bread. They're highlighted on the right.</p></div>
+      </div>
+      <div class="wb-data">
+        <h5>Corner Mart receipts, Saturday morning</h5>
+        <table>
+          <tr><td>T1</td><td><mark>Bread</mark>, Butter, Milk</td></tr>
+          <tr><td>T2</td><td><mark>Bread</mark>, Butter</td></tr>
+          <tr class="out"><td>T3</td><td>Milk, Coffee, Cookies</td></tr>
+          <tr><td>T4</td><td><mark>Bread</mark>, Butter, Eggs</td></tr>
+          <tr class="out"><td>T5</td><td>Milk, Eggs</td></tr>
+          <tr><td>T6</td><td><mark>Bread</mark>, Milk, Butter, Cookies</td></tr>
+          <tr class="out"><td>T7</td><td>Coffee, Cookies</td></tr>
+          <tr><td>T8</td><td><mark>Bread</mark>, Eggs</td></tr>
+          <tr class="out"><td>T9</td><td>Milk, Coffee</td></tr>
+          <tr><td>T10</td><td><mark>Bread</mark>, Butter, Milk, Eggs</td></tr>
+        </table>
+        <p class="tally">6 receipts contain Bread.</p>
+      </div>
+    </div>
+  </div></div>
+  <div class="notes">
+    <div><h3>Type</h3>Newsreader (serif) for questions and hints. Public Sans for the interface.</div>
+    <div><h3>Colour</h3>White paper, black ink, a red pen for corrections and a yellow highlighter for data.<div class="sw"><i style="background:#fff"></i><i style="background:#1d1d1f"></i><i style="background:#c4302b"></i><i style="background:#ffe45c"></i></div></div>
+    <div><h3>Signature detail</h3>Highlighter strokes on the data and a red-pen strike-through on wrong answers. Students already know these marks from paper.</div>
+    <div><h3>Fits / risks</h3>Feels serious and readable for university students. The risk is that it feels like homework rather than a game.</div>
+  </div>
+
+  <!-- Direction 2 -->
+  <h2>2 · Data matrix <span class="rec">Recommended</span></h2>
+  <div class="dir-head"><span class="tagline">The board is the transaction × item matrix the course uses. Every item has its own colour, so patterns show up as colour lining up across columns.</span></div>
+  <div class="frame"><div class="mx" role="img" aria-label="Data matrix direction mockup">
+    <div class="mx-top">
+      <div class="mx-title"><span class="n">03</span><span class="t">If this, then that<small>Basket Detective · Confidence</small></span></div>
+      <div class="mx-steps"><span class="dn">Review</span><span class="dn">Explore</span><span class="on">Checkpoint</span><span>Results</span></div>
+    </div>
+    <div class="mx-body">
+      <div class="mx-matrix"><table>
+        <thead><tr><th></th><th class="if"><span class="role">IF</span>Bread</th><th><span class="role">THEN</span>Butter</th><th><span class="role">&nbsp;</span>Milk</th><th><span class="role">&nbsp;</span>Eggs</th><th><span class="role">&nbsp;</span>Coffee</th><th><span class="role">&nbsp;</span>Cookies</th></tr></thead>
+        <tbody id="mxRows"></tbody>
+        <tfoot><tr><td class="r">Total</td><td class="if">6</td><td>5</td><td>6</td><td>4</td><td>3</td><td>3</td></tr></tfoot>
+      </table></div>
+      <div class="mx-q">
+        <div class="qn"><i class="d"></i><i class="d"></i><i></i> Question 2 of 3</div>
+        <h4>What is the confidence of <span style="white-space:nowrap"><span class="mx-rule"><span class="c" style="background:var(--bread)"></span>Bread</span> → <span class="mx-rule"><span class="c" style="background:var(--butter)"></span>Butter</span></span>?</h4>
+        <div class="mx-in"><span class="f">50%</span><span class="b">Check</span></div>
+        <div class="mx-err">Not quite. You've used all 10 receipts.</div>
+        <div class="mx-hint"><span class="h">HINT 2 OF 3</span>
+          <p>Confidence only looks at receipts with Bread. The other rows are faded. How many of the 6 remaining rows also have Butter?</p></div>
+        <div class="mx-calc"><span class="fr"><span class="q">?</span><span>6</span></span><small>receipts with Bread <b>and</b> Butter<br>÷ receipts with Bread</small></div>
+      </div>
+    </div>
+  </div></div>
+  <div class="notes">
+    <div><h3>Type</h3>Archivo throughout, using its condensed widths for large numbers and labels. Tabular figures in all data.</div>
+    <div><h3>Colour</h3>Cool neutral greys and black ink. One fixed colour per item, kept the same in every mission.<div class="sw"><i style="background:#c4862a"></i><i style="background:#e2bf3b"></i><i style="background:#3b7bd6"></i><i style="background:#df6c36"></i><i style="background:#6a4835"></i><i style="background:#8957c2"></i></div></div>
+    <div><h3>Signature detail</h3>The fraction under the question fills in as the student works. The hint fades rows that don't count, so the denominator is visible.</div>
+    <div><h3>Fits / risks</h3>Teaches the data structure itself, and the same matrix carries Apriori in Mission 5. Every column is labelled with its item name, so it doesn't rely on colour alone.</div>
+  </div>
+
+  <!-- Direction 3 -->
+  <h2>3 · Shop counter</h2>
+  <div class="dir-head"><span class="tagline">Tactile and game-like. Receipts are paper slips on the counter, items are coloured tokens, and the shop owner talks to the student.</span></div>
+  <div class="frame"><div class="sc" role="img" aria-label="Shop counter direction mockup">
+    <div class="sc-top"><span class="logo">Corner Mart</span><span class="pips"><i class="d"></i><i class="d"></i><i class="n"></i><i></i><i></i><i></i></span><span>Mission 3 · Question 2 of 3</span></div>
+    <div class="sc-body">
+      <div>
+        <div class="sc-slips" id="scSlips"></div>
+        <div class="sc-key" id="scKey"></div>
+      </div>
+      <div class="sc-q">
+        <div class="sc-card"><span class="k">Question 2</span><h4>What is the confidence of Bread → Butter?</h4>
+          <div class="sc-opts"><span class="x">50%</span><span>60%</span><span>83%</span><span>100%</span></div></div>
+        <div class="sc-owner"><span class="av">MT</span><div class="sc-bubble"><b>Mrs Tan:</b> Hmm, 50% counts every customer. I only want the ones who bought <b>bread</b>. I've lit up their receipts for you.</div></div>
+        <span class="sc-btn">Try again</span>
+      </div>
+    </div>
+  </div></div>
+  <div class="notes">
+    <div><h3>Type</h3>Baloo 2 for headings and buttons. Nunito Sans for body text.</div>
+    <div><h3>Colour</h3>Sage-green counter, warm paper, and a tomato-red brand colour with pressable buttons.<div class="sw"><i style="background:#d9e2d3"></i><i style="background:#fffdf7"></i><i style="background:#e4572e"></i><i style="background:#23302a"></i></div></div>
+    <div><h3>Signature detail</h3>A shop-owner character gives the hints, so feedback feels like part of the story rather than a red error.</div>
+    <div><h3>Fits / risks</h3>The most fun, and the best fit for secondary-school students. It may feel young for university classes, and the character needs illustration work.</div>
+  </div>
+
+  <h2>Side by side</h2>
+  <div class="cmp"><table>
+    <thead><tr><th></th><th>1 · Workbook</th><th>2 · Data matrix</th><th>3 · Shop counter</th></tr></thead>
+    <tbody>
+      <tr><td><b>Best for</b></td><td>University, revision</td><td>University / polytechnic DMBA course</td><td>Secondary school, outreach</td></tr>
+      <tr><td><b>Shows the pattern</b></td><td>Highlighter on words</td><td>Colour lines up in columns</td><td>Coloured tokens on slips</td></tr>
+      <tr><td><b>Game feel</b></td><td>Low</td><td>Medium</td><td>High</td></tr>
+      <tr><td><b>Scales to later activities</b></td><td>Yes, text-led</td><td>Yes. Clustering, trees and k-NN all use tables of rows</td><td>Each activity needs a new setting and character</td></tr>
+      <tr><td><b>Build effort</b></td><td>Lowest</td><td>Medium</td><td>Highest (illustration)</td></tr>
+    </tbody>
+  </table></div>
+
+  <section class="col">
+    <h2>Recommendation</h2>
+    <p><b>Go with 2 · Data matrix</b> and borrow the margin-note hint style from the Workbook. The matrix makes the concept itself visible: support is how full a column is, confidence is a fraction of the highlighted rows. The look also carries over to the later activities, which all work on tables of data.</p>
+    <p class="muted">Once you pick a direction, I'll redo every screen in the main design doc in that style: hub, mission map, quick review, explore board, checkpoint and results.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  const ITEMS = ["Bread", "Butter", "Milk", "Eggs", "Coffee", "Cookies"];
+  const VAR = { Bread: "bread", Butter: "butter", Milk: "milk", Eggs: "eggs", Coffee: "coffee", Cookies: "cookies" };
+  const ABBR = { Bread: "Br", Butter: "Bu", Milk: "Mi", Eggs: "Eg", Coffee: "Co", Cookies: "Ck" };
+  const T = [
+    ["Bread", "Butter", "Milk"], ["Bread", "Butter"], ["Milk", "Coffee", "Cookies"],
+    ["Bread", "Butter", "Eggs"], ["Milk", "Eggs"], ["Bread", "Milk", "Butter", "Cookies"],
+    ["Coffee", "Cookies"], ["Bread", "Eggs"], ["Milk", "Coffee"], ["Bread", "Butter", "Milk", "Eggs"]
+  ];
+  document.getElementById("mxRows").innerHTML = T.map((t, i) =>
+    `<tr class="${t.includes("Bread") ? "" : "dim"}"><td class="r">T${i + 1}</td>` +
+    ITEMS.map((it, j) => `<td class="${j === 0 ? "if" : ""}">${t.includes(it) ? `<span class="c" style="background:var(--${VAR[it]})"></span>` : ""}</td>`).join("") + "</tr>").join("");
+  document.getElementById("scSlips").innerHTML = T.map((t, i) =>
+    `<div class="slip ${t.includes("Bread") ? "lit" : "dim"}"><div class="no">#${i + 1}</div><div class="tok">` +
+    t.map((it) => `<i style="background:var(--${VAR[it]})">${ABBR[it]}</i>`).join("") + "</div></div>").join("");
+  document.getElementById("scKey").innerHTML = ITEMS.map((it) =>
+    `<span><span class="tok"><i style="background:var(--${VAR[it]})">${ABBR[it]}</i></span>${it}</span>`).join("");
+})();
+</script>
