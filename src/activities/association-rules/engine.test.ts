@@ -81,16 +81,16 @@ describe("strong rules in the week sample", () => {
   const rules = strongRules(WEEK, { minSupport: 0.2, minConfidence: 0.6, minLift: 1 });
   const names = rules.map((r) => `${r.if.join("+")}→${r.then.join("+")}`);
   it("includes the designed rules", () => {
-    expect(names).toEqual(expect.arrayContaining(["Pasta+Sauce→Parmesan", "Chips→Soda", "Coffee→Cookies"]));
+    expect(names).toEqual(expect.arrayContaining(["Pasta+Tomato→Cheese", "Fries→Soda", "Coffee→Cookies"]));
   });
   it("excludes the decoys", () => {
-    expect(names).not.toContain("Wine→Parmesan"); // strong but only 10% support
+    expect(names).not.toContain("Wine→Cheese"); // strong but only 10% support
     expect(names.some((n) => n.endsWith("→Milk"))).toBe(false); // milk is everywhere: lift < 1
-    expect(r2(ruleStats(WEEK, { if: ["Wine"], then: ["Parmesan"] }).lift)).toBe(4.29);
+    expect(r2(ruleStats(WEEK, { if: ["Wine"], then: ["Cheese"] }).lift)).toBe(4.29);
     expect(ruleStats(WEEK, { if: ["Pasta"], then: ["Milk"] }).lift).toBeLessThan(1);
   });
-  it("Pasta + Sauce → Parmesan", () => {
-    const s = ruleStats(WEEK, { if: ["Pasta", "Sauce"], then: ["Parmesan"] });
+  it("Pasta + Tomato → Cheese", () => {
+    const s = ruleStats(WEEK, { if: ["Pasta", "Tomato"], then: ["Cheese"] });
     expect([s.support, s.confidence, r2(s.lift)]).toEqual([0.2, 0.75, 3.21]);
   });
 });

@@ -16,7 +16,7 @@ const expected: Record<string, number> = {
   "m4-base": support(SATURDAY, ["Milk"]),
   "m4-lift": S(["Bread"], ["Milk"]).lift,
   "m5-count": count(SATURDAY, ["Bread", "Butter", "Milk"]),
-  "m6-conf": W(["Pasta", "Sauce"], ["Parmesan"]).confidence,
+  "m6-conf": W(["Pasta", "Tomato"], ["Cheese"]).confidence,
 };
 
 describe("mission content", () => {
@@ -67,11 +67,11 @@ describe("numbers quoted in mission text", () => {
   it("Mission 6 rules", () => {
     const pm = W(["Pasta"], ["Milk"]);
     expect([Math.round(pm.support * 100), Math.round(pm.confidence * 100), +pm.lift.toFixed(2)]).toEqual([17, 56, 0.88]);
-    const cs = W(["Chips"], ["Soda"]);
+    const cs = W(["Fries"], ["Soda"]);
     expect([cs.count, cs.countIf, cs.countThen, +cs.lift.toFixed(2)]).toEqual([7, 8, 8, 3.28]);
-    const wp = W(["Wine"], ["Parmesan"]);
+    const wp = W(["Wine"], ["Cheese"]);
     expect([wp.support, wp.confidence, +wp.lift.toFixed(2)]).toEqual([0.1, 1, 4.29]);
     expect(Math.round(support(WEEK, ["Milk"]) * 100)).toBe(63);
-    expect(W(["Pasta", "Sauce"], ["Parmesan"]).lift.toFixed(2)).toBe("3.21");
+    expect(W(["Pasta", "Tomato"], ["Cheese"]).lift.toFixed(2)).toBe("3.21");
   });
 });

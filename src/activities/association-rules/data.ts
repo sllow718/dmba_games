@@ -13,9 +13,9 @@ export const ITEMS: Record<string, ItemInfo> = {
   Coffee: { icon: "☕", color: "#6e4a34" },
   Cookies: { icon: "🍪", color: "#8458c2" },
   Pasta: { icon: "🍝", color: "#c99a1e" },
-  Sauce: { icon: "🍅", color: "#c2362b" },
-  Parmesan: { icon: "🧀", color: "#7b8b2a" },
-  Chips: { icon: "🍟", color: "#d4870f" },
+  Tomato: { icon: "🍅", color: "#c2362b" },
+  Cheese: { icon: "🧀", color: "#7b8b2a" },
+  Fries: { icon: "🍟", color: "#d4870f" },
   Soda: { icon: "🥤", color: "#167f86" },
   Wine: { icon: "🍷", color: "#7c2148" },
 };
@@ -46,26 +46,26 @@ export const SATURDAY_ITEMS = ["Bread", "Butter", "Milk", "Eggs", "Coffee", "Coo
 /**
  * Corner Mart, a full week sample of 30 receipts for Mission 6. At support ≥ 20%, confidence ≥ 60%
  * and lift > 1 it contains a small set of strong rules plus decoys: Milk is in most baskets
- * (high confidence, lift < 1) and Wine → Parmesan is strong but too rare.
+ * (high confidence, lift < 1) and Wine → Cheese is strong but too rare.
  */
 export const WEEK: Transaction[] = [
-  ["Pasta", "Sauce", "Parmesan", "Milk"],
-  ["Pasta", "Sauce", "Parmesan"],
-  ["Pasta", "Sauce", "Parmesan", "Wine"],
-  ["Pasta", "Sauce", "Parmesan", "Bread"],
-  ["Pasta", "Sauce", "Parmesan", "Milk"],
-  ["Pasta", "Sauce", "Parmesan", "Wine"],
-  ["Pasta", "Sauce", "Milk"],
-  ["Pasta", "Sauce", "Bread", "Milk"],
+  ["Pasta", "Tomato", "Cheese", "Milk"],
+  ["Pasta", "Tomato", "Cheese"],
+  ["Pasta", "Tomato", "Cheese", "Wine"],
+  ["Pasta", "Tomato", "Cheese", "Bread"],
+  ["Pasta", "Tomato", "Cheese", "Milk"],
+  ["Pasta", "Tomato", "Cheese", "Wine"],
+  ["Pasta", "Tomato", "Milk"],
+  ["Pasta", "Tomato", "Bread", "Milk"],
   ["Pasta", "Milk"],
-  ["Chips", "Soda", "Milk"],
-  ["Chips", "Soda"],
-  ["Chips", "Soda", "Bread"],
-  ["Chips", "Soda", "Milk"],
-  ["Chips", "Soda", "Cookies"],
-  ["Chips", "Soda"],
-  ["Chips", "Soda", "Milk"],
-  ["Chips", "Milk"],
+  ["Fries", "Soda", "Milk"],
+  ["Fries", "Soda"],
+  ["Fries", "Soda", "Bread"],
+  ["Fries", "Soda", "Milk"],
+  ["Fries", "Soda", "Cookies"],
+  ["Fries", "Soda"],
+  ["Fries", "Soda", "Milk"],
+  ["Fries", "Milk"],
   ["Coffee", "Cookies", "Milk"],
   ["Coffee", "Cookies"],
   ["Coffee", "Cookies", "Milk"],
@@ -78,5 +78,5 @@ export const WEEK: Transaction[] = [
   ["Bread", "Milk", "Eggs"],
   ["Milk", "Eggs"],
   ["Soda", "Milk"],
-  ["Wine", "Parmesan", "Milk"],
+  ["Wine", "Cheese", "Milk"],
 ];

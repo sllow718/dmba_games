@@ -450,7 +450,7 @@ const m6: MissionDef = {
   data: WEEK,
   dataLabel: "Corner Mart · one week · 30 receipts",
   brief: "This is a full week of receipts. I want three rules I can act on by Monday: support at least 20%, confidence at least 60%, and lift above 1.",
-  card: { formula: "support → confidence → lift → action", example: "Chips → Soda: 23% · 88% · lift 3.28 → display them together" },
+  card: { formula: "support → confidence → lift → action", example: "Fries → Soda: 23% · 88% · lift 3.28 → display them together" },
   review: {
     title: "Putting it together",
     what: (
@@ -469,11 +469,11 @@ const m6: MissionDef = {
         <p>Mrs Tan's thresholds: support ≥ 20%, confidence ≥ 60%, lift &gt; 1.</p>
       </>
     ),
-    exampleTitle: "Chips → Soda on this week's receipts",
+    exampleTitle: "Fries → Soda on this week's receipts",
     steps: [
-      { text: <>Support: receipts with <Token item="Chips" /> and <Token item="Soda" />.</>, eq: "7 ÷ 30 = 23% ✓", say: "Seven baskets out of thirty. Common enough.", highlight: { lit: ["Chips"], both: ["Soda"], only: true } },
-      { text: "Confidence: of the 8 chips buyers, how many took soda?", eq: "7 ÷ 8 = 88% ✓", say: "Nearly every chips buyer takes soda.", highlight: { lit: ["Chips"], both: ["Soda"] } },
-      { text: "Lift: compare with soda's normal rate of 8 ÷ 30 = 27%.", eq: "88% ÷ 27% = 3.28 ✓", say: "More than three times as likely as usual. That's a rule I can use.", highlight: { lit: ["Chips"], both: ["Soda"] } },
+      { text: <>Support: receipts with <Token item="Fries" /> and <Token item="Soda" />.</>, eq: "7 ÷ 30 = 23% ✓", say: "Seven baskets out of thirty. Common enough.", highlight: { lit: ["Fries"], both: ["Soda"], only: true } },
+      { text: "Confidence: of the 8 fries buyers, how many took soda?", eq: "7 ÷ 8 = 88% ✓", say: "Nearly every fries buyer takes soda.", highlight: { lit: ["Fries"], both: ["Soda"] } },
+      { text: "Lift: compare with soda's normal rate of 8 ÷ 30 = 27%.", eq: "88% ÷ 27% = 3.28 ✓", say: "More than three times as likely as usual. That's a rule I can use.", highlight: { lit: ["Fries"], both: ["Soda"] } },
     ],
     remember: [
       "Check all three: support, confidence and lift.",
@@ -486,16 +486,16 @@ const m6: MissionDef = {
   explore: { goal: "Add three rules to the report that pass all three thresholds.", Component: ExploreReport },
   questions: [
     {
-      id: "m6-wine", type: "mc", prompt: "Wine → Parmesan has 100% confidence and lift 4.29. Why can't it go in the report?", layout: "list",
+      id: "m6-wine", type: "mc", prompt: "Wine → Cheese has 100% confidence and lift 4.29. Why can't it go in the report?", layout: "list",
       options: [
         { text: "Its support is only 10%, below the 20% minimum", correct: true },
         { text: "Its lift is too high", hint: "There's no upper limit on lift. Higher is better." },
-        { text: "Confidence can't really be 100%", hint: "It can: every wine buyer here took parmesan." },
-        { text: "Wine and parmesan are in different aisles", hint: "Aisles don't matter to the maths." },
+        { text: "Confidence can't really be 100%", hint: "It can: every wine buyer here took cheese." },
+        { text: "Wine and cheese are in different aisles", hint: "Aisles don't matter to the maths." },
       ],
       ladder: ["Check each of the three thresholds in turn.", "Wine is on only 3 of 30 receipts."],
-      explain: "Only 3 of 30 receipts (10%) have wine and parmesan. It's strong, but too rare to act on.",
-      highlight: { lit: ["Wine"], both: ["Parmesan"] },
+      explain: "Only 3 of 30 receipts (10%) have wine and cheese. It's strong, but too rare to act on.",
+      highlight: { lit: ["Wine"], both: ["Cheese"] },
     },
     {
       id: "m6-pasta-milk", type: "mc", prompt: "Pasta → Milk: support 17%, confidence 56%, lift 0.88. Which thresholds does it fail?", layout: "list",
@@ -510,38 +510,38 @@ const m6: MissionDef = {
       highlight: { lit: ["Pasta"], both: ["Milk"] },
     },
     {
-      id: "m6-conf", type: "num", kind: "proportion", prompt: "What is the confidence of {Pasta, Sauce} → Parmesan?", answer: 0.75,
+      id: "m6-conf", type: "num", kind: "proportion", prompt: "What is the confidence of {Pasta, Tomato} → Cheese?", answer: 0.75,
       traps: [
         { value: 0.2, hint: "That's the support: 6 of all 30 receipts." },
-        { value: 2 / 3, hint: "That's Pasta → Parmesan. The if side needs both pasta and sauce." },
+        { value: 2 / 3, hint: "That's Pasta → Cheese. The if side needs both pasta and tomato." },
       ],
-      first: "The if customers are the ones with both pasta and sauce.",
-      ladder: ["Pasta and sauce are together on 8 receipts. How many of those have parmesan?", "6 of those 8 have parmesan. So 6 ÷ 8 is…?"],
-      explain: "6 ÷ 8 = 75% of pasta-and-sauce buyers also took parmesan.",
-      highlight: { lit: ["Pasta", "Sauce"], both: ["Parmesan"] },
+      first: "The if customers are the ones with both pasta and tomato.",
+      ladder: ["Pasta and tomato are together on 8 receipts. How many of those have cheese?", "6 of those 8 have cheese. So 6 ÷ 8 is…?"],
+      explain: "6 ÷ 8 = 75% of pasta-and-tomato buyers also took cheese.",
+      highlight: { lit: ["Pasta", "Tomato"], both: ["Cheese"] },
     },
     {
-      id: "m6-action", type: "mc", prompt: "{Pasta, Sauce} → Parmesan passes every check (support 20%, confidence 75%, lift 3.21). What should Corner Mart do?", layout: "list",
+      id: "m6-action", type: "mc", prompt: "{Pasta, Tomato} → Cheese passes every check (support 20%, confidence 75%, lift 3.21). What should Corner Mart do?", layout: "list",
       options: [
-        { text: "Discount parmesan for everyone", hint: "That gives money away to people who'd buy it anyway. The rule is about pasta-and-sauce buyers." },
-        { text: "Shelve parmesan next to the pasta and sauce", correct: true },
-        { text: "Stop stocking tomato sauce", hint: "Sauce is part of the pattern. Removing it would lose sales." },
+        { text: "Discount cheese for everyone", hint: "That gives money away to people who'd buy it anyway. The rule is about pasta-and-tomato buyers." },
+        { text: "Shelve cheese next to the pasta and tomato", correct: true },
+        { text: "Stop stocking tomatoes", hint: "Tomato is part of the pattern. Removing it would lose sales." },
         { text: "Nothing, because the rule isn't reliable", hint: "It passes all three thresholds, so it's reliable enough to act on." },
       ],
-      ladder: ["The rule says pasta-and-sauce buyers are very likely to want parmesan.", "Put the then item where the if customers already are."],
-      explain: "Placing parmesan beside pasta and sauce reminds exactly the customers who are most likely to buy it.",
+      ladder: ["The rule says pasta-and-tomato buyers are very likely to want cheese.", "Put the then item where the if customers already are."],
+      explain: "Placing cheese beside pasta and tomato reminds exactly the customers who are most likely to buy it.",
     },
     {
-      id: "m6-lift", type: "mc", prompt: "Chips → Soda has lift 3.28. What does that mean?", layout: "list",
+      id: "m6-lift", type: "mc", prompt: "Fries → Soda has lift 3.28. What does that mean?", layout: "list",
       options: [
-        { text: "Chips buyers are 3.28 times as likely as average to buy soda", correct: true },
-        { text: "328% of chips buyers buy soda", hint: "Lift isn't a percentage of customers. That would be impossible." },
-        { text: "Soda is 3.28 times more popular than chips", hint: "Lift compares soda among chips buyers with soda among everyone." },
+        { text: "Fries buyers are 3.28 times as likely as average to buy soda", correct: true },
+        { text: "328% of fries buyers buy soda", hint: "Lift isn't a percentage of customers. That would be impossible." },
+        { text: "Soda is 3.28 times more popular than fries", hint: "Lift compares soda among fries buyers with soda among everyone." },
         { text: "3.28 customers bought soda", hint: "Lift is a ratio, not a count." },
       ],
-      ladder: ["Lift = confidence ÷ the normal rate of the then item.", "88% of chips buyers take soda, against 27% of all customers."],
-      explain: "88% ÷ 27% ≈ 3.28: chips buyers are over three times as likely to take soda.",
-      highlight: { lit: ["Chips"], both: ["Soda"] },
+      ladder: ["Lift = confidence ÷ the normal rate of the then item.", "88% of fries buyers take soda, against 27% of all customers."],
+      explain: "88% ÷ 27% ≈ 3.28: fries buyers are over three times as likely to take soda.",
+      highlight: { lit: ["Fries"], both: ["Soda"] },
     },
   ],
 };
