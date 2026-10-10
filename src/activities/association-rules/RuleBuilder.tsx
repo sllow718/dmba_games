@@ -55,9 +55,16 @@ export function RuleBuilder({ data, items, initial, compact, dataLabel, threshol
   const base = s ? s.countThen / s.n : 0;
   const t = thresholds;
 
+  const owner = <Owner>{s ? verdict(A, B, s) : "Pick at least one item on each side and I'll tell you if it's worth anything."}</Owner>;
+
   return (
     <>
-      {side && <div style={{ marginBottom: 16 }}>{side}</div>}
+      {side ? (
+        <div className="split" style={{ marginBottom: 16 }}>
+          {side}
+          {owner}
+        </div>
+      ) : null}
       <div className="split">
         <div className="stack">
           <p className="data-label">{dataLabel}</p>
@@ -123,7 +130,7 @@ export function RuleBuilder({ data, items, initial, compact, dataLabel, threshol
               <div className="w" style={{ fontSize: ".85rem" }}>Lift = {pct(s.confidence)} ÷ {pct(base)} = <b>{s.lift.toFixed(2)}</b></div>
             </div>
           )}
-          <Owner>{s ? verdict(A, B, s) : "Pick at least one item on each side and I'll tell you if it's worth anything."}</Owner>
+          {!side && owner}
         </div>
       </div>
     </>
