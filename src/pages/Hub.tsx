@@ -16,12 +16,10 @@ export function Hub() {
       <main>
         <div className="page-head">
           <h1>Pick a shop</h1>
-          <p>Each shop on the street teaches one data-mining technique through short missions. Corner Mart is open now.</p>
+          <p>Each shop on the street teaches one data-mining technique through short missions.</p>
         </div>
-        <div style={{ marginBottom: 26 }}>
-          <Owner>
-            Hello! I'm Mrs Tan, and I run Corner Mart. I've got a week of receipts and no idea what my customers buy together. That's where you come in.
-          </Owner>
+        <div className="stack" style={{ marginBottom: 26 }}>
+          {ACTIVITIES.map((a) => <Owner key={a.id} who={a.theme.owner}>{a.theme.greeting}</Owner>)}
         </div>
         <div className="street">
           {ACTIVITIES.map((a) => {

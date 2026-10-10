@@ -1,6 +1,6 @@
 # DMBA Learn
 
-Browser games that teach data mining for business analytics to polytechnic students. Each activity is a shop on one street; the first one is open.
+Browser games that teach data mining for business analytics to polytechnic students. Each activity is a shop on one street.
 
 **Basket Detective** (association rules): students help Mrs Tan, who runs the Corner Mart minimart, find out what her customers buy together. There are six missions, and each one unlocks after the previous one is complete.
 
@@ -13,11 +13,22 @@ Browser games that teach data mining for business analytics to polytechnic stude
 | 5 | Apriori Climb | Apriori principle, pruning |
 | 6 | Manager's Meeting | support + confidence + lift → a store decision |
 
+**Loan Officer** (decision trees): students help Mr Lim, manager of Neighbourhood Bank, build a tree from 12 past loans and test it on 8 new applicants.
+
+| Counter | Mission | Teaches |
+| --- | --- | --- |
+| 1 | Read the Tree | root, branches, leaves, classifying an applicant, leaf confidence |
+| 2 | Pure or Mixed? | impurity: Gini index and entropy |
+| 3 | Pick the Best Question | weighted impurity, Gini drop, information gain |
+| 4 | Where to Cut Income | numeric splits and candidate cut points |
+| 5 | Grow It, Stop It | recursive partitioning, stopping rules, overfitting, training vs test accuracy |
+| 6 | Prune and Report | pruning, confusion matrix, accuracy, trees as IF/THEN rules |
+
 Each mission is its own page and has four stages:
 
-1. **Review:** four short cards with a step-by-step worked example on the receipts.
+1. **Review:** four short cards with a step-by-step worked example on the data.
 2. **Explore:** a hands-on task that must be finished before the checkpoint opens.
-3. **Checkpoint:** 3–5 questions. A wrong answer gets a hint from Mrs Tan, and the hints get more specific: a targeted nudge, then pointing to the data, then a worked step. Students retry until they're right.
+3. **Checkpoint:** 3–5 questions. A wrong answer gets a hint from the shop owner, and the hints get more specific: a targeted nudge, then pointing to the data, then a worked step. Students retry until they're right.
 4. **Results:** stars, a badge and a formula card. The next mission unlocks.
 
 Progress is saved in the browser (`localStorage`). There are no accounts and no server.
@@ -27,7 +38,7 @@ Progress is saved in the browser (`localStorage`). There are no accounts and no 
 ```sh
 npm install
 npm run dev        # http://localhost:5173
-npm test           # rule engine, mission content and unlock rules
+npm test           # engines, mission content and unlock rules
 npm run build      # static site in dist/
 ```
 
@@ -46,8 +57,8 @@ npm run build      # static site in dist/
 
 ```
 src/
-  core/                 progress store, unlocking, scoring, hash router, shared types
-  components/           receipts, tokens, Mrs Tan, Review and Checkpoint
+  core/                 progress store, unlocking, scoring, hash router, shared types, current-shop context
+  components/           receipts, tokens, the shop owner, Review and Checkpoint
   pages/                Hub, MissionMap, MissionPage, FormulaCards
   activities/
     index.ts            activities on the street
@@ -57,6 +68,13 @@ src/
       missions.tsx      review cards, briefs and checkpoint questions for all six missions
       explores.tsx      the hands-on task for each mission
       RuleBuilder.tsx   the shared rule builder
+    decision-trees/
+      engine.ts         Gini, entropy, splits, cut points, growing, pruning, confusion matrix
+      data.ts           the 12 past loans (training) and 8 new applicants (test)
+      trees.ts          the full, pruned and one-split trees used in the lessons
+      missions.tsx      review cards, briefs and checkpoint questions for all six missions
+      explores.tsx      the hands-on task for each mission
+      ui.tsx            applicant cards, the drawn tree, impurity meters
 docs/                   design proposal and visual directions
 ```
 

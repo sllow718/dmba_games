@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { ExploreProps } from "../../core/types";
-import { ItemKey, Owner, Slips, Token, pct } from "../../components/ui";
+import { ItemKey, Owner, Slips, Tasks, Token, pct } from "../../components/ui";
 import { SATURDAY_ITEMS, WEEK } from "./data";
 import { apriori, combinations, count, itemsOf } from "./engine";
 import { RuleBuilder, ruleName } from "./RuleBuilder";
@@ -8,16 +8,6 @@ import type { Thresholds } from "./RuleBuilder";
 
 const SAT_LABEL = "Corner Mart · Saturday morning · 10 receipts";
 
-function Tasks({ items }: { items: { text: string; done: boolean }[] }) {
-  return (
-    <section className="card">
-      <span className="k">Your tasks</span>
-      <ul className="tasks">
-        {items.map((t) => <li key={t.text} className={t.done ? "done" : ""}>{t.text}<span className="sr-only">{t.done ? " (done)" : ""}</span></li>)}
-      </ul>
-    </section>
-  );
-}
 
 function ItemPicker({ items, value, onChange, label }: { items: readonly string[]; value: string[]; onChange: (v: string[]) => void; label: string }) {
   return (

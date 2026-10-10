@@ -1,6 +1,7 @@
-import type { ActivityDef } from "../core/types";
+import type { AnyActivity } from "../core/types";
 import { basketDetective } from "./association-rules/missions";
+import { loanOfficer } from "./decision-trees/missions";
 
-export const ACTIVITIES: ActivityDef[] = [basketDetective];
+export const ACTIVITIES: AnyActivity[] = [basketDetective, loanOfficer];
 
 export const findActivity = (id: string) => ACTIVITIES.find((a) => a.id === id);

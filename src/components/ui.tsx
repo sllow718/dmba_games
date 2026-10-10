@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
-import type { Highlight, Transaction } from "../core/types";
+import type { GridProps, Highlight, Transaction } from "../core/types";
 import { itemInfo } from "../activities/association-rules/data";
-
-const hasAll = (t: Transaction, items: readonly string[]) => items.every((i) => t.includes(i));
+import { useOptionalActivity } from "../core/activity";
 
 export function Token({ item, ring }: { item: string; ring?: boolean }) {
   const info = itemInfo(item);
@@ -13,33 +12,27 @@ export function Token({ item, ring }: { item: string; ring?: boolean }) {
   );
 }
 
-export function slipState(t: Transaction, h?: Highlight | null): "" | "lit" | "both" | "dim" {
+const hasItem = (t: Transaction, item: string) => t.includes(item);
+
+/** How a row looks under a highlight; `has` says whether the row carries a tag. */
+export function slipState<R>(row: R, h: Highlight | null | undefined, has: (row: R, tag: string) => boolean): "" | "lit" | "both" | "dim" {
+  const hasAll = (tags: readonly string[]) => tags.every((tag) => has(row, tag));
   if (!h || !h.lit.length) return "";
-  if (!hasAll(t, h.lit)) return "dim";
+  if (!hasAll(h.lit)) return "dim";
   if (h.both?.length) {
-    if (hasAll(t, h.both)) return "both";
+    if (hasAll(h.both)) return "both";
     return h.only ? "dim" : "lit";
   }
   return "lit";
 }
 
-interface SlipsProps {
-  data: readonly Transaction[];
-  highlight?: Highlight | null;
-  compact?: boolean;
-  /** Tap mode: receipts become toggle buttons. */
-  selected?: Set<number>;
-  onToggle?: (i: number) => void;
-  marks?: Map<number, "miss" | "extra">;
-  label?: string;
-}
-
-export function Slips({ data, highlight, compact, selected, onToggle, marks, label }: SlipsProps) {
+/** Receipts as paper slips of item tokens. */
+export function Slips({ data, highlight, compact, selected, onToggle, marks, label }: GridProps<Transaction>) {
   const ringed = new Set([...(highlight?.lit ?? []), ...(highlight?.both ?? [])]);
   return (
     <div className={"slips" + (compact ? " compact" : "")} role={onToggle ? "group" : "list"} aria-label={label ?? "Receipts"}>
       {data.map((t, i) => {
-        const st = slipState(t, highlight);
+        const st = slipState(t, highlight, hasItem);
         const content = (
           <>
             <span className="no">#{i + 1}</span>
@@ -66,6 +59,18 @@ export function Slips({ data, highlight, compact, selected, onToggle, marks, lab
   );
 }
 
+/** Checklist for an explore task. */
+export function Tasks({ items }: { items: { text: string; done: boolean }[] }) {
+  return (
+    <section className="card">
+      <span className="k">Your tasks</span>
+      <ul className="tasks">
+        {items.map((t) => <li key={t.text} className={t.done ? "done" : ""}>{t.text}<span className="sr-only">{t.done ? " (done)" : ""}</span></li>)}
+      </ul>
+    </section>
+  );
+}
+
 export function ItemKey({ items }: { items: readonly string[] }) {
   return (
     <div className="key" aria-label="Item key">
@@ -76,12 +81,15 @@ export function ItemKey({ items }: { items: readonly string[] }) {
   );
 }
 
-export function Owner({ children, tone, level }: { children: ReactNode; tone?: "ok"; level?: string }) {
+/** The shop owner talking. Uses the current shop's owner unless one is passed in. */
+export function Owner({ children, tone, level, who }: { children: ReactNode; tone?: "ok"; level?: string; who?: { name: string; initials: string } }) {
+  const shop = useOptionalActivity();
+  const owner = who ?? shop?.theme.owner ?? { name: "Mrs Tan", initials: "MT" };
   return (
     <div className="owner">
-      <span className="av" aria-hidden="true">MT</span>
+      <span className="av" aria-hidden="true">{owner.initials}</span>
       <div className={"bubble" + (tone ? " " + tone : "")}>
-        <span className="who">Mrs Tan:</span>
+        <span className="who">{owner.name}:</span>
         {children}
         {level && <span className="lvl">{level}</span>}
       </div>

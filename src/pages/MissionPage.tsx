@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ActivityDef, MissionDef } from "../core/types";
+import type { AnyActivity, AnyMission } from "../core/types";
 import { getMission, missionKey, patchMission, starsFor, update, useProgress } from "../core/progress";
 import { isOpen } from "../core/unlock";
 import { navigate, setFlash } from "../core/router";
@@ -9,7 +9,8 @@ import { Owner, Stars, TopBar } from "../components/ui";
 
 const STAGES = ["Review", "Explore", "Checkpoint", "Results"];
 
-export function MissionPage({ activity, n }: { activity: ActivityDef; n: number }) {
+export function MissionPage({ activity, n }: { activity: AnyActivity; n: number }) {
+  const { stop } = activity.theme;
   const p = useProgress();
   const m = activity.missions.find((x) => x.n === n);
   const key = missionKey(activity.id, n);
@@ -26,7 +27,7 @@ export function MissionPage({ activity, n }: { activity: ActivityDef; n: number 
   useEffect(() => {
     if (!m) navigate("/" + activity.id, { replace: true });
     else if (!open) {
-      setFlash(`Aisle ${n} is still closed. Finish Aisle ${n - 1}: ${activity.missions[n - 2].title} first.`);
+      setFlash(`${stop} ${n} is still closed. Finish ${stop} ${n - 1}: ${activity.missions[n - 2].title} first.`);
       navigate("/" + activity.id, { replace: true });
     } else if (p.fresh === key) update((q) => ({ ...q, fresh: undefined }));
   }, [m, open, n, activity, key, p.fresh]);
@@ -43,7 +44,7 @@ export function MissionPage({ activity, n }: { activity: ActivityDef; n: number 
   const compact = m.data.length > 12;
   const mapPath = "/" + activity.id;
 
-  function complete(r: { points: number; firstTry: number; attempts: Record<string, number> }, mission: MissionDef) {
+  function complete(r: { points: number; firstTry: number; attempts: Record<string, number> }, mission: AnyMission) {
     if (completing.current) return;
     completing.current = true;
     const max = mission.questions.length * 3;
@@ -86,7 +87,7 @@ export function MissionPage({ activity, n }: { activity: ActivityDef; n: number 
 
   return (
     <>
-      <TopBar title={`Aisle ${n} · ${m.title}`} sub={STAGES[shown]} home={mapPath}>
+      <TopBar title={`${stop} ${n} · ${m.title}`} sub={STAGES[shown]} home={mapPath}>
         <span className="pips" aria-hidden="true">{STAGES.map((_, i) => <i key={i} className={i < stage ? "d" : i === stage ? "n" : ""} />)}</span>
         {stage > 0 && stage < 3 && <button type="button" className="link" onClick={() => openView(view === 0 ? stage : 0)}>{view === 0 ? "Close review" : "Review ↺"}</button>}
         <a className="link" href={"#" + mapPath}>Mission map</a>
@@ -126,7 +127,7 @@ export function MissionPage({ activity, n }: { activity: ActivityDef; n: number 
           <>
             {replay && (
               <div className="row" style={{ marginBottom: 14 }}>
-                <span className="worth" style={{ marginTop: 0 }}>You've done this aisle before.</span>
+                <span className="worth" style={{ marginTop: 0 }}>You've done this {stop.toLowerCase()} before.</span>
                 <button type="button" className="btn alt small" onClick={() => setStage(1)}>Skip review</button>
               </div>
             )}
@@ -163,8 +164,8 @@ export function MissionPage({ activity, n }: { activity: ActivityDef; n: number 
 }
 
 function Results({ mission, last, best, next, activity, onReplay }: {
-  mission: MissionDef; last?: { points: number; max: number; stars: number; firstTry: number; unlocked: boolean }; best: number;
-  next?: MissionDef; activity: ActivityDef; onReplay: () => void;
+  mission: AnyMission; last?: { points: number; max: number; stars: number; firstTry: number; unlocked: boolean }; best: number;
+  next?: AnyMission; activity: AnyActivity; onReplay: () => void;
 }) {
   const leave = (path: string) => { patchMission(missionKey(activity.id, mission.n), { stage: 0 }); navigate(path); };
   return (
@@ -176,7 +177,7 @@ function Results({ mission, last, best, next, activity, onReplay }: {
           <>
             <Stars n={last.stars} size="2.4rem" />
             <p style={{ marginTop: 10 }}>{last.firstTry} of {mission.questions.length} answers right first time · {last.points} / {last.max} points · +{last.points * 10} XP</p>
-            {best > last.stars && <p className="worth">Your best on this aisle is still {best} stars.</p>}
+            {best > last.stars && <p className="worth">Your best on this {activity.theme.stop.toLowerCase()} is still {best} stars.</p>}
           </>
         )}
         <div className="row" style={{ margin: "14px 0" }}>
@@ -198,8 +199,8 @@ function Results({ mission, last, best, next, activity, onReplay }: {
       <div className="stack">
         <Owner tone="ok">
           {next
-            ? last?.unlocked ? <>Nice work. <b>Aisle {next.n}: {next.title}</b> is open now.</> : <>Good practice. Aisle {next.n} is already open.</>
-            : <>That's every aisle done. You're a proper basket detective now. My Monday meeting is sorted.</>}
+            ? last?.unlocked ? <>Nice work. <b>{activity.theme.stop} {next.n}: {next.title}</b> is open now.</> : <>Good practice. {activity.theme.stop} {next.n} is already open.</>
+            : activity.theme.finale}
         </Owner>
       </div>
     </div>

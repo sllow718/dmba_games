@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import type { Question, Transaction } from "../core/types";
+import type { Question } from "../core/types";
 import type { CheckpointState } from "../core/progress";
 import { pointsFor } from "../core/progress";
 import { parseAnswer } from "../activities/association-rules/engine";
-import { Owner, Slips } from "./ui";
+import { useActivity } from "../core/activity";
+import { Owner } from "./ui";
 
 interface Props {
   questions: Question[];
-  data: readonly Transaction[];
+  data: readonly unknown[];
   dataLabel: string;
   compact?: boolean;
   initial?: CheckpointState;
@@ -18,11 +19,14 @@ interface Props {
   finishLabel?: string;
 }
 
-const LEVELS = ["Hint 1 · a nudge", "Hint 2 · look at the receipts", "Hint 3 · nearly there"];
 const listNums = (xs: number[]) => xs.map((i) => "#" + (i + 1)).join(", ");
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** Checkpoint questions with escalating hints and unlimited retries. */
 export function Checkpoint({ questions, data, dataLabel, compact, initial, onProgress, onComplete, finishLabel = "See results" }: Props) {
+  const { view, theme } = useActivity();
+  const [one, many] = theme.rows;
+  const levels = ["Hint 1 · a nudge", `Hint 2 · look at the ${many}`, "Hint 3 · nearly there"];
   const [qi, setQi] = useState(initial?.qi ?? 0);
   const [points, setPoints] = useState(initial?.points ?? 0);
   const [firstTry, setFirstTry] = useState(initial?.firstTry ?? 0);
@@ -89,10 +93,10 @@ export function Checkpoint({ questions, data, dataLabel, compact, initial, onPro
     if (q.type !== "num" || solved) return;
     const v = q.kind === "count" ? Number(num.trim()) : parseAnswer(num, { percentOver1: q.kind === "proportion" });
     if (!num.trim() || !Number.isFinite(v)) {
-      setHint(q.kind === "count" ? "Type a whole number of receipts, like 4." : q.kind === "ratio" ? "Type a number like 1.5." : "Type a fraction (5/8), a decimal (0.62) or a percentage (62%).");
+      setHint(q.kind === "count" ? `Type a whole number of ${many}, like 4.` : q.kind === "ratio" ? "Type a number like 1.5." : q.kind === "decimal" ? "Type a decimal like 0.44, or a fraction like 4/9." : "Type a fraction (5/8), a decimal (0.62) or a percentage (62%).");
       return;
     }
-    const tol = q.tolerance ?? (q.kind === "count" ? 0 : q.kind === "ratio" ? 0.02 : 0.01);
+    const tol = q.tolerance ?? (q.kind === "count" ? 0 : q.kind === "ratio" ? 0.02 : q.kind === "decimal" ? 0.006 : 0.01);
     if (Math.abs(v - q.answer) <= tol + 1e-9) return win();
     const trap = q.traps?.find((t) => Math.abs(v - t.value) <= tol + 1e-9);
     miss(trap?.hint);
@@ -101,14 +105,14 @@ export function Checkpoint({ questions, data, dataLabel, compact, initial, onPro
 
   function answerTap() {
     if (q.type !== "tap" || solved) return;
-    const target = data.map((t, i) => (q.items.every((it) => t.includes(it)) ? i : -1)).filter((i) => i >= 0);
+    const target = data.map((t, i) => (q.items.every((it) => view.has(t, it)) ? i : -1)).filter((i) => i >= 0);
     const missed = target.filter((i) => !picked.has(i));
     const extra = [...picked].filter((i) => !target.includes(i));
     if (!missed.length && !extra.length) { setMarks(new Map()); return win(); }
-    const need = q.items.join(" and ").toLowerCase();
+    const need = q.need ?? q.items.join(" and ").toLowerCase();
     const parts: string[] = [];
     if (wrong === 0) {
-      if (missed.length) parts.push(`You've missed ${missed.length} receipt${missed.length > 1 ? "s" : ""}.`);
+      if (missed.length) parts.push(`You've missed ${missed.length} ${missed.length > 1 ? many : one}.`);
       if (extra.length) parts.push(`${extra.length} of your picks ${extra.length > 1 ? "don't" : "doesn't"} have ${need}.`);
     } else {
       if (missed.length) parts.push(`Look again at ${listNums(missed)}.`);
@@ -133,9 +137,9 @@ export function Checkpoint({ questions, data, dataLabel, compact, initial, onPro
       <div className="stack">
         <p className="data-label">{dataLabel}{q.type === "tap" && !solved ? " · tap to select" : ""}</p>
         {q.type === "tap" ? (
-          <Slips data={data} compact={compact} selected={picked} onToggle={toggle} marks={marks} highlight={solved ? q.highlight : null} label="Receipts: tap to select" />
+          <view.Grid data={data} compact={compact} selected={picked} onToggle={toggle} marks={marks} highlight={solved ? q.highlight : null} label={`${cap(many)}: tap to select`} />
         ) : (
-          <Slips data={data} compact={compact} highlight={highlight} />
+          <view.Grid data={data} compact={compact} highlight={highlight} />
         )}
       </div>
       <div className="stack" aria-live="polite">
@@ -145,6 +149,7 @@ export function Checkpoint({ questions, data, dataLabel, compact, initial, onPro
           </div>
           <span className="k">Question {qi + 1} of {questions.length}</span>
           <h2>{q.prompt}</h2>
+          {q.figure && <div className="qfig">{q.figure}</div>}
           {q.type === "mc" && (
             <div className={"opts" + (q.layout === "list" ? " list" : "")}>
               {q.options.map((o, i) => (
@@ -158,7 +163,7 @@ export function Checkpoint({ questions, data, dataLabel, compact, initial, onPro
             <form className="numrow" onSubmit={answerNumber}>
               <label className="sr-only" htmlFor={`ans-${q.id}`}>Your answer</label>
               <input ref={inputRef} id={`ans-${q.id}`} className={"num" + (wrong && !solved ? " bad" : "")} type="text" inputMode="decimal" autoComplete="off" value={num} disabled={solved}
-                placeholder={q.kind === "count" ? "e.g. 4" : q.kind === "ratio" ? "e.g. 1.5" : "e.g. 3/4, 0.75 or 75%"} onChange={(e) => setNum(e.target.value)} />
+                placeholder={q.kind === "count" ? "e.g. 4" : q.kind === "ratio" ? "e.g. 1.5" : q.kind === "decimal" ? "e.g. 0.44" : "e.g. 3/4, 0.75 or 75%"} onChange={(e) => setNum(e.target.value)} />
               <button className="btn" type="submit" disabled={solved}>Check</button>
             </form>
           )}
@@ -170,7 +175,7 @@ export function Checkpoint({ questions, data, dataLabel, compact, initial, onPro
           )}
           {wrong > 0 && !solved && <p className="worth">Now worth {pointsFor(wrong)} point{pointsFor(wrong) > 1 ? "s" : ""}</p>}
         </section>
-        {hint && !solved && <Owner level={wrong ? `${LEVELS[Math.min(wrong - 1, 2)]} · try again` : undefined}>{hint}</Owner>}
+        {hint && !solved && <Owner level={wrong ? `${levels[Math.min(wrong - 1, 2)]} · try again` : undefined}>{hint}</Owner>}
         {solved && (
           <>
             <Owner tone="ok">Right. {q.explain}</Owner>

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import type { ReviewDef, Transaction } from "../core/types";
-import { Owner, Slips } from "./ui";
+import type { ReviewDef } from "../core/types";
+import { useActivity } from "../core/activity";
+import { Owner } from "./ui";
 
 interface Props {
   def: ReviewDef;
-  data: readonly Transaction[];
+  data: readonly unknown[];
   dataLabel: string;
   compact?: boolean;
   brief?: string;
@@ -14,6 +15,7 @@ interface Props {
 
 /** Four-card quick review: what it is, how to calculate it, a step-by-step worked example, key points. */
 export function Review({ def, data, dataLabel, compact, brief, finishLabel, onFinish }: Props) {
+  const { Grid } = useActivity().view;
   const [card, setCard] = useState(0);
   const [step, setStep] = useState(0);
   const focusRef = useRef<HTMLButtonElement>(null);
@@ -89,7 +91,7 @@ export function Review({ def, data, dataLabel, compact, brief, finishLabel, onFi
       </section>
       <div className="stack">
         <p className="data-label">{dataLabel}</p>
-        <Slips data={data} highlight={highlight} compact={compact} />
+        <Grid data={data} highlight={highlight} compact={compact} />
         <Owner>{say}</Owner>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import type { ActivityDef, MissionDef } from "../../core/types";
-import { Frac, Token } from "../../components/ui";
+import { Frac, Slips, Token } from "../../components/ui";
 import { SATURDAY, WEEK } from "./data";
 import { ExploreApriori, ExploreLift, ExploreReceipts, ExploreReport, ExploreRules, ExploreSupport } from "./explores";
 
@@ -551,5 +551,14 @@ export const basketDetective: ActivityDef = {
   shop: "Corner Mart",
   title: "Basket Detective",
   topic: "Association rules",
+  theme: {
+    owner: { name: "Mrs Tan", initials: "MT" },
+    stop: "Aisle",
+    rows: ["receipt", "receipts"],
+    intro: "Association rules at Mrs Tan's minimart. Each aisle is one mission: a quick review, a hands-on task and a checkpoint.",
+    greeting: "Hello! I'm Mrs Tan, and I run Corner Mart. I've got a week of receipts and no idea what my customers buy together. That's where you come in.",
+    finale: "That's every aisle done. You're a proper basket detective now. My Monday meeting is sorted.",
+  },
+  view: { Grid: Slips, has: (t, item) => t.includes(item) },
   missions: [m1, m2, m3, m4, m5, m6],
 };

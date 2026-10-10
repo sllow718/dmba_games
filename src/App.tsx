@@ -1,4 +1,5 @@
 import { findActivity } from "./activities";
+import { ActivityContext } from "./core/activity";
 import { usePath } from "./core/router";
 import { Hub } from "./pages/Hub";
 import { MissionMap } from "./pages/MissionMap";
@@ -10,9 +11,16 @@ export function App() {
   const [, id, sub] = path.split("/");
   const activity = id ? findActivity(id) : undefined;
   if (!activity) return <Hub />;
-  if (!sub) return <MissionMap key={path} activity={activity} />;
-  if (sub === "cards") return <FormulaCards activity={activity} />;
-  const m = /^mission-(\d+)$/.exec(sub);
-  if (m) return <MissionPage key={path} activity={activity} n={Number(m[1])} />;
-  return <MissionMap key={path} activity={activity} />;
+  const m = sub ? /^mission-(\d+)$/.exec(sub) : null;
+  return (
+    <ActivityContext.Provider value={activity}>
+      {sub === "cards" ? (
+        <FormulaCards activity={activity} />
+      ) : m ? (
+        <MissionPage key={path} activity={activity} n={Number(m[1])} />
+      ) : (
+        <MissionMap key={path} activity={activity} />
+      )}
+    </ActivityContext.Provider>
+  );
 }
