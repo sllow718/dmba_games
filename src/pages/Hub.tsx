@@ -10,7 +10,7 @@ export function Hub() {
   const total = ACTIVITIES.reduce((s, a) => s + activitySummary(p, a).xp, 0);
   return (
     <>
-      <TopBar title="DMBA Games" sub="Data mining, one shop at a time">
+      <TopBar title="DMBA Learn" sub="Data mining, one shop at a time">
         <span>XP <b>{total}</b></span>
       </TopBar>
       <main>

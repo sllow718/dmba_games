@@ -1,4 +1,4 @@
-# DMBA Games
+# DMBA Learn
 
 Browser games that teach data mining for business analytics to polytechnic students. Each activity is a shop on one street; the first one is open.
 
