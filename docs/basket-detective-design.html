@@ -1,924 +1,825 @@
 <title>Basket Detective Game Design</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
 <style>
-/* Layout: single reading column (~72ch) with wide "screen" mockups that break out to 1100px; receipts look like thermal paper. */
+/* Layout: document column (~70ch) for reading; game screens break out to 1100px and use the fixed "Shop counter" palette (sage counter, paper, tomato). */
 :root {
-  --bg: #eef1ee;
+  /* document chrome */
+  --bg: #f4f6f1;
   --surface: #ffffff;
-  --paper: #fbfbf7;
-  --ink: #17232a;
-  --muted: #56646b;
-  --line: #d3dad6;
-  --accent: #1d7a55;        /* grocery green */
-  --accent-ink: #ffffff;
-  --tag: #f4c430;           /* price-tag yellow */
-  --tag-ink: #2a2200;
-  --hit-a: #fdeeb0;         /* receipt has antecedent */
-  --hit-ab: #cdeedc;        /* receipt has both */
-  --good: #1d7a55;
-  --bad: #b8433a;
-  --screen: #14262c;        /* game screen background */
-  --screen-fg: #e8f0ec;
-  --screen-line: #2c444b;
-  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --fg: #23302a;
+  --muted: #5d6b63;
+  --line: #d6ddd2;
+  --brand: #e4572e;
+  --brand-ink: #b4401f;
+  --soft: #fbe3da;
+  --bread: #c98a2e; --butter: #e9c235; --milk: #3f82d6; --eggs: #e57a3e; --coffee: #7a5640; --cookies: #9466cf; /* item colours: identical in both themes */
+  --display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #101a1d; --surface: #172428; --paper: #1d2c30; --ink: #e4ece8; --muted: #9aaba6;
-    --line: #2d3f43; --accent: #4cc493; --accent-ink: #062016; --tag: #f4c430; --tag-ink: #2a2200;
-    --hit-a: #4a4114; --hit-ab: #173f2e; --good: #4cc493; --bad: #ef7d72;
-    --screen: #0b1417; --screen-fg: #e8f0ec; --screen-line: #2a3d42; color-scheme: dark;
-  }
+  :root:not([data-theme="light"]) { --bg: #141a17; --surface: #1c2420; --fg: #e6ece7; --muted: #a2b0a8; --line: #33403a; --brand: #f07049; --brand-ink: #ff9b7a; --soft: #3a2219; color-scheme: dark; }
 }
-:root[data-theme="dark"] {
-  --bg: #101a1d; --surface: #172428; --paper: #1d2c30; --ink: #e4ece8; --muted: #9aaba6;
-  --line: #2d3f43; --accent: #4cc493; --accent-ink: #062016; --tag: #f4c430; --tag-ink: #2a2200;
-  --hit-a: #4a4114; --hit-ab: #173f2e; --good: #4cc493; --bad: #ef7d72;
-  --screen: #0b1417; --screen-fg: #e8f0ec; --screen-line: #2a3d42; color-scheme: dark;
-}
+:root[data-theme="dark"] { --bg: #141a17; --surface: #1c2420; --fg: #e6ece7; --muted: #a2b0a8; --line: #33403a; --brand: #f07049; --brand-ink: #ff9b7a; --soft: #3a2219; color-scheme: dark; }
 
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.6; }
-.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 80px; }
-.col { max-width: 72ch; }
-h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
-h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; letter-spacing: -0.02em; }
-h2 { font-size: 1.75rem; font-weight: 700; margin-top: 64px; margin-bottom: 12px; }
-h3 { font-size: 1.15rem; font-weight: 700; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.6; }
+.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 90px; }
+.col { max-width: 70ch; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.12; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.4rem, 6vw, 3.8rem); font-weight: 800; }
+h2 { font-size: 1.8rem; font-weight: 800; margin-top: 68px; margin-bottom: 10px; }
+h3 { font-size: 1.2rem; font-weight: 700; }
 p { margin: 0 0 14px; }
-.eyebrow { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.lede { font-size: 1.2rem; color: var(--muted); margin-top: 16px; }
-code, .mono { font-family: var(--font-mono); font-size: 0.9em; }
-.tag { display: inline-block; background: var(--tag); color: var(--tag-ink); font-family: var(--font-mono); font-weight: 600; font-size: 0.78rem; padding: 2px 8px; border-radius: 3px; letter-spacing: 0.04em; }
+.lede { font-size: 1.18rem; color: var(--muted); margin-top: 12px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 0.92rem; color: var(--muted); margin-top: 6px; }
+.meta b { color: var(--fg); }
+header.top { padding-bottom: 28px; border-bottom: 3px solid var(--fg); }
+.kicker { font-family: var(--display); font-weight: 700; color: var(--brand-ink); font-size: 1.05rem; }
+.caption { font-size: 0.92rem; color: var(--muted); margin-top: 10px; }
+.mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 0.88em; }
+.f { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--brand-ink); }
+.screen-h { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.screen-h .tagp { font-size: 0.85rem; font-weight: 700; color: var(--brand-ink); }
 
-header.top { display: grid; gap: 10px; padding-bottom: 28px; border-bottom: 2px solid var(--ink); }
-.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-family: var(--font-mono); font-size: 0.82rem; color: var(--muted); margin-top: 10px; }
-
-/* objectives */
-.objectives { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 18px; }
-.obj { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; min-width: 0; }
-.obj .formula { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); margin-top: 6px; display: block; }
-
-/* mission ladder */
-.ladder { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 0; }
-.ladder li { display: grid; grid-template-columns: 56px 1fr; gap: 16px; padding: 18px 0; border-top: 1px solid var(--line); }
-.ladder li:last-child { border-bottom: 1px solid var(--line); }
-.ladder .n { font-family: var(--font-display); font-weight: 800; font-size: 2rem; color: var(--accent); line-height: 1; }
-.ladder .body { min-width: 0; }
-.ladder .mech { font-size: 0.95rem; color: var(--muted); margin: 4px 0 0; }
-.ladder .teach { font-family: var(--font-mono); font-size: 0.8rem; margin-top: 6px; }
-
-/* screens */
-.screen { background: var(--screen); color: var(--screen-fg); border-radius: 14px; padding: 18px; margin-top: 18px; overflow: hidden; }
-.screen-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--screen-line); margin-bottom: 16px; }
-.screen-bar .title { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
-.hud { display: flex; gap: 14px; font-family: var(--font-mono); font-size: 0.8rem; flex-wrap: wrap; }
-.hud span b { color: var(--tag); }
-.caption { font-size: 0.9rem; color: var(--muted); margin-top: 8px; }
-
-/* hub */
-.hub { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
-.tile { border: 1px solid var(--screen-line); border-radius: 10px; padding: 14px; min-height: 140px; display: flex; flex-direction: column; gap: 6px; }
-.tile.live { background: var(--tag); color: var(--tag-ink); border-color: var(--tag); }
-.tile .k { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
-.tile h3 { font-size: 1.05rem; }
-.tile .s { font-size: 0.85rem; opacity: 0.8; margin-top: auto; }
-.tile.locked { opacity: 0.55; }
-
-/* page flow */
-.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin-top: 16px; }
-.flow .pg { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; flex: 1 1 150px; min-width: 0; }
-.flow .pg .k { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); display: block; word-break: break-all; }
-.flow .pg b { font-family: var(--font-display); }
-.flow .pg.mission { border: 2px solid var(--accent); flex: 2 1 280px; }
-.flow .arr { align-self: center; font-family: var(--font-mono); color: var(--muted); }
-.stages { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-.stages span { font-family: var(--font-mono); font-size: 0.72rem; border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; }
-
-/* mission map */
-.urlbar { font-family: var(--font-mono); font-size: 0.78rem; background: var(--screen-line); border-radius: 6px; padding: 6px 10px; margin-bottom: 14px; overflow-x: auto; white-space: nowrap; }
-.map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-@media (max-width: 640px) { .map { grid-template-columns: 1fr; } }
-.mnode { font: inherit; text-align: left; color: var(--screen-fg); background: transparent; border: 1px solid var(--screen-line); border-radius: 10px; padding: 14px; display: grid; gap: 4px; cursor: pointer; min-width: 0; }
-.mnode:focus-visible { outline: 3px solid var(--tag); outline-offset: 2px; }
-.mnode .k { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
-.mnode h3 { font-size: 1.05rem; }
-.mnode .st { font-size: 0.85rem; opacity: 0.85; }
-.mnode.done { border-color: #4cc493; }
-.mnode.done .k { color: #4cc493; opacity: 1; }
-.mnode.current { background: var(--tag); color: var(--tag-ink); border-color: var(--tag); }
-.mnode.locked { opacity: 0.5; cursor: not-allowed; border-style: dashed; }
-.banner { margin-bottom: 14px; border-radius: 8px; padding: 10px 12px; font-size: 0.92rem; border: 1px solid var(--tag); }
-.banner.lock { border-color: #ef7d72; }
-.mpage { display: grid; gap: 14px; }
-.mstages { display: flex; flex-wrap: wrap; gap: 6px; }
-.mstages span { font-family: var(--font-mono); font-size: 0.78rem; border: 1px solid var(--screen-line); border-radius: 999px; padding: 4px 10px; }
-.mstages span.done { border-color: #4cc493; color: #4cc493; }
-.mstages span.now { background: var(--tag); color: var(--tag-ink); border-color: var(--tag); font-weight: 700; }
-.mstages span.todo { opacity: 0.5; }
-
-/* playable demo */
-.play { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; }
-@media (max-width: 760px) { .play { grid-template-columns: 1fr; } }
-.receipts { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
-.receipt { background: var(--paper); color: var(--ink); font-family: var(--font-mono); font-size: 0.74rem; padding: 10px 10px 14px; border-radius: 2px; position: relative; transition: background .2s;
-  -webkit-mask: radial-gradient(circle 4px at 50% 100%, transparent 98%, #000) 0 0 / 10px 100% repeat-x;
-          mask: radial-gradient(circle 4px at 50% 100%, transparent 98%, #000) 0 0 / 10px 100% repeat-x; }
-.receipt .no { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--muted); padding-bottom: 4px; margin-bottom: 4px; color: var(--muted); }
-.receipt.a { background: var(--hit-a); }
-.receipt.ab { background: var(--hit-ab); }
-.receipt .it { display: block; }
-.receipt .it.on { font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
-.panel { display: grid; gap: 14px; align-content: start; min-width: 0; }
-.picker { display: grid; gap: 6px; }
-.picker .lbl { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { font: inherit; font-size: 0.88rem; background: transparent; color: var(--screen-fg); border: 1px solid var(--screen-line); padding: 5px 11px; border-radius: 999px; cursor: pointer; }
-.chip:hover { border-color: var(--screen-fg); }
-.chip[aria-pressed="true"] { background: var(--tag); color: var(--tag-ink); border-color: var(--tag); font-weight: 700; }
-.chip:disabled { opacity: 0.3; cursor: not-allowed; }
-.chip:focus-visible, .btn:focus-visible { outline: 3px solid var(--tag); outline-offset: 2px; }
-.rule { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; min-height: 1.6em; }
-.rule .arrow { color: var(--tag); padding-inline: 6px; }
-.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.metric { border: 1px solid var(--screen-line); border-radius: 8px; padding: 10px; min-width: 0; }
-.metric .m { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
-.metric .v { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; font-variant-numeric: tabular-nums; }
-.metric .w { font-family: var(--font-mono); font-size: 0.72rem; opacity: 0.8; font-variant-numeric: tabular-nums; }
-.verdict { border-radius: 8px; padding: 10px 12px; font-size: 0.92rem; border: 1px solid var(--screen-line); }
-.verdict.good { border-color: #4cc493; }
-.verdict.bad { border-color: #ef7d72; }
-.verdict b.g { color: #4cc493; } .verdict b.r { color: #ef7d72; }
-.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.8rem; margin-top: 10px; opacity: 0.85; }
-.sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
-
-/* apriori lattice */
-.lattice { display: grid; gap: 14px; }
-.lvl { display: grid; grid-template-columns: 90px 1fr; gap: 12px; align-items: start; }
-.lvl .lk { font-family: var(--font-mono); font-size: 0.75rem; opacity: 0.75; padding-top: 6px; }
-.nodes { display: flex; flex-wrap: wrap; gap: 6px; }
-.node { font-family: var(--font-mono); font-size: 0.78rem; border: 1px solid var(--screen-line); border-radius: 6px; padding: 5px 9px; }
-.node.ok { border-color: #4cc493; }
-.node.cut { text-decoration: line-through; opacity: 0.55; }
-.node.pruned { border-style: dashed; opacity: 0.55; }
-.node b { font-weight: 600; color: var(--tag); }
-
-/* boss */
-.boss { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
-.card { border: 1px solid var(--screen-line); border-radius: 10px; padding: 14px; min-width: 0; }
-.card .opt { display: block; margin-top: 6px; font-size: 0.9rem; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--screen-line); }
-.card .opt.sel { background: var(--tag); color: var(--tag-ink); border-color: var(--tag); font-weight: 700; }
-.stars { font-size: 1.5rem; letter-spacing: 4px; color: var(--tag); }
-
-/* tables */
-.tbl-wrap { overflow-x: auto; margin-top: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
-table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
-th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
-th { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-tr:last-child td { border-bottom: none; }
-td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; color: var(--accent); }
-.pri { font-family: var(--font-mono); font-size: 0.75rem; padding: 1px 6px; border-radius: 3px; border: 1px solid var(--line); white-space: nowrap; }
-.pri.must { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-
-.arch { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 14px; }
-.arch .obj h3 { font-size: 1rem; }
-.arch ul { margin: 6px 0 0; padding-left: 18px; font-size: 0.92rem; }
-.qs { counter-reset: q; list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; }
-.qs li { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--tag); border-radius: 4px; padding: 12px 14px; }
+/* doc components */
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0 28px; margin-top: 14px; }
+.grid3 > div { border-top: 2px solid var(--fg); padding: 12px 0 16px; min-width: 0; }
+.grid3 p { margin: 4px 0 0; font-size: 0.96rem; }
+.grid3 .f { display: block; margin-top: 6px; font-size: 0.92rem; }
+.grid3 q { display: block; margin-top: 8px; font-style: italic; color: var(--muted); font-size: 0.93rem; }
+.grid3 .k { font-size: 0.85rem; color: var(--muted); font-weight: 700; }
+.loop { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; counter-reset: s; }
+.loop span { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px 6px 8px; font-weight: 700; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px; }
+.loop span::before { counter-increment: s; content: counter(s); width: 24px; height: 24px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--fg); color: var(--bg); font-size: 0.8rem; }
+.loop span.hl { background: var(--soft); border-color: var(--brand); }
+.missions { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 0; }
+.missions li { display: grid; grid-template-columns: 64px 1fr; gap: 16px; padding: 16px 0; border-top: 1px solid var(--line); }
+.missions li:last-child { border-bottom: 1px solid var(--line); }
+.missions .n { font-family: var(--display); font-weight: 800; font-size: 1rem; color: var(--brand-ink); line-height: 1.1; }
+.missions .n b { display: block; font-size: 2.2rem; color: var(--fg); }
+.missions li > div { min-width: 0; }
+.missions p { margin: 4px 0 0; color: var(--muted); font-size: 0.97rem; }
+.missions .t { font-size: 0.85rem; font-weight: 700; margin-top: 6px; }
+.tbl-wrap { overflow-x: auto; margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table.doc { border-collapse: collapse; width: 100%; font-size: 0.94rem; }
+table.doc th, table.doc td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.doc th { font-weight: 800; font-size: 0.85rem; color: var(--muted); }
+table.doc tr:last-child td { border-bottom: none; }
+table.doc td.id { font-weight: 800; white-space: nowrap; color: var(--brand-ink); font-variant-numeric: tabular-nums; }
+.pri { font-size: 0.78rem; font-weight: 800; padding: 1px 8px; border-radius: 999px; border: 1.5px solid var(--line); white-space: nowrap; }
+.pri.must { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin-top: 16px; }
+.flow > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; flex: 1 1 150px; min-width: 0; font-size: 0.95rem; }
+.flow > div.main { border: 2px solid var(--brand); flex: 2 1 260px; }
+.flow .path { display: block; font-size: 0.78rem; color: var(--muted); word-break: break-all; font-family: ui-monospace, Menlo, monospace; }
+.flow b { font-family: var(--display); font-size: 1.05rem; }
+.flow .arr { align-self: center; color: var(--muted); flex: 0 0 auto; background: none; border: 0; padding: 0; }
+.qs { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; }
+.qs li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+.qs li.done { opacity: 0.75; }
 .qs li b { display: block; }
-.qs li span { color: var(--muted); font-size: 0.93rem; }
-/* mission loop */
-.loop { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; margin-top: 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); overflow: hidden; }
-@media (max-width: 760px) { .loop { grid-template-columns: 1fr; } }
-.loop .step { padding: 14px; font-size: 0.92rem; border-right: 1px solid var(--line); min-width: 0; position: relative; }
-.loop .step:last-child { border-right: none; }
-@media (max-width: 760px) { .loop .step { border-right: none; border-bottom: 1px solid var(--line); } .loop .step:last-child { border-bottom: none; } }
-.loop .k { display: block; font-family: var(--font-display); font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
-.loop .step:nth-child(2) { background: var(--hit-ab); }
-.loop .step:nth-child(4), .loop .step:nth-child(5) { background: var(--hit-a); }
-@media (max-width: 960px) and (min-width: 761px) { .loop { grid-template-columns: repeat(3, minmax(0, 1fr)); } .loop .step { border-bottom: 1px solid var(--line); } }
+.qs li span { color: var(--muted); font-size: 0.95rem; }
+.qs .ans { color: var(--brand-ink); font-weight: 800; }
 
-/* quick review */
-.review { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; }
-@media (max-width: 760px) { .review { grid-template-columns: 1fr; } }
-.rv-card { border: 1px solid var(--screen-line); border-radius: 10px; padding: 18px; min-height: 270px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.rv-card h3 { font-size: 1.3rem; }
-.rv-card p { margin: 0; }
-.rv-formula { font-family: var(--font-mono); font-size: 1rem; background: var(--screen-line); border-radius: 8px; padding: 12px 14px; line-height: 1.5; overflow-x: auto; }
-.rv-formula .frac { display: inline-grid; vertical-align: middle; text-align: center; margin-inline: 4px; }
-.rv-formula .frac span:first-child { border-bottom: 1px solid var(--screen-fg); padding-bottom: 2px; }
-.rv-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
-.rv-steps li { border-left: 3px solid var(--tag); padding-left: 10px; }
-.rv-steps .eq { font-family: var(--font-mono); color: var(--tag); }
-.rv-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 6px; }
-.rv-dots { display: flex; gap: 6px; }
-.rv-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--screen-line); }
-.rv-dots i.now { background: var(--tag); }
-.btn.ghost { background: transparent; color: var(--screen-fg); border: 1px solid var(--screen-line); }
-.btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.rv-points { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+/* ================= GAME SCREENS (fixed Shop counter palette) ================= */
+.sc { --counter: #d9e2d3; --counter-2: #cbd6c4; --paper: #fffdf7; --ink: #23302a; --sub: #5d6b63; --edge: #d7d3c4;
+  --brand: #e4572e; --brand-dk: #b4401f; --ok: #2c8a57; --ok-bg: #e2f2e8; --hl: #fff2c2;
+  --bread: #c98a2e; --butter: #e9c235; --milk: #3f82d6; --eggs: #e57a3e; --coffee: #7a5640; --cookies: #9466cf;
+  background-color: var(--counter); background-image: radial-gradient(var(--counter-2) 1px, transparent 1.5px); background-size: 14px 14px;
+  color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; border-radius: 16px; overflow: hidden; margin-top: 14px; color-scheme: light; }
+.sc-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; padding: 12px 22px; background: var(--ink); color: #fff; }
+.sc-top .logo { font-family: var(--display); font-weight: 800; font-size: 1.3rem; line-height: 1; }
+.sc-top .logo small { font-family: var(--body); font-weight: 600; font-size: 0.82rem; opacity: 0.7; margin-left: 8px; }
+.sc-top .right { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-size: 0.9rem; }
+.sc-top .right b { color: var(--butter); }
+.sc-top .addr { font-family: ui-monospace, Menlo, monospace; font-size: 0.78rem; opacity: 0.65; }
+.pips { display: flex; gap: 5px; }
+.pips i { width: 26px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.22); }
+.pips i.d { background: #8fd3a9; } .pips i.n { background: var(--butter); }
+.sc-body { padding: 22px; }
+.sc-split { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; }
+@media (max-width: 780px) { .sc-split { grid-template-columns: 1fr; } }
+.sc-stack { display: grid; gap: 14px; align-content: start; min-width: 0; }
 
-/* hint ladder */
-.hints { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
-.hints .obj .k { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.hints .obj p { margin: 6px 0 0; font-size: 0.93rem; }
-.hints .obj q { display: block; margin-top: 8px; font-style: italic; color: var(--accent); font-size: 0.9rem; }
+.card { background: var(--paper); border-radius: 14px; padding: 18px; box-shadow: 0 3px 0 rgba(35,48,42,.1); min-width: 0; }
+.card .k { font-family: var(--display); font-weight: 600; color: var(--sub); font-size: 0.95rem; }
+.card h4 { font-family: var(--display); font-weight: 800; font-size: 1.45rem; line-height: 1.15; margin: 0 0 10px; text-wrap: balance; }
+.card p { margin: 0 0 8px; }
+.card p:last-child { margin-bottom: 0; }
 
-/* checkpoint quiz */
-.quiz { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 18px; }
-@media (max-width: 760px) { .quiz { grid-template-columns: 1fr; } }
-.qprog { display: flex; gap: 6px; margin-bottom: 12px; }
-.qprog i { flex: 1; height: 6px; border-radius: 3px; background: var(--screen-line); }
-.qprog i.done { background: #4cc493; }
-.qprog i.now { background: var(--tag); }
-.qtext { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; margin-bottom: 12px; }
-.opts { display: grid; gap: 8px; }
-.opt-btn { font: inherit; text-align: left; background: transparent; color: var(--screen-fg); border: 1px solid var(--screen-line); border-radius: 8px; padding: 10px 12px; cursor: pointer; }
-.opt-btn:hover:not(:disabled) { border-color: var(--screen-fg); }
-.opt-btn:focus-visible, .num-row input:focus-visible { outline: 3px solid var(--tag); outline-offset: 2px; }
-.opt-btn.wrong { border-color: #ef7d72; opacity: 0.6; cursor: not-allowed; text-decoration: line-through; }
-.opt-btn.right { border-color: #4cc493; background: #173f2e; font-weight: 700; }
-.num-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.num-row input { font: inherit; font-family: var(--font-mono); background: var(--screen); color: var(--screen-fg); border: 1px solid var(--screen-line); border-radius: 8px; padding: 9px 12px; width: 10em; max-width: 100%; }
-.btn { font: inherit; font-weight: 700; background: var(--tag); color: var(--tag-ink); border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; }
-.hintbox { margin-top: 14px; border-radius: 8px; padding: 12px 14px; font-size: 0.95rem; border: 1px solid var(--screen-line); }
-.hintbox.hint { border-color: var(--tag); }
-.hintbox.hint .hk { color: var(--tag); }
-.hintbox.ok { border-color: #4cc493; }
-.hintbox.ok .hk { color: #4cc493; }
-.hk { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-bottom: 4px; }
-.mini-receipts { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
-.mini-receipts .receipt { font-size: 0.68rem; padding: 7px 7px 11px; }
-.attempts { font-family: var(--font-mono); font-size: 0.78rem; opacity: 0.8; margin-top: 10px; }
+/* receipts */
+.slips { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px 10px; }
+@media (max-width: 520px) { .slips { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.slip { background: var(--paper); padding: 7px 7px 10px; box-shadow: 0 2px 0 rgba(35,48,42,.1); transition: opacity .2s, outline-color .2s; outline: 3px solid transparent; outline-offset: 2px; min-width: 0; }
+.slip:nth-child(odd) { transform: rotate(-1.3deg); } .slip:nth-child(3n) { transform: rotate(1.1deg); }
+.slip .no { font-weight: 800; font-size: 0.74rem; color: var(--sub); border-bottom: 1px dashed var(--edge); margin-bottom: 6px; padding-bottom: 2px; }
+.slip.lit { outline-color: var(--butter); }
+.slip.both { outline-color: var(--ok); background: var(--ok-bg); }
+.slip.dim { opacity: 0.42; }
+.toks { display: flex; flex-wrap: wrap; gap: 3px; }
+.tok { width: 23px; height: 23px; border-radius: 50%; display: inline-grid; place-items: center; font-weight: 800; font-size: 0.62rem; color: #fff; flex: 0 0 auto; letter-spacing: 0; }
+.tok.ring { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
+.key { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 14px; font-size: 0.82rem; }
+.key span { display: inline-flex; gap: 5px; align-items: center; }
+.key .sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
 
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* owner */
+.owner { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; align-items: start; }
+.av { width: 48px; height: 48px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 1.1rem; box-shadow: 0 3px 0 var(--brand-dk); }
+.bubble { background: var(--paper); border-radius: 14px; border-top-left-radius: 3px; padding: 11px 14px; box-shadow: 0 3px 0 rgba(35,48,42,.1); min-width: 0; }
+.bubble .who { font-family: var(--display); font-weight: 800; color: var(--brand-dk); margin-right: 4px; }
+.bubble.ok .who { color: var(--ok); }
+.bubble .lvl { display: block; font-size: 0.78rem; font-weight: 800; color: var(--sub); margin-top: 6px; }
+
+/* buttons */
+.btn { font: inherit; font-family: var(--display); font-weight: 800; font-size: 1.05rem; line-height: 1.2; background: var(--brand); color: #fff; border: 0; border-radius: 12px; padding: 9px 20px 8px; box-shadow: 0 4px 0 var(--brand-dk); cursor: pointer; transition: transform .08s, box-shadow .08s; }
+.btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--brand-dk); }
+.btn.alt { background: var(--paper); color: var(--ink); box-shadow: 0 4px 0 var(--edge); border: 2px solid var(--edge); padding: 7px 16px 6px; }
+.btn.alt:active:not(:disabled) { box-shadow: 0 1px 0 var(--edge); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn:focus-visible, .opt:focus-visible, .pick:focus-visible, .aisle:focus-visible, .sc input:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.row.end { justify-content: space-between; }
+
+/* options + inputs */
+.opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.opts.one { grid-template-columns: 1fr; }
+.opt { font: inherit; font-weight: 700; font-size: 1rem; text-align: center; background: var(--paper); color: var(--ink); border: 2px solid var(--edge); border-bottom-width: 5px; border-radius: 11px; padding: 9px 10px; cursor: pointer; }
+.opts.one .opt { text-align: left; }
+.opt:hover:not(:disabled) { border-color: var(--sub); }
+.opt.x { border-color: #edc2b5; color: #b9a49d; text-decoration: line-through; cursor: not-allowed; }
+.opt.x::before { content: "✕ "; text-decoration: none; display: inline-block; margin-right: 2px; }
+.opt.ok { border-color: var(--ok); background: var(--ok-bg); color: var(--ok); }
+.opt.ok::before { content: "✓ "; }
+.numrow { display: flex; flex-wrap: wrap; gap: 10px; }
+.sc input[type=text] { font: inherit; font-weight: 700; font-size: 1.15rem; background: var(--paper); color: var(--ink); border: 2px solid var(--edge); border-radius: 11px; padding: 8px 12px; width: 11em; max-width: 100%; font-variant-numeric: tabular-nums; }
+.sc input.bad { border-color: var(--brand); }
+.qbar { display: flex; gap: 5px; margin-bottom: 10px; }
+.qbar i { flex: 1; height: 7px; border-radius: 4px; background: var(--edge); }
+.qbar i.d { background: var(--ok); } .qbar i.n { background: var(--brand); }
+.worth { font-size: 0.82rem; color: var(--sub); font-weight: 700; }
+
+/* stars */
+.stars { color: var(--butter); font-size: 1.5rem; letter-spacing: 3px; -webkit-text-stroke: 1px #b2901c; }
+.stars .e { color: transparent; }
+
+/* hub: storefronts */
+.street { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+.shop { background: var(--paper); border-radius: 6px 6px 12px 12px; box-shadow: 0 3px 0 rgba(35,48,42,.12); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.awning { height: 30px; background: repeating-linear-gradient(90deg, var(--brand) 0 18px, #fff 18px 36px);
+  -webkit-mask: radial-gradient(circle 9px at 9px 100%, transparent 98%, #000) 0 0 / 18px 100% repeat-x; mask: radial-gradient(circle 9px at 9px 100%, transparent 98%, #000) 0 0 / 18px 100% repeat-x; }
+.shop .in { padding: 12px 14px 14px; display: grid; gap: 2px; }
+.shop .sign { font-family: var(--display); font-weight: 800; font-size: 1.15rem; line-height: 1.1; }
+.shop .topic { color: var(--sub); font-size: 0.9rem; }
+.shop .st { font-size: 0.85rem; font-weight: 700; margin-top: 6px; }
+.shop.closed .awning { background: repeating-linear-gradient(90deg, #9aa69a 0 18px, #c3ccc1 18px 36px); }
+.shop.closed .in { background: repeating-linear-gradient(0deg, #e9ece6 0 7px, #dfe3dc 7px 9px); }
+.shop.closed .sign, .shop.closed .topic { color: #7d887f; }
+
+/* mission map: aisle signs */
+.aisles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 16px; padding-top: 10px; }
+@media (max-width: 680px) { .aisles { grid-template-columns: 1fr; } }
+.aisle { font: inherit; color: var(--ink); text-align: left; background: var(--paper); border: 0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 4px 0 rgba(35,48,42,.12); display: grid; gap: 2px; cursor: pointer; position: relative; min-width: 0; }
+.aisle::before, .aisle::after { content: ""; position: absolute; top: -12px; width: 2px; height: 12px; background: #9aa69a; }
+.aisle::before { left: 22%; } .aisle::after { right: 22%; }
+.aisle .no { font-family: var(--display); font-weight: 800; font-size: 0.9rem; color: var(--sub); }
+.aisle .nm { font-family: var(--display); font-weight: 800; font-size: 1.2rem; line-height: 1.15; }
+.aisle .ds { font-size: 0.88rem; color: var(--sub); }
+.aisle .stars { font-size: 1.1rem; }
+.aisle.cur { background: var(--brand); color: #fff; box-shadow: 0 4px 0 var(--brand-dk); }
+.aisle.cur .no, .aisle.cur .ds { color: #ffe3d8; }
+.aisle.done .no { color: var(--ok); }
+.aisle.lock { background: repeating-linear-gradient(0deg, #e9ece6 0 7px, #dfe3dc 7px 9px); color: #7d887f; cursor: not-allowed; box-shadow: 0 4px 0 rgba(35,48,42,.08); }
+.aisle.lock .no, .aisle.lock .ds { color: #7d887f; }
+.aisle .new { position: absolute; top: -10px; right: 10px; background: var(--butter); color: var(--ink); font-family: var(--display); font-weight: 800; font-size: 0.8rem; padding: 0 8px; border-radius: 999px; }
+.lock-ic { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; }
+.stage-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.stage-row span { font-weight: 800; font-size: 0.85rem; background: var(--paper); border: 2px solid var(--edge); border-radius: 999px; padding: 3px 12px; }
+.stage-row span.d { border-color: var(--ok); color: var(--ok); }
+.stage-row span.n { background: var(--brand); border-color: var(--brand); color: #fff; }
+.stage-row span.t { opacity: 0.55; }
+
+/* rule builder */
+.picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.pick { font: inherit; font-weight: 700; font-size: 0.9rem; display: inline-flex; gap: 6px; align-items: center; background: var(--paper); color: var(--ink); border: 2px solid var(--edge); border-bottom-width: 4px; border-radius: 999px; padding: 3px 12px 3px 4px; cursor: pointer; }
+.pick .tok { width: 22px; height: 22px; }
+.pick[aria-pressed="true"] { border-color: var(--ink); background: var(--hl); }
+.pick:disabled { opacity: 0.35; cursor: not-allowed; }
+.lbl { font-family: var(--display); font-weight: 700; font-size: 1rem; margin-bottom: 6px; display: block; }
+.ruleline { font-family: var(--display); font-weight: 800; font-size: 1.35rem; min-height: 1.5em; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ruleline .arrow { color: var(--brand); }
+.meters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.meter { background: var(--paper); border-radius: 12px; padding: 10px 12px; box-shadow: 0 3px 0 rgba(35,48,42,.1); min-width: 0; }
+.meter .m { font-family: var(--display); font-weight: 700; color: var(--sub); font-size: 0.92rem; }
+.meter .v { font-family: var(--display); font-weight: 800; font-size: 1.8rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.meter .w { font-size: 0.78rem; color: var(--sub); font-variant-numeric: tabular-nums; }
+.meter .bar { height: 6px; border-radius: 3px; background: var(--edge); margin-top: 6px; overflow: hidden; }
+.meter .bar i { display: block; height: 100%; background: var(--ink); transition: width .25s; }
+
+/* review */
+.rv-steps { list-style: none; padding: 0; margin: 0 0 10px; display: grid; gap: 8px; }
+.rv-steps li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px; }
+.rv-steps li::before { content: attr(data-n); width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 0.8rem; }
+.rv-steps .eq { display: block; font-weight: 800; color: var(--brand-dk); font-variant-numeric: tabular-nums; }
+.formula { background: var(--hl); border-radius: 10px; padding: 12px 14px; font-weight: 700; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.frac { display: inline-grid; text-align: center; font-weight: 800; }
+.frac span:first-child { border-bottom: 2px solid var(--ink); padding: 0 6px 2px; }
+.frac span:last-child { padding: 2px 6px 0; }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--edge); }
+.dots i.n { background: var(--brand); }
+.rv-card { min-height: 300px; display: flex; flex-direction: column; }
+.rv-card .row.end { margin-top: auto; padding-top: 12px; }
+
+/* apriori shelves */
+.shelves { display: grid; gap: 26px; }
+.shelf { position: relative; padding-bottom: 12px; }
+.shelf::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 10px; border-radius: 3px; background: #a77b4f; box-shadow: 0 4px 0 #7d5a38; }
+.shelf .lab { font-family: var(--display); font-weight: 800; font-size: 0.95rem; margin-bottom: 6px; }
+.boxes { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.box { background: var(--paper); border-radius: 8px 8px 3px 3px; padding: 6px 8px 5px; display: grid; gap: 4px; justify-items: center; box-shadow: 0 2px 0 rgba(35,48,42,.12); position: relative; }
+.box .toks { justify-content: center; }
+.box .ct { font-weight: 800; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.box.rare { opacity: 0.6; }
+.box.rare::after { content: "TOO RARE"; position: absolute; top: 8px; left: -5px; right: -5px; transform: rotate(-10deg); text-align: center; font-family: var(--display); font-weight: 800; font-size: 0.72rem; color: var(--brand-dk); border: 2px solid var(--brand-dk); border-radius: 4px; background: rgba(255,253,247,.85); }
+.box.skip { background: transparent; border: 2px dashed #8b968d; box-shadow: none; }
+.box.skip .ct { color: var(--ok); }
+.box.more { background: transparent; box-shadow: none; color: var(--sub); font-size: 0.82rem; font-weight: 700; padding: 6px 2px; }
+
+/* final */
+.meet { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.chip-stat { display: inline-flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.chip-stat span { font-weight: 800; font-size: 0.85rem; background: var(--hl); border-radius: 6px; padding: 2px 8px; font-variant-numeric: tabular-nums; }
+.badge { display: inline-grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--butter); color: var(--ink); font-family: var(--display); font-weight: 800; font-size: 0.75rem; text-align: center; line-height: 1; box-shadow: 0 0 0 4px var(--paper), 0 0 0 6px var(--butter); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } .slip { transform: none !important; } }
 </style>
 
 <div class="wrap">
   <header class="top">
-    <span class="eyebrow">DMBA Games · Activity 01 · Design proposal v0.1</span>
+    <span class="kicker">DMBA Games · Activity 01 · Design proposal v0.2</span>
     <h1>Basket Detective</h1>
-    <p class="lede col">Students work as the data analyst for a small neighbourhood grocery, <em>Corner Mart</em>. They read till receipts, find which products are bought together, and learn to tell a useful rule from a misleading one. Along the way they compute support, confidence and lift, and use the Apriori principle to skip work.</p>
-    <div class="meta"><span>Audience: intro data-mining / business analytics students</span><span>Session: 20–30 min</span><span>Platform: browser, desktop + tablet + phone</span></div>
+    <p class="lede col">Students work as the data analyst for Mrs Tan's neighbourhood minimart, <b>Corner Mart</b>. They go through the till receipts, find which products are bought together, and learn to tell a useful rule from a misleading one. Along the way they calculate support, confidence and lift, and use the Apriori principle to skip work.</p>
+    <div class="meta"><span>Audience <b>Polytechnic students, intro data mining / business analytics</b></span><span>Session <b>20–30 min</b></span><span>Platform <b>browser: laptop, tablet, phone</b></span><span>Look <b>Shop counter</b></span></div>
   </header>
 
   <section class="col">
     <h2>What students should walk away with</h2>
-    <p>Each mission targets one idea. A short review explains it first, in plain words and with one worked example on the receipts. The student then applies it straight away on the board and in the checkpoint questions.</p>
+    <p>Each mission targets one idea. A short review explains it first, in plain words and with one worked example on the receipts. The student then applies it on the board and answers checkpoint questions on it.</p>
   </section>
-  <div class="objectives">
-    <div class="obj"><h3>Transactions &amp; itemsets</h3>A receipt is a transaction. Any group of items is an itemset.<span class="formula">{Bread, Butter}</span></div>
-    <div class="obj"><h3>Support</h3>How common is this combination across all receipts?<span class="formula">supp(X) = count(X) / N</span></div>
-    <div class="obj"><h3>Confidence</h3>Of the receipts with X, how many also have Y?<span class="formula">conf(X→Y) = supp(X∪Y) / supp(X)</span></div>
-    <div class="obj"><h3>Lift</h3>Does X actually raise the chance of Y, compared with Y on its own?<span class="formula">lift = conf(X→Y) / supp(Y)</span></div>
-    <div class="obj"><h3>Apriori principle</h3>If an itemset is rare, every bigger set containing it is rare too, so it can be pruned without counting.<span class="formula">supp(X∪Y) ≤ supp(X)</span></div>
-    <div class="obj"><h3>Business judgement</h3>Turn a strong rule into an action: bundle, shelf placement or promotion. Reject rules with lift ≤ 1.</div>
+  <div class="grid3">
+    <div><h3>Transactions &amp; itemsets</h3><p>A receipt is a transaction. Any group of items is an itemset.</p><span class="f">{Bread, Butter}</span></div>
+    <div><h3>Support</h3><p>How common is this combination across all receipts?</p><span class="f">supp(X) = count(X) ÷ N</span></div>
+    <div><h3>Confidence</h3><p>Of the receipts with X, how many also have Y?</p><span class="f">conf(X→Y) = count(X∪Y) ÷ count(X)</span></div>
+    <div><h3>Lift</h3><p>Does X actually raise the chance of Y, compared with Y on its own?</p><span class="f">lift = conf(X→Y) ÷ supp(Y)</span></div>
+    <div><h3>Apriori principle</h3><p>If an itemset is rare, every bigger set that contains it is rare too, so it can be skipped without counting.</p><span class="f">supp(X∪Y) ≤ supp(X)</span></div>
+    <div><h3>Business judgement</h3><p>Turn a strong rule into an action: a bundle, a shelf placement or a promotion. Reject rules with lift ≤ 1.</p></div>
   </div>
 
   <section class="col">
-    <h2>Game structure</h2>
-    <p>A hub page lists every activity. Activity 01 is a run of six missions that unlock in order. Each mission follows the same loop:</p>
+    <h2>How a mission runs</h2>
+    <p>The hub lists every activity. Activity 01 has six missions, and each one is a separate page. A mission unlocks only after the previous one is complete. Every mission follows the same steps:</p>
   </section>
-  <div class="loop">
-    <div class="step"><span class="k">Brief</span>The store owner sets the problem.</div>
-    <div class="step"><span class="k">Quick review</span>1–2 minutes: what the idea is, how to calculate it, one worked example.</div>
-    <div class="step"><span class="k">Explore</span>Students work with the receipts on the interactive board.</div>
-    <div class="step"><span class="k">Checkpoint</span>3–5 questions on what the mission just taught.</div>
-    <div class="step"><span class="k">Wrong? Hint + retry</span>A hint appears and the student tries again, as many times as needed.</div>
-    <div class="step"><span class="k">Score</span>Stars depend on how many answers were right first time.</div>
-  </div>
-  <ol class="ladder col">
-    <li><span class="n">1</span><div class="body"><h3>Read the Receipts</h3><p class="mech">Sort 10 till receipts. Tap every receipt that contains Bread. Count them. The game names what they just did: that is the <em>support count</em>.</p><div class="teach">teaches: transactions, itemsets, support count</div></div></li>
-    <li><span class="n">2</span><div class="body"><h3>Support Hunt</h3><p class="mech">The owner only cares about combinations bought in at least 30% of baskets. Students drag a minimum-support slider and predict which itemsets survive before the game reveals them.</p><div class="teach">teaches: support as a percentage, min-support threshold</div></div></li>
-    <li><span class="n">3</span><div class="body"><h3>If This, Then That</h3><p class="mech">Build a rule by picking items for the "if" side and the "then" side. Receipts light up as they match. Students type the confidence before the meter reveals it.</p><div class="teach">teaches: rules X → Y, confidence, direction matters (Bread→Butter ≠ Butter→Bread)</div></div></li>
-    <li><span class="n">4</span><div class="body"><h3>The Lift Lens</h3><p class="mech">The owner's nephew claims "half of bread buyers buy milk, put them together!" Students compare that 50% with how often anyone buys milk (60%) and decide whether the rule is real.</p><div class="teach">teaches: lift, baseline, why high confidence can mislead</div></div></li>
-    <li><span class="n">5</span><div class="body"><h3>Apriori Climb</h3><p class="mech">Climb an itemset lattice level by level. Students cross out rare itemsets, and the game rewards them for pruning bigger sets without counting them. A counter tracks "receipts scanned" so efficiency is visible.</p><div class="teach">teaches: Apriori principle, candidate generation, pruning</div></div></li>
-    <li><span class="n">6</span><div class="body"><h3>Manager's Meeting</h3><p class="mech">The final challenge uses a bigger 30-receipt dataset. Students find the top three rules that pass support ≥ 20%, confidence ≥ 60% and lift &gt; 1, then pick a store action for each and defend it in one sentence.</p><div class="teach">teaches: the full pipeline, interpretation, business recommendation</div></div></li>
+  <div class="loop"><span>Brief from Mrs Tan</span><span class="hl">Quick review</span><span>Explore the receipts</span><span class="hl">Checkpoint questions</span><span>Wrong? Hint, then retry</span><span>Results &amp; unlock next</span></div>
+  <ol class="missions col">
+    <li><span class="n">Aisle<b>1</b></span><div><h3>Read the Receipts</h3><p>Go through 10 till receipts. Tap every receipt that contains Bread and count them. That count is the support count.</p><div class="t">Teaches: transactions, itemsets, support count</div></div></li>
+    <li><span class="n">Aisle<b>2</b></span><div><h3>Support Hunt</h3><p>Mrs Tan only cares about combinations bought in at least 30% of baskets. Students drag a minimum-support slider and predict which itemsets survive before the game reveals them.</p><div class="t">Teaches: support as a percentage, the minimum-support threshold</div></div></li>
+    <li><span class="n">Aisle<b>3</b></span><div><h3>If This, Then That</h3><p>Build a rule by picking items for the "if" side and the "then" side. Receipts light up as they match. Students work out the confidence before the meter shows it.</p><div class="t">Teaches: rules X → Y, confidence, why Bread → Butter ≠ Butter → Bread</div></div></li>
+    <li><span class="n">Aisle<b>4</b></span><div><h3>The Lift Lens</h3><p>Mrs Tan's nephew says "half of bread buyers buy milk, so put them together!" Students compare that 50% with how often anyone buys milk (60%) and decide whether the rule is real.</p><div class="t">Teaches: lift, baseline rate, why high confidence can mislead</div></div></li>
+    <li><span class="n">Aisle<b>5</b></span><div><h3>Apriori Climb</h3><p>Stock the shelves one level at a time. Rare itemsets get stamped "too rare", and students earn bonus points for skipping bigger sets without counting them. A counter shows how many receipt checks they saved.</p><div class="t">Teaches: Apriori principle, candidate generation, pruning</div></div></li>
+    <li><span class="n">Aisle<b>6</b></span><div><h3>Manager's Meeting</h3><p>The final challenge uses a bigger dataset of 30 receipts. Students find three rules that pass support ≥ 20%, confidence ≥ 60% and lift &gt; 1, then choose a store action for each.</p><div class="t">Teaches: the full process, interpretation, business recommendation</div></div></li>
   </ol>
 
   <section class="col">
-    <h2>Quick review before each mission</h2>
-    <p>Before a mission's activity starts, the student goes through a short review of what the mission teaches. It is 3–4 cards and takes 1–2 minutes. Every review uses the same four cards, so students always know where to look:</p>
-  </section>
-  <div class="hints">
-    <div class="obj"><span class="k">Card 1</span><h3>What is it?</h3><p>The idea in one or two plain sentences, tied to the store: "how common is this combination?"</p></div>
-    <div class="obj"><span class="k">Card 2</span><h3>How to calculate it</h3><p>The formula, written in words first and then in symbols.</p></div>
-    <div class="obj"><span class="k">Card 3</span><h3>Worked example</h3><p>One example on the real receipts, revealed step by step. Matching receipts light up as each step appears.</p></div>
-    <div class="obj"><span class="k">Card 4</span><h3>Remember</h3><p>2–3 key points and common mistakes, then the <b>Start mission</b> button.</p></div>
-  </div>
-  <p class="col caption">The review is required the first time and skippable on replays. A <b>Review</b> button on every mission and checkpoint screen reopens it at any point, and the step-3 hints link back to the worked example. After the mission, the cards are saved to the student's formula-card glossary.</p>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Mission</th><th>Review covers</th><th>Formula card</th><th>Worked example</th></tr></thead>
-    <tbody>
-      <tr><td class="id">1 · Receipts</td><td>Transaction, item, itemset, support count</td><td class="mono">count(X) = receipts containing every item in X</td><td>count({Bread}) = 6</td></tr>
-      <tr><td class="id">2 · Support</td><td>Support, minimum-support threshold</td><td class="mono">supp(X) = count(X) ÷ N</td><td>supp({Bread, Butter}) = 5 ÷ 10 = 50%</td></tr>
-      <tr><td class="id">3 · Confidence</td><td>Rules X → Y, "if" and "then" sides, confidence</td><td class="mono">conf(X→Y) = count(X∪Y) ÷ count(X)</td><td>conf(Bread → Butter) = 5 ÷ 6 = 83%</td></tr>
-      <tr><td class="id">4 · Lift</td><td>Baseline rate, lift, reading lift above, at and below 1</td><td class="mono">lift(X→Y) = conf(X→Y) ÷ supp(Y)</td><td>lift(Coffee → Cookies) = 67% ÷ 30% = 2.22</td></tr>
-      <tr><td class="id">5 · Apriori</td><td>Frequent itemsets, Apriori principle, pruning</td><td class="mono">X rare ⇒ every superset of X rare</td><td>{Butter, Eggs} rare ⇒ skip {Bread, Butter, Eggs}</td></tr>
-      <tr><td class="id">6 · Manager</td><td>Recap of all three measures and the full pipeline</td><td class="mono">support → confidence → lift → action</td><td>Mission 1–5 cards in sequence</td></tr>
-    </tbody>
-  </table></div>
-
-  <section class="col">
     <h2>Pages and unlocking</h2>
-    <p>The game is not one long page. Each mission is a separate page with its own address, and students reach it from the activity's mission map. A student can only open the next mission after completing the one before it.</p>
+    <p>Students move between separate pages. They can only open the next mission once the one before it is complete.</p>
   </section>
   <div class="flow" aria-label="Page flow">
-    <div class="pg"><span class="k">/</span><b>Hub</b><br>All activities</div>
+    <div><span class="path">/</span><b>Hub</b><br>All activities, as shops on a street</div>
     <span class="arr">→</span>
-    <div class="pg"><span class="k">/basket-detective</span><b>Mission map</b><br>6 missions: done, current or locked</div>
+    <div><span class="path">/basket-detective</span><b>Mission map</b><br>Six aisles: done, current or locked</div>
     <span class="arr">→</span>
-    <div class="pg mission"><span class="k">/basket-detective/mission-3</span><b>Mission page</b> (one per mission)
-      <div class="stages"><span>1 Review</span><span>2 Explore</span><span>3 Checkpoint</span><span>4 Results</span></div></div>
+    <div class="main"><span class="path">/basket-detective/mission-3</span><b>Mission page</b>, one per mission<br>Review → Explore → Checkpoint → Results</div>
     <span class="arr">→</span>
-    <div class="pg"><span class="k">back to map</span><b>Next mission unlocked</b><br>"Go to Mission 4"</div>
+    <div><span class="path">back to map</span><b>Next aisle opens</b><br>"Go to Mission 4"</div>
   </div>
-  <div class="tbl-wrap"><table>
+  <div class="tbl-wrap"><table class="doc">
     <thead><tr><th>Rule</th><th>What happens</th></tr></thead>
     <tbody>
-      <tr><td><b>Completing a mission</b></td><td>A mission is complete when every checkpoint question has been answered correctly. Hints and retries are unlimited, so this is always reachable; any star rating counts.</td></tr>
-      <tr><td><b>Unlocking</b></td><td>Completing Mission <i>n</i> unlocks Mission <i>n</i>+1 straight away. The results page shows a <b>Go to Mission <i>n</i>+1</b> button, and the map marks it as new.</td></tr>
-      <tr><td><b>Locked missions</b></td><td>Shown on the map with a lock and the reason ("Finish Mission 3 to unlock"). Opening a locked mission's address directly sends the student back to the map with the same message.</td></tr>
-      <tr><td><b>Stages inside a mission</b></td><td>Stages run in order: review, explore, checkpoint, results. On the first play a student can't skip ahead to the checkpoint. On replays the review can be skipped.</td></tr>
-      <tr><td><b>Leaving mid-mission</b></td><td>The stage and answers so far are saved. Returning to the mission resumes where the student left off.</td></tr>
-      <tr><td><b>Replaying</b></td><td>Completed missions stay open for replay at any time. The best star score is kept, and replays never lock anything again.</td></tr>
+      <tr><td><b>Completing a mission</b></td><td>A mission is complete when every checkpoint question has been answered correctly. Hints and retries are unlimited, so every student can get there. Any star rating counts.</td></tr>
+      <tr><td><b>Unlocking</b></td><td>Completing Mission <i>n</i> unlocks Mission <i>n</i>+1 straight away. The results page shows a <b>Go to Mission <i>n</i>+1</b> button, and the map marks that aisle as new.</td></tr>
+      <tr><td><b>Locked missions</b></td><td>Shown on the map with the shutter down and a reason ("Finish Mission 3 to open"). Opening a locked mission's address directly sends the student back to the map with the same message.</td></tr>
+      <tr><td><b>Stages inside a mission</b></td><td>Stages run in order. On the first play a student can't skip ahead to the checkpoint. On replays the review can be skipped.</td></tr>
+      <tr><td><b>Leaving midway</b></td><td>The current stage and answers are saved, and the student resumes where they left off.</td></tr>
+      <tr><td><b>Replaying</b></td><td>Completed missions stay open. The best score is kept and nothing locks again.</td></tr>
     </tbody>
   </table></div>
 
+  <!-- ================= SCREENS ================= -->
   <h2>Screen designs</h2>
-  <p class="col">Mockups of the main screens. They are shown together here for review, but in the game each one is its own page. Screens A2, A3, B and B2 are playable and run on the real 10-receipt dataset the first missions use.</p>
+  <p class="col">The screens are shown together here for review, but in the game each one is its own page. Screens marked <b>playable</b> run on the real 10-receipt dataset used in the first missions. Every item has a fixed colour and a two-letter tag, so a pattern shows up as the same tokens appearing together, and colour is never the only signal.</p>
 
-  <h3 style="margin-top:28px">A · Activity hub</h3>
-  <div class="screen" role="img" aria-label="Mockup of the activity hub">
-    <div class="screen-bar"><span class="title">DMBA Games</span><div class="hud"><span>Player <b>Alex T.</b></span><span>XP <b>340</b></span><span>Stars <b>11 / 18</b></span></div></div>
-    <div class="hub">
-      <div class="tile live"><span class="k">Activity 01 · open</span><h3>Basket Detective</h3><span>Association rules</span><span class="s">Mission 4 of 6 · ★★★ ★★☆ ★★★</span></div>
-      <div class="tile locked"><span class="k">Activity 02 · planned</span><h3>Customer Tribes</h3><span>k-means clustering</span><span class="s">Coming soon</span></div>
-      <div class="tile locked"><span class="k">Activity 03 · planned</span><h3>Loan Officer</h3><span>Classification trees</span><span class="s">Coming soon</span></div>
-      <div class="tile locked"><span class="k">Activity 04 · planned</span><h3>Nearest Neighbours</h3><span>k-NN classification</span><span class="s">Coming soon</span></div>
-      <div class="tile locked"><span class="k">Activity 05 · planned</span><h3>Price Predictor</h3><span>Linear regression</span><span class="s">Coming soon</span></div>
-    </div>
-  </div>
-  <p class="caption">Later activities are placeholders to show how the hub scales; the topics follow a typical DMBA syllabus.</p>
-
-  <h3 style="margin-top:36px">A2 · Mission map (playable)</h3>
-  <div class="screen">
-    <div class="urlbar" id="mapUrl">dmba-games/basket-detective</div>
-    <div class="screen-bar"><span class="title" id="mapTitle">Basket Detective · Missions</span><div class="hud"><span>Completed <b id="mapDone">2 / 6</b></span><span>Stars <b id="mapStars">5 / 18</b></span></div></div>
-    <div id="mapBody" aria-live="polite"></div>
-  </div>
-  <p class="caption">Open Mission 3, step through its stages and finish it to unlock Mission 4. Clicking a locked mission shows why it's locked. <button type="button" class="btn ghost" id="mapReset" style="color:var(--ink);border-color:var(--line);padding:3px 10px;font-size:.85rem">Reset demo</button></p>
-
-  <h3 style="margin-top:36px">A3 · Quick review: Mission 2, Support (playable)</h3>
-  <div class="screen">
-    <div class="screen-bar"><span class="title">Mission 2 · Support Hunt · Quick review</span><div class="hud"><span>Card <b id="rvNum">1 / 4</b></span><span>About <b>1 min</b></span></div></div>
-    <div class="review">
-      <div class="rv-card" id="rvCard" aria-live="polite"></div>
-      <div>
-        <div class="mini-receipts" id="rvReceipts"></div>
-        <p class="caption" style="color:var(--screen-fg);opacity:.75" id="rvCap">Corner Mart's 10 receipts.</p>
+  <div class="screen-h"><h3>A · Hub</h3></div>
+  <div class="sc" role="img" aria-label="Hub mockup: activities shown as shops on a street">
+    <div class="sc-top"><span class="logo">DMBA Games<small>Data mining, one shop at a time</small></span><span class="right"><span>Alex Tan</span><span>XP <b>340</b></span></span></div>
+    <div class="sc-body">
+      <div class="street">
+        <div class="shop"><div class="awning"></div><div class="in"><span class="sign">Corner Mart</span><span class="topic">Basket Detective · association rules</span><span class="st">Mission 4 of 6 <span class="stars" style="font-size:1rem">★★★<span class="e">★</span>★★</span></span></div></div>
+        <div class="shop closed"><div class="awning"></div><div class="in"><span class="sign">Gym &amp; Juice</span><span class="topic">Customer Tribes · k-means clustering</span><span class="st">Opening soon</span></div></div>
+        <div class="shop closed"><div class="awning"></div><div class="in"><span class="sign">Neighbourhood Bank</span><span class="topic">Loan Officer · classification trees</span><span class="st">Opening soon</span></div></div>
+        <div class="shop closed"><div class="awning"></div><div class="in"><span class="sign">Property Agent</span><span class="topic">Price Predictor · linear regression</span><span class="st">Opening soon</span></div></div>
       </div>
     </div>
   </div>
-  <p class="caption">Go through the cards with Next. On card 3, each <b>Show next step</b> click lights up more of the receipts.</p>
+  <p class="caption">Each activity is a different shop on the same street. This keeps the look consistent as more topics are added. The later shops are placeholders.</p>
 
-  <h3 style="margin-top:36px">B · Mission screen: build a rule (playable)</h3>
-  <div class="screen">
-    <div class="screen-bar"><span class="title">Mission 3 · If This, Then That</span><div class="hud"><span>Receipts <b>10</b></span><span>Review <b>↺</b></span><span>Score <b>★★☆</b></span></div></div>
-    <div class="play">
-      <div>
-        <div class="receipts" id="receipts"></div>
-        <div class="legend"><span><i class="sw" style="background:var(--hit-a)"></i>has the "if" items</span><span><i class="sw" style="background:var(--hit-ab)"></i>has "if" and "then" items</span></div>
-      </div>
-      <div class="panel">
-        <div class="picker"><span class="lbl">If a customer buys</span><div class="chips" id="pickA"></div></div>
-        <div class="picker"><span class="lbl">Then they also buy</span><div class="chips" id="pickB"></div></div>
-        <div class="rule" id="rule" aria-live="polite"></div>
-        <div class="metrics">
-          <div class="metric"><div class="m">Support</div><div class="v" id="vS">–</div><div class="w" id="wS"></div></div>
-          <div class="metric"><div class="m">Confidence</div><div class="v" id="vC">–</div><div class="w" id="wC"></div></div>
-          <div class="metric"><div class="m">Lift</div><div class="v" id="vL">–</div><div class="w" id="wL"></div></div>
+  <div class="screen-h"><h3>B · Mission map</h3><span class="tagp">Playable</span></div>
+  <div class="sc">
+    <div class="sc-top"><span class="logo" id="mapTitle">Corner Mart<small>Basket Detective</small></span><span class="right"><span class="addr" id="mapUrl">/basket-detective</span><span>Done <b id="mapDone">2 / 6</b></span><span>Stars <b id="mapStars">5 / 18</b></span></span></div>
+    <div class="sc-body" id="mapBody" aria-live="polite"></div>
+  </div>
+  <p class="caption">Open Aisle 3, step through its stages and finish it to open Aisle 4. Clicking a locked aisle tells you why it's closed. <button type="button" class="btn alt" id="mapReset" style="font-size:.85rem;padding:2px 10px">Reset demo</button></p>
+
+  <div class="screen-h"><h3>C · Quick review: Mission 2, Support</h3><span class="tagp">Playable</span></div>
+  <div class="sc">
+    <div class="sc-top"><span class="logo">Aisle 2 · Support Hunt<small>Quick review</small></span><span class="right"><span>Card <b id="rvNum">1 / 4</b></span><span>About <b>1 min</b></span></span></div>
+    <div class="sc-body">
+      <div class="sc-split">
+        <div class="card rv-card" id="rvCard" aria-live="polite"></div>
+        <div class="sc-stack">
+          <div class="slips" id="rvSlips"></div>
+          <div class="owner"><span class="av" aria-hidden="true">MT</span><div class="bubble" id="rvSay"></div></div>
         </div>
-        <div class="verdict" id="verdict">Pick at least one item on each side.</div>
       </div>
     </div>
   </div>
-  <p class="caption">In the real mission the meters stay hidden until the student types an answer. Try <b>Bread → Milk</b> (50% confidence, lift 0.83) against <b>Coffee → Cookies</b> (67%, lift 2.22).</p>
+  <p class="caption">Use Next to go through the cards. On card 3, each <b>Show next step</b> lights up more of the receipts.</p>
 
-  <h3 style="margin-top:36px">B2 · Checkpoint questions (playable)</h3>
-  <div class="screen">
-    <div class="screen-bar"><span class="title">Mission 3 · Checkpoint</span><div class="hud"><span>Question <b id="qNum">1 / 3</b></span><span>First-try <b id="qFirst">0</b></span><span>Review <b>↺</b></span></div></div>
-    <div class="quiz">
-      <div>
-        <div class="mini-receipts" id="miniReceipts"></div>
-        <p class="caption" style="color:var(--screen-fg);opacity:.75">The receipts stay on screen so students can count.</p>
+  <div class="screen-h"><h3>D · Explore: build a rule (Mission 3)</h3><span class="tagp">Playable</span></div>
+  <div class="sc">
+    <div class="sc-top"><span class="logo">Aisle 3 · If This, Then That<small>Explore</small></span><span class="right"><span class="pips"><i class="d"></i><i class="n"></i><i></i><i></i></span><span>Review ↺</span></span></div>
+    <div class="sc-body">
+      <div class="sc-split">
+        <div><div class="slips" id="rbSlips"></div><div class="key"><span><i class="sw" style="outline:3px solid var(--butter);outline-offset:-3px"></i>has the "if" items</span><span><i class="sw" style="background:var(--ok-bg);outline:3px solid var(--ok);outline-offset:-3px"></i>has the "if" and "then" items</span></div><div class="key" id="rbKey"></div></div>
+        <div class="sc-stack">
+          <div><span class="lbl">If a customer buys…</span><div class="picks" id="pickA"></div></div>
+          <div><span class="lbl">…then they also buy</span><div class="picks" id="pickB"></div></div>
+          <div class="ruleline" id="rbRule" aria-live="polite"></div>
+          <div class="meters">
+            <div class="meter"><div class="m">Support</div><div class="v" id="vS">–</div><div class="w" id="wS">&nbsp;</div><div class="bar"><i id="bS" style="width:0"></i></div></div>
+            <div class="meter"><div class="m">Confidence</div><div class="v" id="vC">–</div><div class="w" id="wC">&nbsp;</div><div class="bar"><i id="bC" style="width:0"></i></div></div>
+            <div class="meter"><div class="m">Lift</div><div class="v" id="vL">–</div><div class="w" id="wL">&nbsp;</div><div class="bar"><i id="bL" style="width:0"></i></div></div>
+          </div>
+          <div class="owner"><span class="av" aria-hidden="true">MT</span><div class="bubble" id="rbSay"></div></div>
+        </div>
       </div>
-      <div>
-        <div class="qprog" id="qProg"></div>
-        <div id="qBody" aria-live="polite"></div>
+    </div>
+  </div>
+  <p class="caption">In the real mission the meters stay hidden until the student has worked out the number. Compare <b>Bread → Milk</b> (50% confidence, lift 0.83) with <b>Coffee → Cookies</b> (67%, lift 2.22).</p>
+
+  <div class="screen-h"><h3>E · Checkpoint questions (Mission 3)</h3><span class="tagp">Playable</span></div>
+  <div class="sc">
+    <div class="sc-top"><span class="logo">Aisle 3 · If This, Then That<small>Checkpoint</small></span><span class="right"><span class="pips"><i class="d"></i><i class="d"></i><i class="n"></i><i></i></span><span>Question <b id="qNum">1 / 3</b></span><span>Review ↺</span></span></div>
+    <div class="sc-body">
+      <div class="sc-split">
+        <div><div class="slips" id="qSlips"></div><p class="caption" style="color:var(--sub)">The receipts stay on screen so students can count.</p></div>
+        <div class="sc-stack" id="qBody" aria-live="polite"></div>
       </div>
     </div>
   </div>
-  <p class="caption">Try a wrong answer to see the hint, then retry. A wrong option stays crossed out, so each retry has fewer options.</p>
+  <p class="caption">Try a wrong answer. Mrs Tan gives a hint, and the hints get more specific each time. A wrong option stays crossed out.</p>
 
-  <h3 style="margin-top:36px">C · Mission screen: Apriori Climb</h3>
-  <div class="screen" role="img" aria-label="Mockup of the Apriori lattice at minimum support 30 percent">
-    <div class="screen-bar"><span class="title">Mission 5 · Apriori Climb</span><div class="hud"><span>Min support <b>30%</b> (3 of 10)</span><span>Receipts scanned <b>220</b> / naïve 630</span></div></div>
-    <div class="lattice">
-      <div class="lvl"><span class="lk">1 item</span><div class="nodes">
-        <span class="node ok">Bread <b>6</b></span><span class="node ok">Milk <b>6</b></span><span class="node ok">Butter <b>5</b></span><span class="node ok">Eggs <b>4</b></span><span class="node ok">Coffee <b>3</b></span><span class="node ok">Cookies <b>3</b></span></div></div>
-      <div class="lvl"><span class="lk">2 items</span><div class="nodes">
-        <span class="node ok">Bread·Butter <b>5</b></span><span class="node ok">Bread·Milk <b>3</b></span><span class="node ok">Bread·Eggs <b>3</b></span><span class="node ok">Butter·Milk <b>3</b></span>
-        <span class="node cut">Butter·Eggs 2</span><span class="node cut">Milk·Eggs 2</span><span class="node cut">Milk·Coffee 2</span><span class="node cut">Milk·Cookies 2</span><span class="node cut">Coffee·Cookies 2</span><span class="node cut">…6 more ≤1</span></div></div>
-      <div class="lvl"><span class="lk">3 items</span><div class="nodes">
-        <span class="node ok">Bread·Butter·Milk <b>3</b></span><span class="node pruned">Bread·Butter·Eggs · pruned, Butter·Eggs is rare</span><span class="node pruned">Bread·Milk·Eggs · pruned, Milk·Eggs is rare</span></div></div>
-    </div>
-    <div class="legend"><span>solid green = frequent</span><span>struck through = counted, too rare</span><span>dashed = pruned without counting (bonus points)</span></div>
-  </div>
-
-  <h3 style="margin-top:36px">D · Manager's Meeting and results</h3>
-  <div class="screen" role="img" aria-label="Mockup of the final challenge and results screen">
-    <div class="screen-bar"><span class="title">Mission 6 · Manager's Meeting</span><div class="hud"><span>Rule 2 of 3</span><span>Time <b>04:12</b></span></div></div>
-    <div class="boss">
-      <div class="card"><span class="tag">YOUR RULE</span><h3 style="margin-top:8px">{Pasta, Tomato sauce} → Parmesan</h3><p class="mono" style="font-size:.85rem;margin-top:8px">supp 23% · conf 78% · lift 2.4</p></div>
-      <div class="card"><span class="tag">WHAT SHOULD CORNER MART DO?</span>
-        <span class="opt">Discount parmesan for everyone</span>
-        <span class="opt sel">Shelve parmesan next to the pasta aisle</span>
-        <span class="opt">Stop stocking tomato sauce</span>
-        <span class="opt">Nothing, the rule is not reliable</span></div>
-      <div class="card"><span class="tag">MISSION RESULT</span><div class="stars" style="margin-top:8px">★★★</div><p style="font-size:.9rem;margin:6px 0 0">3 of 3 rules valid · 7 of 8 answers right first time · +120 XP<br>Badge earned: <b>Apriori Ace</b></p></div>
+  <div class="screen-h"><h3>F · Apriori Climb (Mission 5)</h3></div>
+  <div class="sc" role="img" aria-label="Apriori shelves mockup at minimum support 30 percent">
+    <div class="sc-top"><span class="logo">Aisle 5 · Apriori Climb<small>Explore</small></span><span class="right"><span>Min support <b>30%</b> (3 of 10)</span><span>Receipt checks <b>220</b> vs 630 without Apriori</span></span></div>
+    <div class="sc-body">
+      <div class="sc-split">
+        <div class="shelves" id="shelves"></div>
+        <div class="sc-stack">
+          <div class="owner"><span class="av" aria-hidden="true">MT</span><div class="bubble"><span class="who">Mrs Tan:</span>Butter-and-Eggs only turns up on 2 receipts. So any bigger basket with Butter and Eggs in it must be rare too. Do we really need to count it?</div></div>
+          <div class="card"><span class="k">Your move</span><h4 style="font-size:1.15rem">Bread · Butter · Eggs</h4>
+            <div class="opts"><button class="opt" type="button" tabindex="-1">Count it</button><button class="opt ok" type="button" tabindex="-1">Skip it</button></div>
+            <p style="margin-top:10px;font-size:.9rem;color:var(--sub)">+10 bonus for skipping without counting</p></div>
+          <div class="key"><span><span class="box" style="padding:2px 6px;font-size:.75rem">3</span> frequent: stays</span><span><span class="box" style="padding:2px 6px;font-size:.75rem;opacity:.6">2</span> stamped "too rare": counted, then dropped</span><span><span class="box skip" style="padding:2px 6px;font-size:.75rem">–</span> skipped, never counted</span></div>
+        </div>
+      </div>
     </div>
   </div>
+
+  <div class="screen-h"><h3>G · Manager's Meeting and results (Mission 6)</h3></div>
+  <div class="sc" role="img" aria-label="Final challenge and results mockup">
+    <div class="sc-top"><span class="logo">Aisle 6 · Manager's Meeting<small>Rule 2 of 3</small></span><span class="right"><span>30 receipts</span><span>Time <b>04:12</b></span></span></div>
+    <div class="sc-body">
+      <div class="meet">
+        <div class="card"><span class="k">Your rule</span><h4>Pasta + Tomato sauce → Parmesan</h4><div class="chip-stat"><span>support 23%</span><span>confidence 78%</span><span>lift 2.4</span></div>
+          <div class="owner" style="margin-top:14px"><span class="av" aria-hidden="true">MT</span><div class="bubble"><span class="who">Mrs Tan:</span>Good. So what do I do with it?</div></div></div>
+        <div class="card"><span class="k">What should Corner Mart do?</span>
+          <div class="opts one" style="margin-top:8px">
+            <button class="opt x" type="button" tabindex="-1">Discount parmesan for everyone</button>
+            <button class="opt ok" type="button" tabindex="-1">Shelve parmesan next to the pasta</button>
+            <button class="opt" type="button" tabindex="-1">Stop stocking tomato sauce</button>
+            <button class="opt" type="button" tabindex="-1">Nothing, the rule isn't reliable</button></div></div>
+        <div class="card" style="display:grid;gap:8px;align-content:start"><span class="k">Mission complete</span><div class="stars" style="font-size:2rem">★★<span class="e">★</span></div>
+          <p style="margin:0">3 of 3 rules valid · 7 of 8 answers right first time · +120 XP</p>
+          <div class="row"><span class="badge">APRIORI<br>ACE</span><span style="font-weight:700">New badge</span></div>
+          <div class="row"><span class="btn">Back to the street</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DETAILS ================= -->
+  <section class="col">
+    <h2>Quick review before each mission</h2>
+    <p>Before a mission's activity starts, the student goes through a short review of what it teaches: four cards, 1–2 minutes. It is required the first time and can be skipped on replays. A <b>Review ↺</b> button on every mission screen reopens it. After the mission, the cards are added to the student's formula-card collection.</p>
+  </section>
+  <div class="grid3">
+    <div><span class="k">Card 1</span><h3>What is it?</h3><p>The idea in one or two plain sentences, tied to the shop.</p></div>
+    <div><span class="k">Card 2</span><h3>How to calculate it</h3><p>The formula, in words first and then in symbols.</p></div>
+    <div><span class="k">Card 3</span><h3>Worked example</h3><p>One example on the real receipts, revealed step by step.</p></div>
+    <div><span class="k">Card 4</span><h3>Remember</h3><p>Key points and the common mistake, then <b>Start mission</b>.</p></div>
+  </div>
+  <div class="tbl-wrap"><table class="doc">
+    <thead><tr><th>Mission</th><th>Review covers</th><th>Formula card</th><th>Worked example</th></tr></thead>
+    <tbody>
+      <tr><td class="id">1 · Receipts</td><td>Transaction, item, itemset, support count</td><td>count(X) = receipts containing every item in X</td><td>count({Bread}) = 6</td></tr>
+      <tr><td class="id">2 · Support</td><td>Support, minimum-support threshold</td><td>supp(X) = count(X) ÷ N</td><td>supp({Bread, Butter}) = 5 ÷ 10 = 50%</td></tr>
+      <tr><td class="id">3 · Confidence</td><td>Rules X → Y, the "if" and "then" sides, confidence</td><td>conf(X→Y) = count(X∪Y) ÷ count(X)</td><td>conf(Bread → Butter) = 5 ÷ 6 = 83%</td></tr>
+      <tr><td class="id">4 · Lift</td><td>Baseline rate, lift, reading lift above, at and below 1</td><td>lift(X→Y) = conf(X→Y) ÷ supp(Y)</td><td>lift(Coffee → Cookies) = 67% ÷ 30% = 2.22</td></tr>
+      <tr><td class="id">5 · Apriori</td><td>Frequent itemsets, Apriori principle, pruning</td><td>X rare ⇒ every superset of X is rare</td><td>{Butter, Eggs} rare ⇒ skip {Bread, Butter, Eggs}</td></tr>
+      <tr><td class="id">6 · Manager</td><td>Recap of all three measures and the full process</td><td>support → confidence → lift → action</td><td>Cards from Missions 1–5 in order</td></tr>
+    </tbody>
+  </table></div>
 
   <section class="col">
     <h2>Questions, hints and retries</h2>
-    <p>Every mission ends with a checkpoint of 3–5 questions on what that mission taught. A student cannot leave the checkpoint until every question is answered correctly, so every student finishes having got each answer right at least once. When an answer is wrong, a hint appears and the student tries again. They can retry as many times as they need.</p>
-    <p>Hints get more specific with each wrong attempt on the same question:</p>
+    <p>Every mission ends with a checkpoint of 3–5 questions. A student can't leave the checkpoint until every question is answered correctly. When an answer is wrong, Mrs Tan gives a hint and the student tries again, as many times as they need. Each wrong attempt on the same question gets a more specific hint:</p>
   </section>
-  <div class="hints">
-    <div class="obj"><span class="k">1st wrong attempt</span><h3>Targeted nudge</h3><p>Aimed at the mistake behind the answer they picked. Each wrong option is written for a common misconception and has its own hint.</p><q>You counted every receipt. Confidence only looks at receipts that contain the "if" item.</q></div>
-    <div class="obj"><span class="k">2nd wrong attempt</span><h3>Point to the data</h3><p>Highlights the receipts that matter on the board and gives the first number.</p><q>6 receipts have Bread (now highlighted). How many of those also have Butter?</q></div>
-    <div class="obj"><span class="k">3rd wrong attempt onwards</span><h3>Worked step</h3><p>Shows the calculation with one step left for the student to finish. The game never gives the answer outright.</p><q>5 of the 6 Bread receipts have Butter. Confidence = 5 ÷ 6 = ?</q></div>
-    <div class="obj"><span class="k">Correct</span><h3>Explain why</h3><p>Every correct answer comes with a one-line explanation, so a lucky guess still teaches something.</p><q>Right: 83% of Bread buyers also bought Butter.</q></div>
+  <div class="grid3">
+    <div><span class="k">1st wrong attempt</span><h3>Targeted nudge</h3><p>Written for the misconception behind the option they picked.</p><q>"50% counts every customer. I only want the ones who bought bread."</q></div>
+    <div><span class="k">2nd wrong attempt</span><h3>Point to the data</h3><p>Lights up the receipts that matter and gives the first number.</p><q>"6 receipts have bread. I've lit them up. How many also have butter?"</q></div>
+    <div><span class="k">3rd attempt onwards</span><h3>Worked step</h3><p>Shows the calculation with one step left to finish. The answer is never given outright.</p><q>"5 of the 6 bread receipts have butter. So 5 ÷ 6 is…?"</q></div>
+    <div><span class="k">Correct</span><h3>Explain why</h3><p>Every correct answer comes with a one-line explanation, so a lucky guess still teaches something.</p><q>"Right. 83% of my bread buyers also take butter."</q></div>
   </div>
-
-  <section class="col">
-    <h3 style="margin-top:28px">Question types</h3>
-  </section>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Type</th><th>How it works</th><th>Used for</th></tr></thead>
+  <div class="tbl-wrap"><table class="doc">
+    <thead><tr><th>Question type</th><th>How it works</th><th>Used for</th></tr></thead>
     <tbody>
-      <tr><td class="mono">Multiple choice</td><td>4 options. A wrong pick is crossed out and its own hint is shown.</td><td>Concepts, interpretation, store decisions</td></tr>
-      <tr><td class="mono">Numeric</td><td>Accepts a fraction, decimal or percent (5/6, 0.83, 83%) with a small rounding tolerance.</td><td>Support, confidence and lift calculations</td></tr>
-      <tr><td class="mono">Tap the receipts</td><td>Select receipts on the board. A wrong set gets a hint naming what was missed or wrongly included ("T8 has Bread too").</td><td>Counting, finding transactions</td></tr>
-      <tr><td class="mono">Sort / match</td><td>Drag rules into "useful" and "misleading", or match a metric to its meaning.</td><td>Lift, comparing rules</td></tr>
+      <tr><td><b>Multiple choice</b></td><td>4 options. A wrong pick is crossed out and gets its own hint.</td><td>Concepts, interpretation, store decisions</td></tr>
+      <tr><td><b>Numeric</b></td><td>Accepts a fraction, decimal or percentage (5/6, 0.83, 83%), with a small rounding tolerance.</td><td>Support, confidence and lift calculations</td></tr>
+      <tr><td><b>Tap the receipts</b></td><td>Select receipts on the counter. A wrong selection gets a hint naming what was missed ("#8 has bread too").</td><td>Counting, finding transactions</td></tr>
+      <tr><td><b>Sort / match</b></td><td>Drag rules into "useful" and "misleading", or match a measure to its meaning.</td><td>Lift, comparing rules</td></tr>
     </tbody>
   </table></div>
-
-  <section class="col">
-    <h3 style="margin-top:28px">Sample checkpoint questions per mission</h3>
-  </section>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Mission</th><th>Example questions</th><th>Answer</th></tr></thead>
+  <div class="tbl-wrap"><table class="doc">
+    <thead><tr><th>Mission</th><th>Example checkpoint questions</th><th>Answers</th></tr></thead>
     <tbody>
-      <tr><td class="id">1 · Receipts</td><td>How many receipts contain Bread?<br>Tap every receipt that contains both Bread and Butter.<br>Which of these is an itemset? (multiple choice)</td><td class="mono">6<br>T1 T2 T4 T6 T10</td></tr>
-      <tr><td class="id">2 · Support</td><td>What is the support of {Coffee, Cookies}?<br>With minimum support 30%, does {Milk, Eggs} survive?<br>Can a pair have higher support than either of its items?</td><td class="mono">20%<br>No (20%)<br>No</td></tr>
-      <tr><td class="id">3 · Confidence</td><td>Confidence of Bread → Butter?<br>Confidence of Butter → Bread?<br>Why are these two different?</td><td class="mono">83%<br>100%<br>Different "if" group</td></tr>
-      <tr><td class="id">4 · Lift</td><td>What fraction of all customers buy Milk?<br>Lift of Bread → Milk?<br>Should the shop place milk next to bread?</td><td class="mono">60%<br>0.83<br>No, lift &lt; 1</td></tr>
-      <tr><td class="id">5 · Apriori</td><td>{Butter, Eggs} is rare. Do we need to count {Bread, Butter, Eggs}?<br>Which 3-item set is a candidate worth counting?</td><td class="mono">No, prune it<br>{Bread, Butter, Milk}</td></tr>
-      <tr><td class="id">6 · Manager</td><td>Pick the rule that passes all three thresholds.<br>Choose the best store action for it.</td><td class="mono">Varies by dataset</td></tr>
+      <tr><td class="id">1 · Receipts</td><td>How many receipts contain Bread?<br>Tap every receipt with both Bread and Butter.<br>Which of these is an itemset?</td><td>6<br>#1 #2 #4 #6 #10<br>(multiple choice)</td></tr>
+      <tr><td class="id">2 · Support</td><td>What is the support of {Coffee, Cookies}?<br>At minimum support 30%, does {Milk, Eggs} survive?<br>Can a pair have higher support than either of its items?</td><td>20%<br>No (20%)<br>No</td></tr>
+      <tr><td class="id">3 · Confidence</td><td>Confidence of Bread → Butter?<br>Confidence of Butter → Bread?<br>Why are the two different?</td><td>83%<br>100%<br>Different "if" group</td></tr>
+      <tr><td class="id">4 · Lift</td><td>What share of all customers buy Milk?<br>Lift of Bread → Milk?<br>Should Mrs Tan put milk next to the bread?</td><td>60%<br>0.83<br>No, lift &lt; 1</td></tr>
+      <tr><td class="id">5 · Apriori</td><td>{Butter, Eggs} is rare. Do we need to count {Bread, Butter, Eggs}?<br>Which 3-item set is worth counting?</td><td>No, skip it<br>{Bread, Butter, Milk}</td></tr>
+      <tr><td class="id">6 · Manager</td><td>Pick the rule that passes all three thresholds.<br>Choose the best store action for it.</td><td>Depends on the dataset</td></tr>
     </tbody>
   </table></div>
-
   <section class="col">
-    <h3 style="margin-top:28px">Scoring with retries</h3>
-    <p>Retries are unlimited, so stars measure how quickly the student got there. A question answered right on the first try earns 3 points, on the second try 2 points, and later 1 point. A mission's stars come from its share of the maximum points: <span class="mono">≥ 90% ★★★ · ≥ 60% ★★☆ · otherwise ★☆☆</span>. Replaying a mission keeps the best score. The game also logs which questions needed the most attempts, ready for a teacher view later.</p>
+    <h3 style="margin-top:26px">Scoring with retries</h3>
+    <p>A correct answer earns 3 points on the first try, 2 on the second and 1 after that. Stars come from the share of the maximum points: 90% or more earns three stars, 60% or more earns two, and anything less earns one. Replays keep the best score. The game also records which questions took the most attempts, ready for a teacher view later.</p>
   </section>
 
   <section class="col">
     <h2>The starter dataset</h2>
-    <p>Ten receipts, small enough to count by hand and built so every key lesson appears in them: a strong rule, a direction-dependent rule, a rule with lift below 1, a rule with lift exactly 1, and an itemset the Apriori principle prunes.</p>
+    <p>The starter set has ten receipts, which is small enough to count by hand. It is built so every key lesson appears in it: a strong rule, a rule that depends on direction, a rule with lift below 1, a rule with lift exactly 1, and an itemset that the Apriori principle skips.</p>
   </section>
-  <div class="tbl-wrap"><table>
+  <div class="tbl-wrap"><table class="doc">
     <thead><tr><th>Rule</th><th>Support</th><th>Confidence</th><th>Lift</th><th>Lesson it carries</th></tr></thead>
     <tbody>
-      <tr><td class="mono">Butter → Bread</td><td>50%</td><td>100%</td><td>1.67</td><td>Strong rule</td></tr>
-      <tr><td class="mono">Bread → Butter</td><td>50%</td><td>83%</td><td>1.67</td><td>Same itemset, different confidence: direction matters</td></tr>
-      <tr><td class="mono">Coffee → Cookies</td><td>20%</td><td>67%</td><td>2.22</td><td>Rare but very strong: shows the trade-off with min support</td></tr>
-      <tr><td class="mono">Bread → Milk</td><td>30%</td><td>50%</td><td>0.83</td><td>Looks useful, but milk is bought 60% of the time anyway</td></tr>
-      <tr><td class="mono">{Bread, Butter} → Milk</td><td>30%</td><td>60%</td><td>1.00</td><td>Independence: lift exactly 1</td></tr>
+      <tr><td><b>Butter → Bread</b></td><td>50%</td><td>100%</td><td>1.67</td><td>Strong rule</td></tr>
+      <tr><td><b>Bread → Butter</b></td><td>50%</td><td>83%</td><td>1.67</td><td>Same itemset, different confidence: direction matters</td></tr>
+      <tr><td><b>Coffee → Cookies</b></td><td>20%</td><td>67%</td><td>2.22</td><td>Rare but strong: the trade-off with minimum support</td></tr>
+      <tr><td><b>Bread → Milk</b></td><td>30%</td><td>50%</td><td>0.83</td><td>Looks useful, but 60% of all customers buy milk anyway</td></tr>
+      <tr><td><b>{Bread, Butter} → Milk</b></td><td>30%</td><td>60%</td><td>1.00</td><td>Independence: lift exactly 1</td></tr>
     </tbody>
   </table></div>
 
   <section class="col">
-    <h2>Requirements</h2>
-    <p><span class="pri must">Must</span> is in the first playable release. <span class="pri">Should</span> and <span class="pri">Could</span> follow once the core loop is tested with students.</p>
+    <h2>Visual style</h2>
+    <p>The game uses the <b>Shop counter</b> direction, adjusted for polytechnic students. The setting is playful, but the language is direct and the data is always readable.</p>
   </section>
-  <h3 style="margin-top:18px">Functional</h3>
-  <div class="tbl-wrap"><table>
+  <div class="grid3">
+    <div><h3>Setting</h3><p>Sage-green counter, paper receipts and pressable buttons. Each activity is a different shop on the same street.</p></div>
+    <div><h3>Items</h3><p>Every item has a fixed colour and a two-letter tag that never change, so patterns are visible without reading.</p><span class="toks" style="margin-top:8px;display:flex" id="styleToks"></span></div>
+    <div><h3>Type</h3><p>Baloo 2 for headings and buttons. Nunito Sans for everything students read.</p></div>
+    <div><h3>Mrs Tan</h3><p>The shop owner gives every brief, hint and verdict. Feedback feels like a conversation, not an error message. She speaks like a business owner, not a teacher.</p></div>
+    <div><h3>Kept adult</h3><p>No mascots, confetti or baby talk. Real business numbers and decisions. Stars and badges are kept small.</p></div>
+    <div><h3>Accessible</h3><p>Colour is always paired with a tag or a symbol (✓ ✕). Text meets AA contrast, everything is keyboard-operable, and tilts and motion are turned off under reduced motion.</p></div>
+  </div>
+
+  <section class="col">
+    <h2>Requirements</h2>
+    <p><span class="pri must">Must</span> means it's in the first playable release. <span class="pri">Should</span> and <span class="pri">Could</span> come after the core loop has been tested with students.</p>
+  </section>
+  <h3 style="margin-top:16px">Functional</h3>
+  <div class="tbl-wrap"><table class="doc">
     <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
     <tbody>
-      <tr><td class="id">F-01</td><td>Hub page lists all activities, shows lock state and the student's stars per activity.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-02</td><td>Activity 01 has a mission map page showing its six missions as done (with stars), current or locked.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-03</td><td>Each mission is a separate page with its own address, containing its stages in order: review → explore → checkpoint → results.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-04</td><td>A mission unlocks only when the previous one is complete (all checkpoint questions correct). Opening a locked mission sends the student back to the map with the reason.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-05</td><td>Completed missions can be replayed at any time; the best score is kept and nothing re-locks.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-06</td><td>Leaving a mission midway saves the current stage and answers so the student can resume.</td><td><span class="pri">Should</span></td></tr>
-      <tr><td class="id">F-07</td><td>Receipts render as tappable cards; selecting items highlights matching receipts live.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-08</td><td>A rule engine computes support, confidence and lift for any rule on any dataset, and runs Apriori with a given min support.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-09</td><td>Every mission opens with a quick review of 3–4 cards (what it is, how to calculate it, a step-by-step worked example on the receipts, key points). It is required on the first play and skippable on replays; a Review button reopens it from any mission screen.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-10</td><td>Every mission ends with a checkpoint of 3–5 questions on what it taught. Question types: multiple choice, numeric, tap-the-receipts, sort/match.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-11</td><td>A wrong answer shows a hint and lets the student retry, with no limit. The mission completes only when every question is correct.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-12</td><td>Hints escalate per question: targeted nudge for that wrong option → point to the data → worked step. The answer itself is never revealed.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-13</td><td>Wrong multiple-choice options stay crossed out; every correct answer shows a one-line explanation.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-14</td><td>Numeric answers accept a fraction, decimal or percent, with a small rounding tolerance.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-15</td><td>Scoring: 3 / 2 / 1 points for a correct answer on the first / second / later try; stars per mission, XP total and badges.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-16</td><td>Progress, including the attempt count for each question, saves in the browser and survives a page reload.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-17</td><td>A "formula card" glossary unlocks each concept after the mission that teaches it.</td><td><span class="pri">Should</span></td></tr>
-      <tr><td class="id">F-18</td><td>Sandbox mode after Mission 6: students paste or build their own receipts and explore rules freely.</td><td><span class="pri">Should</span></td></tr>
-      <tr><td class="id">F-19</td><td>Missions 2–6 draw from several datasets (grocery, bookshop, café, streaming playlists) so replays get new numbers; questions and hints are templates filled from the dataset.</td><td><span class="pri">Should</span></td></tr>
-      <tr><td class="id">F-20</td><td>Teacher view: class code, per-student progress, the questions needing the most attempts, CSV export, and an "unlock all missions" switch for demos in class.</td><td><span class="pri">Could</span></td></tr>
+      <tr><td class="id">F-01</td><td>The hub lists all activities as shops, with their open or closed state and the student's stars.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-02</td><td>Activity 01 has a mission map page showing six missions as done (with stars), current or locked.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-03</td><td>Each mission is a separate page with its own address, with stages in order: review → explore → checkpoint → results.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-04</td><td>A mission unlocks only when the previous one is complete (all checkpoint questions correct). Opening a locked mission redirects to the map with the reason.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-05</td><td>Completed missions can be replayed at any time. The best score is kept and nothing locks again.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-06</td><td>Leaving a mission midway saves the stage and answers so the student can resume.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-07</td><td>Receipts show items as coloured, tagged tokens. Selecting items highlights matching receipts live.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-08</td><td>A rule engine calculates support, confidence and lift for any rule on any dataset, and runs Apriori at a given minimum support.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-09</td><td>Every mission opens with a four-card quick review (what it is, how to calculate it, a step-by-step worked example, key points). It is required on the first play and skippable on replays, and a Review button reopens it.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-10</td><td>Every mission ends with a checkpoint of 3–5 questions: multiple choice, numeric, tap the receipts, or sort/match.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-11</td><td>A wrong answer shows a hint from Mrs Tan and allows unlimited retries. The mission completes only when every question is correct.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-12</td><td>Hints escalate for each question: a targeted nudge, then pointing to the data, then a worked step. The answer is never revealed.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-13</td><td>Wrong options stay crossed out. Every correct answer shows a one-line explanation.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-14</td><td>Numeric answers accept a fraction, decimal or percentage, with a small rounding tolerance.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-15</td><td>Scoring: 3, 2 or 1 points for a correct answer on the first, second or a later try. Stars per mission, an XP total and badges.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-16</td><td>Progress, including attempts per question, is saved in the browser and survives a reload.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-17</td><td>A formula-card collection adds each concept after the mission that teaches it.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-18</td><td>Sandbox mode after Mission 6: students build their own receipts and explore rules freely.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-19</td><td>Missions 2–6 draw on several datasets (minimart, bubble-tea shop, bookshop, streaming playlists), so replays use new numbers.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-20</td><td>Teacher view: class code, progress per student, the questions with the most attempts, CSV export, and an "unlock all" switch for class demos.</td><td><span class="pri">Could</span></td></tr>
     </tbody>
   </table></div>
-
-  <h3 style="margin-top:24px">Non-functional</h3>
-  <div class="tbl-wrap"><table>
+  <h3 style="margin-top:22px">Non-functional</h3>
+  <div class="tbl-wrap"><table class="doc">
     <thead><tr><th>ID</th><th>Requirement</th><th>Priority</th></tr></thead>
     <tbody>
-      <tr><td class="id">N-01</td><td>Runs in a browser with no install or login; loads in under 3 s on school Wi-Fi and works on Chromebooks.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">N-02</td><td>Responsive from 360 px phones to projector screens; touch and mouse both work.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">N-03</td><td>Accessible: keyboard play, visible focus, colour is never the only signal, WCAG AA contrast, reduced-motion respected.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">N-04</td><td>No personal data collected in the first release; only a display name stored locally.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">N-05</td><td>Each activity is a self-contained module so new activities plug into the hub without touching others.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">N-06</td><td>Mission text and datasets live in data files, so a teacher can edit wording or numbers without changing code.</td><td><span class="pri">Should</span></td></tr>
-      <tr><td class="id">N-07</td><td>Rule engine has unit tests covering every number shown in the missions.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">N-01</td><td>Runs in a browser with no install or login, and loads in under 3 s on campus Wi-Fi.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">N-02</td><td>Works on screens from 360 px phones to lecture-theatre projectors, with touch and mouse.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">N-03</td><td>Accessible: keyboard play, visible focus, colour never the only signal, WCAG AA contrast, and reduced motion respected.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">N-04</td><td>No personal data in the first release. Only a display name is stored, on the student's own device.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">N-05</td><td>Each activity is a self-contained module, so new shops can be added to the hub without touching the others.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">N-06</td><td>Mission text, hints and datasets live in data files, so lecturers can edit them without changing code.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">N-07</td><td>The rule engine has unit tests covering every number shown in the missions.</td><td><span class="pri must">Must</span></td></tr>
     </tbody>
   </table></div>
 
   <section class="col">
     <h2>Proposed build</h2>
-    <p>A static web app, so it can be hosted for free on GitHub Pages or Vercel straight from this repository.</p>
+    <p>A static web app that can be hosted free on GitHub Pages or Vercel straight from this repository.</p>
   </section>
-  <div class="arch">
-    <div class="obj"><h3>Stack</h3><ul><li>Vite + React + TypeScript</li><li>Plain CSS with design tokens</li><li>Vitest for the rule engine</li></ul></div>
-    <div class="obj"><h3>Shared core</h3><ul><li>Hub, routing, player profile</li><li>Scoring, stars, XP, badges</li><li>Progress store (localStorage)</li></ul></div>
-    <div class="obj"><h3>Activity module</h3><ul><li><code>activities/association-rules/</code></li><li><code>engine.ts</code>: support, confidence, lift, Apriori</li><li><code>missions/*.json</code>: questions, options, hint ladders</li><li><code>datasets/*.json</code></li></ul></div>
-    <div class="obj"><h3>Milestones</h3><ul><li>M1: engine + tests, Missions 1–3</li><li>M2: Missions 4–6, scoring, hub</li><li>M3: sandbox, extra datasets, polish</li></ul></div>
+  <div class="grid3">
+    <div><h3>Stack</h3><p>Vite + React + TypeScript, plain CSS with design tokens, and Vitest for the rule engine.</p></div>
+    <div><h3>Shared core</h3><p>Hub, routing and page guards for locked missions, scoring, and a progress store.</p></div>
+    <div><h3>Activity module</h3><p><span class="mono">activities/association-rules/</span> with <span class="mono">engine.ts</span>, <span class="mono">missions/*.json</span> (questions, hints) and <span class="mono">datasets/*.json</span>.</p></div>
+    <div><h3>Milestones</h3><p>M1: engine, tests, hub, map and Missions 1–3. M2: Missions 4–6 and scoring. M3: sandbox, more datasets, polish.</p></div>
   </div>
 
   <section class="col">
-    <h2>Decisions I need from you</h2>
+    <h2>Decisions</h2>
   </section>
   <ol class="qs col">
-    <li><b>Who are the students?</b><span>The design assumes university or polytechnic students in an intro data-mining or business analytics course. Younger students would need simpler wording and fewer formulas.</span></li>
-    <li><b>Does the store theme work for your class?</b><span>Corner Mart grocery is the default. Alternatives: a bookshop, a bubble-tea shop, or an online store.</span></li>
-    <li><b>Do you need teacher tracking in the first release?</b><span>Without it the game is a static site with no server. With it we need accounts and a small backend.</span></li>
-    <li><b>Is the React + TypeScript stack fine?</b><span>A plain HTML/JS version is also possible if you or other teachers want to edit the code without a build step.</span></li>
+    <li class="done"><b>Who are the students?</b><span class="ans">Polytechnic students.</span> <span>Wording, numbers and tone have been set for them.</span></li>
+    <li class="done"><b>Visual direction?</b><span class="ans">Shop counter.</span></li>
+    <li><b>Does the minimart setting work for your module?</b><span>Corner Mart is the default. A bubble-tea shop or an online store would also work.</span></li>
+    <li><b>Do you need teacher tracking in the first release?</b><span>Without it, the game is a static site with no server. With it, we need logins and a small backend.</span></li>
+    <li><b>Is React + TypeScript fine?</b><span>A plain HTML/JS version is possible if lecturers want to edit the code without a build step.</span></li>
   </ol>
 </div>
 
 <script>
 (function () {
   const ITEMS = ["Bread", "Butter", "Milk", "Eggs", "Coffee", "Cookies"];
+  const AB = { Bread: "Br", Butter: "Bu", Milk: "Mi", Eggs: "Eg", Coffee: "Co", Cookies: "Ck" };
   const T = [
     ["Bread", "Butter", "Milk"], ["Bread", "Butter"], ["Milk", "Coffee", "Cookies"],
     ["Bread", "Butter", "Eggs"], ["Milk", "Eggs"], ["Bread", "Milk", "Butter", "Cookies"],
     ["Coffee", "Cookies"], ["Bread", "Eggs"], ["Milk", "Coffee"], ["Bread", "Butter", "Milk", "Eggs"]
   ];
   const N = T.length;
-  const A = new Set(["Bread"]), B = new Set(["Milk"]);
   const $ = (id) => document.getElementById(id);
   const has = (t, set) => [...set].every((i) => t.includes(i));
   const pct = (x) => Math.round(x * 100) + "%";
-
-  function chips(el, own, other) {
-    el.innerHTML = "";
-    ITEMS.forEach((it) => {
-      const b = document.createElement("button");
-      b.className = "chip"; b.type = "button"; b.id = el.id + "-" + it; b.textContent = it;
-      b.setAttribute("aria-pressed", own.has(it));
-      b.disabled = other.has(it);
-      b.onclick = () => { own.has(it) ? own.delete(it) : own.add(it); render(); };
-      el.appendChild(b);
-    });
+  const tok = (it, ring) => `<span class="tok${ring ? " ring" : ""}" style="background:var(--${it.toLowerCase()})" title="${it}">${AB[it]}</span>`;
+  const starHtml = (n) => "★".repeat(n) + `<span class="e">${"★".repeat(3 - n)}</span>`;
+  // cls(t) -> "lit" | "both" | "dim" | ""; ring(it) -> bool
+  function slips(el, cls, ring) {
+    $(el).innerHTML = T.map((t, i) => `<div class="slip ${cls ? cls(t) : ""}"><div class="no">#${i + 1}</div><div class="toks">${t.map((it) => tok(it, ring && ring(it))).join("")}</div></div>`).join("");
   }
+  const say = (who, html, ok) => `<span class="who">${who}:</span>${html}`;
 
-  function render() {
-    chips($("pickA"), A, B); chips($("pickB"), B, A);
-    const rc = $("receipts"); rc.innerHTML = "";
-    T.forEach((t, i) => {
-      const d = document.createElement("div");
-      const a = A.size && has(t, A), ab = a && B.size && has(t, B);
-      d.className = "receipt" + (ab ? " ab" : a ? " a" : "");
-      d.innerHTML = `<div class="no"><span>T${i + 1}</span><span>CORNER MART</span></div>` +
-        t.map((it) => `<span class="it${A.has(it) || B.has(it) ? " on" : ""}">${it}</span>`).join("");
-      rc.appendChild(d);
-    });
-    const ok = A.size && B.size;
-    $("rule").innerHTML = ok ? `${[...A].join(" + ")}<span class="arrow">→</span>${[...B].join(" + ")}` : "";
-    if (!ok) { ["vS","vC","vL"].forEach((k) => $(k).textContent = "–"); ["wS","wC","wL"].forEach((k) => $(k).textContent = "");
-      $("verdict").className = "verdict"; $("verdict").textContent = "Pick at least one item on each side."; return; }
-    const nA = T.filter((t) => has(t, A)).length;
-    const nB = T.filter((t) => has(t, B)).length;
-    const nAB = T.filter((t) => has(t, A) && has(t, B)).length;
-    const conf = nA ? nAB / nA : 0, lift = nB && nA ? conf / (nB / N) : 0;
-    $("vS").textContent = pct(nAB / N); $("wS").textContent = `${nAB} of ${N} receipts`;
-    $("vC").textContent = nA ? pct(conf) : "–"; $("wC").textContent = `${nAB} of ${nA} "if" receipts`;
-    $("vL").textContent = nA && nB ? lift.toFixed(2) : "–"; $("wL").textContent = `${pct(conf)} vs ${pct(nB / N)} baseline`;
-    const v = $("verdict");
-    if (nAB === 0) { v.className = "verdict bad"; v.innerHTML = "<b class='r'>No receipt has both.</b> This rule has zero support."; }
-    else if (lift > 1.05) { v.className = "verdict good"; v.innerHTML = `<b class='g'>Real pattern.</b> Buying ${[...A].join(" + ")} makes ${[...B].join(" + ")} ${lift.toFixed(1)}× more likely than usual.`; }
-    else if (lift >= 0.95) { v.className = "verdict"; v.innerHTML = `<b>No effect.</b> ${[...B].join(" + ")} is bought just as often without ${[...A].join(" + ")}.`; }
-    else { v.className = "verdict bad"; v.innerHTML = `<b class='r'>Misleading.</b> ${pct(conf)} sounds high, but ${pct(nB / N)} of all customers buy ${[...B].join(" + ")} anyway.`; }
-  }
-  render();
-})();
-</script>
-<script>
-(function () {
-  const T = [
-    ["Bread", "Butter", "Milk"], ["Bread", "Butter"], ["Milk", "Coffee", "Cookies"],
-    ["Bread", "Butter", "Eggs"], ["Milk", "Eggs"], ["Bread", "Milk", "Butter", "Cookies"],
-    ["Coffee", "Cookies"], ["Bread", "Eggs"], ["Milk", "Coffee"], ["Bread", "Butter", "Milk", "Eggs"]
-  ];
-  const Q = [
-    { type: "mc", text: "How many receipts contain Bread?", mark: "Bread",
-      options: [
-        { t: "4", hint: "Bread is on more receipts than that. Check every receipt, including the long ones." },
-        { t: "5", hint: "Close. Did you check T8? It has Bread and Eggs." },
-        { t: "6", ok: true },
-        { t: "10", hint: "Not every receipt has Bread. T3 has only Milk, Coffee and Cookies." }],
-      ladder: ["Bread is on T1, T2 and T4. Keep counting from T5.", "Bread is on T1, T2, T4, T6, T8 and T10 (now highlighted). How many is that?"],
-      explain: "6 of the 10 receipts contain Bread, so the support of Bread is 60%." },
-    { type: "num", text: "What is the confidence of Bread → Butter?", answer: 5 / 6, mark: "Bread",
-      traps: [
-        { v: 0.5, hint: "That's 5 out of all 10 receipts, which is the support. Confidence only counts the receipts that contain Bread." },
-        { v: 1, hint: "That's Butter → Bread. Here Bread is the \"if\" item, so divide by the number of Bread receipts." }],
-      first: "Confidence only looks at receipts that contain the \"if\" item, Bread.",
-      ladder: ["The 6 Bread receipts are now highlighted. How many of them also have Butter?", "5 of the 6 Bread receipts have Butter. Work out 5 ÷ 6."],
-      explain: "5 ÷ 6 ≈ 83%. Of the customers who bought Bread, 83% also bought Butter." },
-    { type: "mc", text: "Bread → Milk has 50% confidence. Should Corner Mart put milk next to the bread to sell more milk?", mark: "Milk",
-      options: [
-        { t: "Yes. Half of bread buyers also buy milk.", hint: "50% sounds high. Compare it with how often any customer buys milk." },
-        { t: "Yes. The pair has 30% support.", hint: "Support only says the pair is common. It doesn't say that buying bread makes milk more likely." },
-        { t: "No. Bread buyers buy milk less often than customers overall.", ok: true },
-        { t: "No. A rule needs 100% confidence to be useful.", hint: "Rules rarely reach 100%. The real question is whether 50% beats the normal milk rate." }],
-      ladder: ["Milk is on 6 of the 10 receipts (now highlighted), so 60% of all customers buy milk.", "Bread buyers: 50% buy milk. Everyone: 60%. Lift = 50% ÷ 60% = 0.83. Is that above or below 1?"],
-      explain: "Lift is 0.83, which is below 1. Bread buyers are slightly less likely than average to buy milk, so moving the milk won't help." }
-  ];
-  const $ = (id) => document.getElementById(id);
-  let qi, wrong, points, firstTry, crossed, hl;
+  /* style section */
+  $("styleToks").innerHTML = ITEMS.map((it) => `<span style="display:inline-flex;gap:4px;align-items:center;margin-right:8px">${tok(it)}<span style="font-size:.85rem">${it}</span></span>`).join("");
 
-  function receipts() {
-    $("miniReceipts").innerHTML = T.map((t, i) =>
-      `<div class="receipt${hl && t.includes(hl) ? " ab" : ""}"><div class="no"><span>T${i + 1}</span></div>` +
-      t.map((it) => `<span class="it${hl === it ? " on" : ""}">${it}</span>`).join("") + "</div>").join("");
-  }
-  function parse(s) {
-    s = s.trim().replace(/\s/g, "");
-    if (!s) return NaN;
-    if (s.includes("/")) { const [a, b] = s.split("/").map(Number); return b ? a / b : NaN; }
-    const pc = s.endsWith("%"); let v = parseFloat(s);
-    if (isNaN(v)) return NaN;
-    if (pc || v > 1) v /= 100;
-    return v;
-  }
-  function start() { qi = 0; points = 0; firstTry = 0; load(); }
-  function load() { wrong = 0; crossed = new Set(); hl = null; draw(); }
-
-  function hintHtml(specific) {
-    const q = Q[qi];
-    let lines = [];
-    if (specific) lines.push(specific);
-    if (wrong >= 2) lines.push(q.ladder[Math.min(wrong - 2, q.ladder.length - 1)]);
-    else if (!specific && q.first) lines.push(q.first);
-    if (wrong >= 2) hl = q.mark;
-    return `<div class="hintbox hint"><span class="hk">Hint ${wrong} · try again</span>${lines.join("<br>")}</div>`;
-  }
-
-  function draw(feedback) {
-    receipts();
-    $("qNum").textContent = `${Math.min(qi + 1, Q.length)} / ${Q.length}`;
-    $("qFirst").textContent = firstTry;
-    $("qProg").innerHTML = Q.map((_, i) => `<i class="${i < qi ? "done" : i === qi ? "now" : ""}"></i>`).join("");
-    const body = $("qBody");
-    if (qi >= Q.length) {
-      const pct = points / (Q.length * 3);
-      const stars = pct >= 0.9 ? "★★★" : pct >= 0.6 ? "★★☆" : "★☆☆";
-      body.innerHTML = `<div class="qtext">Checkpoint cleared</div><div class="stars">${stars}</div>
-        <p style="margin-top:8px">${firstTry} of ${Q.length} right first time · ${points} / ${Q.length * 3} points</p>
-        <button class="btn" type="button" id="qAgain">Play again</button>`;
-      $("qAgain").onclick = start;
-      return;
+  /* ---------- B: mission map ---------- */
+  (function () {
+    const M = [
+      { t: "Read the Receipts", c: "Transactions & itemsets" }, { t: "Support Hunt", c: "Support" },
+      { t: "If This, Then That", c: "Confidence" }, { t: "The Lift Lens", c: "Lift" },
+      { t: "Apriori Climb", c: "Apriori principle" }, { t: "Manager's Meeting", c: "The full process" }
+    ];
+    const ST = [
+      { n: "Review", d: "Four cards: what it is, how to calculate it, a worked example, key points.", go: "Start exploring" },
+      { n: "Explore", d: "Hands-on work with the receipts on the counter.", go: "Go to the checkpoint" },
+      { n: "Checkpoint", d: "Get every question right. A wrong answer gets a hint from Mrs Tan, then you try again.", go: "Finish checkpoint" },
+      { n: "Results", d: "", go: "" }
+    ];
+    const LOCK = `<svg class="lock-ic" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="8" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    let stars, open, stage, msg, newly;
+    const reset = () => { stars = [3, 2, null, null, null, null]; open = null; stage = 0; msg = ""; newly = null; draw(); };
+    const isOpen = (i) => i === 0 || stars[i - 1] !== null;
+    function drawMap() {
+      $("mapUrl").textContent = "/basket-detective";
+      $("mapTitle").innerHTML = "Corner Mart<small>Basket Detective</small>";
+      let h = msg ? `<div class="owner" style="margin-bottom:18px"><span class="av" aria-hidden="true">MT</span><div class="bubble">${msg}</div></div>` : "";
+      h += `<div class="aisles">` + M.map((m, i) => {
+        const done = stars[i] !== null, cur = !done && isOpen(i);
+        const cls = done ? "done" : cur ? "cur" : "lock";
+        const top = done ? `Aisle ${i + 1} · done` : cur ? `Aisle ${i + 1} · play now` : `${LOCK}Aisle ${i + 1} · closed`;
+        const bottom = done ? `<span class="stars">${starHtml(stars[i])}</span>` : cur ? `<span class="ds">${m.c}</span>` : `<span class="ds">Finish Aisle ${i} to open</span>`;
+        return `<button type="button" class="aisle ${cls}" id="aisle${i}" data-i="${i}"${cls === "lock" ? ` aria-disabled="true"` : ""}>${newly === i && cur ? `<span class="new">New</span>` : ""}<span class="no">${top}</span><span class="nm">${m.t}</span>${bottom}</button>`;
+      }).join("") + `</div>`;
+      if (stars.every((s) => s !== null)) h += `<div class="owner" style="margin-top:20px"><span class="av" aria-hidden="true">MT</span><div class="bubble ok">${say("Mrs Tan", "That's every aisle done. Sandbox mode is open, so try it on your own receipts.")}</div></div>`;
+      $("mapBody").innerHTML = h;
+      $("mapBody").querySelectorAll(".aisle").forEach((b) => b.onclick = () => {
+        const i = +b.dataset.i;
+        if (!isOpen(i)) { msg = say("Mrs Tan", `Aisle ${i + 1} is still closed. Finish <b>Aisle ${i}: ${M[i - 1].t}</b> first.`); draw(); return; }
+        go(i);
+      });
     }
-    const q = Q[qi];
-    let html = `<div class="qtext">${q.text}</div>`;
-    if (q.type === "mc") {
-      html += `<div class="opts">` + q.options.map((o, i) =>
-        `<button type="button" class="opt-btn${crossed.has(i) ? " wrong" : ""}" id="q${qi}o${i}" data-i="${i}"${crossed.has(i) ? " disabled" : ""}>${o.t}</button>`).join("") + `</div>`;
-    } else {
-      html += `<form class="num-row" id="numForm"><input id="q${qi}num" inputmode="decimal" autocomplete="off" placeholder="e.g. 3/4, 0.75, 75%" aria-label="Your answer"><button class="btn" type="submit">Check</button></form>`;
-    }
-    html += feedback || "";
-    if (wrong) html += `<div class="attempts">Wrong attempts: ${wrong} · this question is now worth ${wrong === 1 ? 2 : 1} point${wrong === 1 ? "s" : ""}</div>`;
-    body.innerHTML = html;
-    if (q.type === "mc") {
-      body.querySelectorAll(".opt-btn:not(:disabled)").forEach((b) => b.onclick = () => answerMc(+b.dataset.i));
-    } else {
-      $("numForm").onsubmit = (e) => { e.preventDefault(); answerNum($(`q${qi}num`).value); };
-      const inp = $(`q${qi}num`); if (feedback) inp.focus();
-    }
-  }
-  function correct() {
-    const q = Q[qi];
-    points += wrong === 0 ? 3 : wrong === 1 ? 2 : 1;
-    if (wrong === 0) firstTry++;
-    hl = q.mark;
-    receipts();
-    $("qFirst").textContent = firstTry;
-    const body = $("qBody");
-    body.querySelectorAll("button, input").forEach((el) => el.disabled = true);
-    body.insertAdjacentHTML("beforeend", `<div class="hintbox ok"><span class="hk">Correct</span>${q.explain}</div>
-      <p style="margin-top:12px"><button class="btn" type="button" id="qNext">${qi === Q.length - 1 ? "Finish" : "Next question"}</button></p>`);
-    body.querySelector(".hintbox.hint")?.remove();
-    $("qNext").onclick = () => { qi++; load(); };
-    $("qNext").focus();
-  }
-  function answerMc(i) {
-    const o = Q[qi].options[i];
-    if (o.ok) { draw(); body_mark(i); correct(); return; }
-    wrong++; crossed.add(i);
-    draw(hintHtml(o.hint));
-  }
-  function body_mark(i) { const b = $(`q${qi}o${i}`); if (b) b.classList.add("right"); }
-  function answerNum(raw) {
-    const q = Q[qi], v = parse(raw);
-    if (isNaN(v)) { draw(`<div class="hintbox hint"><span class="hk">Check the format</span>Type a fraction (5/8), a decimal (0.62) or a percent (62%).</div>`); return; }
-    if (Math.abs(v - q.answer) <= 0.01) { $(`q${qi}num`).value = raw; correct(); return; }
-    wrong++;
-    const trap = q.traps.find((t) => Math.abs(v - t.v) <= 0.01);
-    draw(hintHtml(trap && trap.hint));
-    $(`q${qi}num`).value = raw;
-  }
-  start();
-})();
-</script>
-<script>
-(function () {
-  const T = [
-    ["Bread", "Butter", "Milk"], ["Bread", "Butter"], ["Milk", "Coffee", "Cookies"],
-    ["Bread", "Butter", "Eggs"], ["Milk", "Eggs"], ["Bread", "Milk", "Butter", "Cookies"],
-    ["Coffee", "Cookies"], ["Bread", "Eggs"], ["Milk", "Coffee"], ["Bread", "Butter", "Milk", "Eggs"]
-  ];
-  const $ = (id) => document.getElementById(id);
-  let card = 0, step = 0, started = false;
-  const STEPS = [
-    { h: "Find every receipt with <b>Bread</b>.", eq: "6 receipts", cap: "Yellow: receipts with Bread (6)." },
-    { h: "Keep only the ones that <b>also</b> have <b>Butter</b>. T8 drops out: it has Bread but no Butter.", eq: "5 receipts", cap: "Green: receipts with Bread and Butter (5)." },
-    { h: "Count the total number of receipts.", eq: "N = 10", cap: "Green: receipts with Bread and Butter (5) out of 10." },
-    { h: "Divide.", eq: "supp({Bread, Butter}) = 5 ÷ 10 = 0.5 = 50%", cap: "Half of all Corner Mart customers bought Bread and Butter together." }
-  ];
-  function receipts() {
-    const showA = card === 2 && step >= 1, showAB = card === 2 && step >= 2;
-    $("rvReceipts").innerHTML = T.map((t, i) => {
-      const a = t.includes("Bread"), ab = a && t.includes("Butter");
-      const cls = showAB && ab ? " ab" : showA && a && !showAB ? " a" : "";
-      return `<div class="receipt${cls}"><div class="no"><span>T${i + 1}</span></div>` +
-        t.map((it) => `<span class="it${card === 2 && (it === "Bread" || (showAB && it === "Butter")) ? " on" : ""}">${it}</span>`).join("") + "</div>";
-    }).join("");
-    $("rvCap").textContent = card === 2 && step ? STEPS[step - 1].cap : "Corner Mart's 10 receipts.";
-  }
-  const CARDS = [
-    () => `<span class="hk" style="color:var(--tag)">1 · What is it?</span><h3>Support</h3>
-      <p>Support tells you <b>how common</b> an item, or a combination of items, is across all the receipts.</p>
-      <p>In store terms: out of all customers, what share bought this?</p>
-      <p style="opacity:.8">High support means many customers buy it. Low support means it is rare.</p>`,
-    () => `<span class="hk" style="color:var(--tag)">2 · How to calculate it</span><h3>Count, then divide</h3>
-      <div class="rv-formula">support(X) = <span class="frac"><span>number of receipts containing X</span><span>total number of receipts</span></span></div>
-      <p>For a combination like {Bread, Butter}, a receipt only counts if it has <b>every</b> item in the combination.</p>
-      <p style="opacity:.8">Multiply by 100 to get a percentage.</p>`,
-    () => `<span class="hk" style="color:var(--tag)">3 · Worked example</span><h3>Support of {Bread, Butter}</h3>
-      <ol class="rv-steps">${STEPS.slice(0, step).map((s) => `<li>${s.h}<br><span class="eq">${s.eq}</span></li>`).join("")}</ol>
-      ${step < STEPS.length ? `<p><button type="button" class="btn ghost" id="rvStep">Show next step (${step + 1} of ${STEPS.length})</button></p>` : ""}`,
-    () => `<span class="hk" style="color:var(--tag)">4 · Remember</span><h3>Key points</h3>
-      <ul class="rv-points">
-        <li>Support is always between 0% and 100%.</li>
-        <li>A combination is never more common than any single item in it: {Bread, Butter} 50% ≤ Butter 50% ≤ Bread 60%.</li>
-        <li>Common mistake: counting receipts with Bread <em>or</em> Butter. It must be both.</li>
-        <li>In this mission, Corner Mart only cares about itemsets with support of <b>at least 30%</b>.</li>
-      </ul>
-      ${started ? `<div class="hintbox ok"><span class="hk">Mission started</span>The review is saved to your formula cards. Press Review ↺ any time to see it again.</div>` : ""}`
-  ];
-  function draw() {
-    $("rvNum").textContent = `${card + 1} / ${CARDS.length}`;
-    const last = card === CARDS.length - 1;
-    $("rvCard").innerHTML = CARDS[card]() + `<div class="rv-nav">
-      <div class="rv-dots">${CARDS.map((_, i) => `<i class="${i === card ? "now" : ""}"></i>`).join("")}</div>
-      <div style="display:flex;gap:8px">
-        <button type="button" class="btn ghost" id="rvBack"${card === 0 ? " disabled" : ""}>Back</button>
-        <button type="button" class="btn" id="rvNext">${last ? (started ? "Review again" : "Start mission") : "Next"}</button>
-      </div></div>`;
-    receipts();
-    $("rvBack").onclick = () => { card--; draw(); };
-    $("rvNext").onclick = () => {
-      if (!last) { card++; draw(); }
-      else if (!started) { started = true; draw(); }
-      else { started = false; card = 0; step = 0; draw(); }
-    };
-    const s = $("rvStep"); if (s) s.onclick = () => { step++; draw(); const n = $("rvStep") || $("rvNext"); n.focus(); };
-  }
-  draw();
-})();
-</script>
-<script>
-(function () {
-  const M = [
-    { t: "Read the Receipts", c: "Transactions & itemsets" },
-    { t: "Support Hunt", c: "Support" },
-    { t: "If This, Then That", c: "Confidence" },
-    { t: "The Lift Lens", c: "Lift" },
-    { t: "Apriori Climb", c: "Apriori principle" },
-    { t: "Manager's Meeting", c: "Full pipeline" }
-  ];
-  const STAGES = [
-    { n: "Review", d: "Four cards: what it is, how to calculate it, a worked example, key points.", go: "Start the activity" },
-    { n: "Explore", d: "Hands-on work with the receipts on the interactive board.", go: "Go to the checkpoint" },
-    { n: "Checkpoint", d: "Answer every question correctly. Wrong answers show a hint and you try again.", go: "Submit final answer" },
-    { n: "Results", d: "", go: "" }
-  ];
-  const $ = (id) => document.getElementById(id);
-  let stars, open, stage, banner, newly;
-  function reset() { stars = [3, 2, null, null, null, null]; open = null; stage = 0; banner = ""; newly = null; draw(); }
-  const doneCount = () => stars.filter((s) => s !== null).length;
-  const isOpen = (i) => i === 0 || stars[i - 1] !== null;
-  const starStr = (s) => "★".repeat(s) + "☆".repeat(3 - s);
-
-  function drawMap() {
-    $("mapUrl").textContent = "dmba-games/basket-detective";
-    $("mapTitle").textContent = "Basket Detective · Missions";
-    let html = banner;
-    html += `<div class="map">` + M.map((m, i) => {
-      const done = stars[i] !== null, cur = !done && isOpen(i);
-      const cls = done ? "done" : cur ? "current" : "locked";
-      const k = done ? `Mission ${i + 1} · done ${starStr(stars[i])}` : cur ? `Mission ${i + 1} · ${newly === i ? "new · " : ""}play now` : `Mission ${i + 1} · locked`;
-      const st = done ? "Replay any time" : cur ? "Next up" : `Finish Mission ${i} to unlock`;
-      return `<button type="button" class="mnode ${cls}" id="mnode${i}" data-i="${i}"${cls === "locked" ? ` aria-disabled="true"` : ""}>
-        <span class="k">${k}</span><h3>${m.t}</h3><span class="st">${m.c} · ${st}</span></button>`;
-    }).join("") + `</div>`;
-    if (doneCount() === 6) html += `<div class="banner" style="margin-top:14px">All six missions complete. <b>Sandbox mode</b> is now unlocked.</div>`;
-    $("mapBody").innerHTML = html;
-    $("mapBody").querySelectorAll(".mnode").forEach((b) => b.onclick = () => {
-      const i = +b.dataset.i;
-      if (!isOpen(i)) { banner = `<div class="banner lock">🔒 Mission ${i + 1} is locked. Finish Mission ${i}, <b>${M[i - 1].t}</b>, to unlock it.</div>`; draw(); return; }
-      openMission(i);
-    });
-  }
-  function openMission(i) { open = i; stage = 0; banner = ""; draw(); }
-  function drawMission() {
-    const i = open, replay = stars[i] !== null;
-    $("mapUrl").textContent = `dmba-games/basket-detective/mission-${i + 1}`;
-    $("mapTitle").textContent = `Mission ${i + 1} · ${M[i].t}`;
-    const pills = STAGES.map((s, k) => `<span class="${k < stage ? "done" : k === stage ? "now" : "todo"}">${k < stage ? "✓ " : ""}${k + 1} ${s.n}</span>`).join("");
-    let body;
-    if (stage < 3) {
-      const s = STAGES[stage];
-      body = `<div class="rv-card" style="min-height:0"><span class="hk" style="color:var(--tag)">Stage ${stage + 1} of 4 · ${s.n}</span>
-        <h3>${s.n}: ${M[i].c}</h3><p>${s.d}</p>
-        <p style="opacity:.75;font-size:.9rem">${stage === 0 && !replay ? "First play: the review can't be skipped." : stage === 2 ? "In this demo, the button stands in for answering all the questions." : "Later stages unlock as you go."}</p>
-        <div class="rv-nav"><button type="button" class="btn ghost" id="mBack">← Mission map</button>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">${stage === 0 && replay ? `<button type="button" class="btn ghost" id="mSkip">Skip review</button>` : ""}
-        <button type="button" class="btn" id="mNext">${s.go}</button></div></div></div>`;
-    } else {
-      const got = stars[i];
-      const next = i + 1 < M.length ? i + 1 : null;
-      body = `<div class="rv-card" style="min-height:0"><span class="hk" style="color:#4cc493">Mission complete</span>
-        <h3>${M[i].t}</h3><div class="stars">${starStr(got)}</div>
-        <p>${next !== null ? (newly === next ? `<b>Mission ${next + 1}, ${M[next].t}, is now unlocked.</b>` : `Mission ${next + 1} is already open.`) : "That was the last mission of Basket Detective."}</p>
-        <div class="rv-nav"><button type="button" class="btn ghost" id="mBack">← Mission map</button>
-        ${next !== null ? `<button type="button" class="btn" id="mGo">Go to Mission ${next + 1} →</button>` : ""}</div></div>`;
-    }
-    $("mapBody").innerHTML = `<div class="mpage"><div class="mstages">${pills}</div>${body}</div>`;
-    $("mBack").onclick = () => { open = null; draw(); };
-    const nx = $("mNext"); if (nx) nx.onclick = () => {
-      if (stage === 2) {
-        const first = stars[i] === null;
-        stars[i] = Math.max(stars[i] ?? 0, 2);
-        newly = first && i + 1 < M.length ? i + 1 : newly;
+    const go = (i) => { open = i; stage = 0; msg = ""; draw(); };
+    function drawMission() {
+      const i = open, replay = stars[i] !== null;
+      $("mapUrl").textContent = `/basket-detective/mission-${i + 1}`;
+      $("mapTitle").innerHTML = `Aisle ${i + 1} · ${M[i].t}<small>Mission page</small>`;
+      const pills = ST.map((s, k) => `<span class="${k < stage ? "d" : k === stage ? "n" : "t"}">${k < stage ? "✓ " : ""}${s.n}</span>`).join("");
+      let body;
+      if (stage < 3) {
+        const s = ST[stage];
+        const note = stage === 0 && !replay ? "First play: the review can't be skipped." : stage === 2 ? "In this demo, the button stands in for answering every question correctly." : "";
+        body = `<div class="card"><span class="k">Stage ${stage + 1} of 4</span><h4>${s.n}: ${M[i].c}</h4><p>${s.d}</p>${note ? `<p style="color:var(--sub);font-size:.9rem">${note}</p>` : ""}
+          <div class="row end" style="margin-top:14px"><button type="button" class="btn alt" id="mBack">← Mission map</button>
+          <span class="row">${stage === 0 && replay ? `<button type="button" class="btn alt" id="mSkip">Skip review</button>` : ""}<button type="button" class="btn" id="mNext">${s.go}</button></span></div></div>`;
+      } else {
+        const nx = i + 1 < M.length ? i + 1 : null;
+        body = `<div class="card"><span class="k">Mission complete</span><h4>${M[i].t}</h4><div class="stars" style="font-size:2rem">${starHtml(stars[i])}</div>
+          <div class="owner" style="margin:12px 0 4px"><span class="av" aria-hidden="true">MT</span><div class="bubble ok">${say("Mrs Tan", nx !== null ? (newly === nx ? `Nice work. <b>Aisle ${nx + 1}: ${M[nx].t}</b> is open now.` : `Aisle ${nx + 1} was already open.`) : "That's the last aisle. Well done.")}</div></div>
+          <div class="row end" style="margin-top:14px"><button type="button" class="btn alt" id="mBack">← Mission map</button>${nx !== null ? `<button type="button" class="btn" id="mGo">Go to Mission ${nx + 1} →</button>` : ""}</div></div>`;
       }
-      stage++; draw();
-    };
-    const sk = $("mSkip"); if (sk) sk.onclick = () => { stage = 1; draw(); };
-    const g = $("mGo"); if (g) g.onclick = () => openMission(i + 1);
-  }
-  function draw() {
-    $("mapDone").textContent = `${doneCount()} / 6`;
-    $("mapStars").textContent = `${stars.reduce((a, s) => a + (s || 0), 0)} / 18`;
-    open === null ? drawMap() : drawMission();
-  }
-  $("mapReset").onclick = reset;
-  reset();
+      $("mapBody").innerHTML = `<div class="sc-stack"><div class="stage-row">${pills}</div>${body}</div>`;
+      $("mBack").onclick = () => { open = null; draw(); };
+      const n = $("mNext"); if (n) n.onclick = () => {
+        if (stage === 2) { const first = stars[i] === null; stars[i] = Math.max(stars[i] ?? 0, 2); if (first && i + 1 < M.length) newly = i + 1; }
+        stage++; draw(); ($("mGo") || $("mNext") || $("mBack")).focus();
+      };
+      const sk = $("mSkip"); if (sk) sk.onclick = () => { stage = 1; draw(); };
+      const g = $("mGo"); if (g) g.onclick = () => go(i + 1);
+    }
+    function draw() {
+      $("mapDone").textContent = `${stars.filter((s) => s !== null).length} / 6`;
+      $("mapStars").textContent = `${stars.reduce((a, s) => a + (s || 0), 0)} / 18`;
+      open === null ? drawMap() : drawMission();
+    }
+    $("mapReset").onclick = reset;
+    reset();
+  })();
+
+  /* ---------- C: quick review ---------- */
+  (function () {
+    let card = 0, step = 0, started = false;
+    const STEPS = [
+      { h: "Find every receipt with <b>Bread</b>.", eq: "6 receipts", say: "First, all the bread buyers. I've outlined them." },
+      { h: "Keep only the ones that <b>also</b> have <b>Butter</b>. #8 drops out: bread, but no butter.", eq: "5 receipts", say: "Now only the ones that took butter as well. That's the green ones." },
+      { h: "Count all the receipts.", eq: "N = 10", say: "Ten customers on Saturday morning." },
+      { h: "Divide.", eq: "supp({Bread, Butter}) = 5 ÷ 10 = 50%", say: "Half my customers buy bread and butter together. Good to know." }
+    ];
+    const CARDS = [
+      () => `<span class="k">1 · What is it?</span><h4>Support</h4><p>Support tells you <b>how common</b> an item, or a combination of items, is across all the receipts.</p><p>In shop terms: out of all customers, what share bought this?</p><p style="color:var(--sub)">High support means lots of customers buy it. Low support means it's rare.</p>`,
+      () => `<span class="k">2 · How to calculate it</span><h4>Count, then divide</h4><div class="formula">support(X) = <span class="frac"><span>receipts containing X</span><span>total receipts</span></span></div><p style="margin-top:10px">For a combination like {Bread, Butter}, a receipt only counts if it has <b>every</b> item in the combination.</p><p style="color:var(--sub)">Multiply by 100 for a percentage.</p>`,
+      () => `<span class="k">3 · Worked example</span><h4>Support of {Bread, Butter}</h4><ol class="rv-steps">${STEPS.slice(0, step).map((s, k) => `<li data-n="${k + 1}"><span>${s.h}<span class="eq">${s.eq}</span></span></li>`).join("")}</ol>${step < STEPS.length ? `<div><button type="button" class="btn alt" id="rvStep">Show next step (${step + 1} of ${STEPS.length})</button></div>` : ""}`,
+      () => `<span class="k">4 · Remember</span><h4>Key points</h4><ul style="margin:0;padding-left:18px;display:grid;gap:6px"><li>Support is always between 0% and 100%.</li><li>A combination is never more common than any single item in it: {Bread, Butter} 50% ≤ Bread 60%.</li><li>Common mistake: counting receipts with Bread <em>or</em> Butter. It has to be both.</li><li>In this mission, Mrs Tan only wants itemsets with support of <b>at least 30%</b>.</li></ul>`
+    ];
+    const talk = () => card === 2 && step ? STEPS[step - 1].say : started ? "Right, let's find out what my customers really buy." : ["Before we start: one idea, one formula, one example.", "This is the only formula you need for this aisle.", "Let's try it on Saturday's receipts.", "That's it. Ready when you are."][card];
+    function draw() {
+      $("rvNum").textContent = `${card + 1} / 4`;
+      const last = card === 3;
+      $("rvCard").innerHTML = CARDS[card]() + `<div class="row end"><span class="dots">${CARDS.map((_, i) => `<i class="${i === card ? "n" : ""}"></i>`).join("")}</span><span class="row"><button type="button" class="btn alt" id="rvBack"${card === 0 ? " disabled" : ""}>Back</button><button type="button" class="btn" id="rvNext">${last ? (started ? "Review again" : "Start mission") : "Next"}</button></span></div>`;
+      const showA = card === 2 && step >= 1, showB = card === 2 && step >= 2;
+      slips("rvSlips", (t) => { const a = t.includes("Bread"), b = a && t.includes("Butter"); return showB ? (b ? "both" : "dim") : showA ? (a ? "lit" : "dim") : ""; },
+        (it) => (showA && it === "Bread") || (showB && it === "Butter"));
+      $("rvSay").innerHTML = say("Mrs Tan", talk());
+      $("rvBack").onclick = () => { card--; draw(); };
+      $("rvNext").onclick = () => { if (!last) card++; else if (!started) started = true; else { started = false; card = 0; step = 0; } draw(); };
+      const s = $("rvStep"); if (s) s.onclick = () => { step++; draw(); ($("rvStep") || $("rvNext")).focus(); };
+    }
+    draw();
+  })();
+
+  /* ---------- D: rule builder ---------- */
+  (function () {
+    const A = new Set(["Bread"]), B = new Set(["Milk"]);
+    const ruleTxt = (S) => [...S].join(" + ");
+    function picks(el, own, other) {
+      $(el).innerHTML = ITEMS.map((it) => `<button type="button" class="pick" id="${el}-${it}" data-it="${it}" aria-pressed="${own.has(it)}"${other.has(it) ? " disabled" : ""}>${tok(it)}${it}</button>`).join("");
+      $(el).querySelectorAll(".pick").forEach((b) => b.onclick = () => { const it = b.dataset.it; own.has(it) ? own.delete(it) : own.add(it); draw(); $(b.id).focus(); });
+    }
+    function draw() {
+      picks("pickA", A, B); picks("pickB", B, A);
+      const ok = A.size && B.size;
+      slips("rbSlips", (t) => { if (!A.size) return ""; const a = has(t, A), b = a && B.size && has(t, B); return b ? "both" : a ? "lit" : "dim"; }, (it) => A.has(it) || B.has(it));
+      $("rbRule").innerHTML = ok ? `${[...A].map((i) => tok(i)).join("")} ${ruleTxt(A)} <span class="arrow">→</span> ${[...B].map((i) => tok(i)).join("")} ${ruleTxt(B)}` : "";
+      const set = (k, v, w, bar) => { $("v" + k).textContent = v; $("w" + k).innerHTML = w || "&nbsp;"; $("b" + k).style.width = bar + "%"; };
+      if (!ok) { set("S", "–", "", 0); set("C", "–", "", 0); set("L", "–", "", 0); $("rbSay").innerHTML = say("Mrs Tan", "Pick at least one item on each side and I'll tell you if it's worth anything."); return; }
+      const nA = T.filter((t) => has(t, A)).length, nB = T.filter((t) => has(t, B)).length, nAB = T.filter((t) => has(t, A) && has(t, B)).length;
+      const conf = nA ? nAB / nA : 0, base = nB / N, lift = nA && nB ? conf / base : 0;
+      set("S", pct(nAB / N), `${nAB} of ${N} receipts`, nAB / N * 100);
+      set("C", nA ? pct(conf) : "–", `${nAB} of ${nA} "if" receipts`, conf * 100);
+      set("L", nA && nB ? lift.toFixed(2) : "–", `${pct(conf)} vs ${pct(base)} usual`, Math.min(lift / 3, 1) * 100);
+      const a = ruleTxt(A).toLowerCase(), b = ruleTxt(B).toLowerCase();
+      let s;
+      if (nAB === 0) s = `Nobody bought ${a} and ${b} together. Zero support, so forget it.`;
+      else if (lift > 1.05) s = `<b>That's a real pattern.</b> Customers who buy ${a} are ${lift.toFixed(1)}× as likely as usual to buy ${b}. Worth putting them together.`;
+      else if (lift >= 0.95) s = `<b>No effect.</b> People buy ${b} just as often whether or not they buy ${a}.`;
+      else s = `<b>Don't be fooled.</b> ${pct(conf)} sounds high, but ${pct(base)} of all my customers buy ${b} anyway. ${a[0].toUpperCase() + a.slice(1)} doesn't help sell it.`;
+      $("rbSay").innerHTML = say("Mrs Tan", s);
+    }
+    $("rbKey").innerHTML = ITEMS.map((it) => `<span>${tok(it)}${it}</span>`).join("");
+    draw();
+  })();
+
+  /* ---------- E: checkpoint ---------- */
+  (function () {
+    const Q = [
+      { type: "mc", text: "How many receipts contain Bread?", mark: "Bread",
+        options: [{ t: "4", hint: "More than that. Check every receipt, including the long ones." }, { t: "5", hint: "Close. Did you check #8? Bread and eggs." }, { t: "6", ok: true }, { t: "10", hint: "Not everyone buys bread. #3 is milk, coffee and cookies." }],
+        ladder: ["Bread is on #1, #2 and #4. Keep going from #5. I've outlined the bread receipts.", "Bread is on #1, #2, #4, #6, #8 and #10. How many is that?"],
+        explain: "6 of my 10 customers bought bread, so the support of Bread is 60%." },
+      { type: "num", text: "What is the confidence of Bread → Butter?", answer: 5 / 6, mark: "Bread",
+        traps: [{ v: 0.5, hint: "That's 5 out of all 10 customers, which is the support. For confidence I only want the bread buyers." }, { v: 1, hint: "That's Butter → Bread. Here bread comes first, so divide by the bread receipts." }],
+        first: "Confidence only looks at the customers who bought the \"if\" item: bread.",
+        ladder: ["6 receipts have bread. I've lit them up. How many of those also have butter?", "5 of the 6 bread receipts have butter. So 5 ÷ 6 is…?"],
+        explain: "5 ÷ 6 ≈ 83%. Most of my bread buyers take butter too." },
+      { type: "mc", one: true, text: "Bread → Milk has 50% confidence. Should Mrs Tan move the milk next to the bread to sell more milk?", mark: "Milk",
+        options: [{ t: "Yes. Half of bread buyers also buy milk.", hint: "50% sounds good. But how often does anyone buy milk?" }, { t: "Yes. The pair has 30% support.", hint: "Support only says the pair is common. It doesn't say bread makes people buy milk." }, { t: "No. Bread buyers buy milk less often than customers overall.", ok: true }, { t: "No. A rule needs 100% confidence to be useful.", hint: "Hardly any rule hits 100%. The question is whether 50% beats the usual milk rate." }],
+        ladder: ["Milk is on 6 of the 10 receipts, lit up now. So 60% of everyone buys milk.", "Bread buyers: 50% buy milk. Everyone: 60%. Lift = 50% ÷ 60% = 0.83. Above or below 1?"],
+        explain: "Lift is 0.83, below 1. Bread buyers are slightly less likely to buy milk, so moving it won't help." }
+    ];
+    let qi, wrong, pts, first, crossed, mark, fb, solved;
+    const start = () => { qi = 0; pts = 0; first = 0; load(); };
+    const load = () => { wrong = 0; crossed = new Set(); mark = null; fb = ""; solved = false; draw(); };
+    function parse(s) {
+      s = s.trim().replace(/\s/g, ""); if (!s) return NaN;
+      if (s.includes("/")) { const [a, b] = s.split("/").map(Number); return b ? a / b : NaN; }
+      let v = parseFloat(s); if (isNaN(v)) return NaN; if (s.endsWith("%") || v > 1) v /= 100; return v;
+    }
+    function hint(spec) {
+      const q = Q[qi], lines = [];
+      if (spec) lines.push(spec);
+      if (wrong >= 2) { lines.push(q.ladder[Math.min(wrong - 2, q.ladder.length - 1)]); mark = q.mark; }
+      else if (!spec && q.first) lines.push(q.first);
+      const lvl = wrong === 1 ? "Hint 1 · a nudge" : wrong === 2 ? "Hint 2 · look at the receipts" : "Hint 3 · nearly there";
+      fb = `<div class="owner"><span class="av" aria-hidden="true">MT</span><div class="bubble">${say("Mrs Tan", lines.join(" "))}<span class="lvl">${lvl} · try again</span></div></div>`;
+    }
+    function draw() {
+      slips("qSlips", (t) => mark ? (t.includes(mark) ? "lit" : "dim") : "", (it) => it === mark);
+      $("qNum").textContent = `${Math.min(qi + 1, Q.length)} / ${Q.length}`;
+      const bar = `<div class="qbar">${Q.map((_, i) => `<i class="${i < qi || (i === qi && solved) ? "d" : i === qi ? "n" : ""}"></i>`).join("")}</div>`;
+      if (qi >= Q.length) {
+        const r = pts / (Q.length * 3), n = r >= 0.9 ? 3 : r >= 0.6 ? 2 : 1;
+        $("qBody").innerHTML = `<div class="card">${bar}<span class="k">Checkpoint cleared</span><h4>Aisle 3 done</h4><div class="stars" style="font-size:2rem">${starHtml(n)}</div><p>${first} of ${Q.length} right first time · ${pts} / ${Q.length * 3} points</p><div class="row" style="margin-top:10px"><button type="button" class="btn" id="qAgain">Play again</button></div></div>`;
+        $("qAgain").onclick = start; $("qAgain").focus(); return;
+      }
+      const q = Q[qi];
+      let h = `<div class="card">${bar}<span class="k">Question ${qi + 1}</span><h4>${q.text}</h4>`;
+      if (q.type === "mc") h += `<div class="opts${q.one ? " one" : ""}">${q.options.map((o, i) => `<button type="button" class="opt${crossed.has(i) ? " x" : ""}${solved && o.ok ? " ok" : ""}" id="q${qi}o${i}" data-i="${i}"${crossed.has(i) || solved ? " disabled" : ""}>${o.t}</button>`).join("")}</div>`;
+      else h += `<form class="numrow" id="qForm"><input type="text" id="q${qi}n" inputmode="decimal" autocomplete="off" placeholder="e.g. 3/4, 0.75 or 75%" aria-label="Your answer"${wrong && !solved ? ' class="bad"' : ""}${solved ? " disabled" : ""}><button class="btn" type="submit"${solved ? " disabled" : ""}>Check</button></form>`;
+      if (wrong && !solved) h += `<p class="worth" style="margin-top:10px">Now worth ${wrong === 1 ? 2 : 1} point${wrong === 1 ? "s" : ""}</p>`;
+      h += `</div>` + fb;
+      if (solved) h += `<div class="row"><button type="button" class="btn" id="qNext">${qi === Q.length - 1 ? "Finish" : "Next question"}</button></div>`;
+      const keep = q.type === "num" && $(`q${qi}n`) ? $(`q${qi}n`).value : "";
+      $("qBody").innerHTML = h;
+      if (q.type === "mc") $("qBody").querySelectorAll(".opt:not(:disabled)").forEach((b) => b.onclick = () => mc(+b.dataset.i));
+      else { const inp = $(`q${qi}n`); inp.value = keep; $("qForm").onsubmit = (e) => { e.preventDefault(); num(inp.value); }; if (wrong && !solved) inp.focus(); }
+      if (solved) { $("qNext").onclick = () => { qi++; load(); }; $("qNext").focus(); }
+    }
+    function win() {
+      const q = Q[qi]; pts += wrong === 0 ? 3 : wrong === 1 ? 2 : 1; if (!wrong) first++;
+      solved = true; mark = q.mark;
+      fb = `<div class="owner"><span class="av" aria-hidden="true">MT</span><div class="bubble ok">${say("Mrs Tan", "Right. " + q.explain)}</div></div>`;
+      draw();
+    }
+    function mc(i) { const o = Q[qi].options[i]; if (o.ok) return win(); wrong++; crossed.add(i); hint(o.hint); draw(); }
+    function num(raw) {
+      const q = Q[qi], v = parse(raw);
+      if (isNaN(v)) { fb = `<div class="owner"><span class="av" aria-hidden="true">MT</span><div class="bubble">${say("Mrs Tan", "I can't read that. Type a fraction (5/8), a decimal (0.62) or a percentage (62%).")}</div></div>`; draw(); return; }
+      if (Math.abs(v - q.answer) <= 0.01) return win();
+      wrong++; const tr = q.traps.find((t) => Math.abs(v - t.v) <= 0.01); hint(tr && tr.hint); draw();
+    }
+    start();
+  })();
+
+  /* ---------- F: apriori shelves ---------- */
+  (function () {
+    const box = (items, ct, cls) => `<div class="box ${cls || ""}"><div class="toks">${items.map((i) => tok(i)).join("")}</div><span class="ct">${ct}</span></div>`;
+    $("shelves").innerHTML = [
+      `<div class="shelf"><div class="lab">Shelf 1 · single items</div><div class="boxes">${["Bread", "Milk", "Butter", "Eggs", "Coffee", "Cookies"].map((i, k) => box([i], [6, 6, 5, 4, 3, 3][k])).join("")}</div></div>`,
+      `<div class="shelf"><div class="lab">Shelf 2 · pairs</div><div class="boxes">${box(["Bread", "Butter"], 5)}${box(["Bread", "Milk"], 3)}${box(["Bread", "Eggs"], 3)}${box(["Butter", "Milk"], 3)}${box(["Butter", "Eggs"], 2, "rare")}${box(["Milk", "Eggs"], 2, "rare")}${box(["Coffee", "Cookies"], 2, "rare")}<div class="box more">+ 8 more pairs, all too rare</div></div></div>`,
+      `<div class="shelf"><div class="lab">Shelf 3 · triples</div><div class="boxes">${box(["Bread", "Butter", "Milk"], 3)}${box(["Bread", "Butter", "Eggs"], "skipped", "skip")}${box(["Bread", "Milk", "Eggs"], "skipped", "skip")}</div></div>`
+    ].join("");
+  })();
 })();
 </script>
