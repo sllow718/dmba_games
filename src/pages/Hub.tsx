@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ACTIVITIES, COMING_SOON } from "../activities";
-import { resetProgress, update, useProgress } from "../core/progress";
+import { resetProgress, useProgress } from "../core/progress";
 import { activitySummary } from "../core/unlock";
 import { Owner, Stars, TopBar } from "../components/ui";
 
@@ -11,7 +11,6 @@ export function Hub() {
   return (
     <>
       <TopBar title="DMBA Games" sub="Data mining, one shop at a time">
-        {p.name && <span>{p.name}</span>}
         <span>XP <b>{total}</b></span>
       </TopBar>
       <main>
@@ -19,16 +18,10 @@ export function Hub() {
           <h1>Pick a shop</h1>
           <p>Each shop on the street teaches one data-mining technique through short missions. Corner Mart is open now.</p>
         </div>
-        <div className="split" style={{ marginBottom: 26 }}>
+        <div style={{ marginBottom: 26 }}>
           <Owner>
-            {p.name ? <>Welcome back, {p.name}. </> : <>Hello! I'm Mrs Tan, and I run Corner Mart. </>}
-            I've got a week of receipts and no idea what my customers buy together. That's where you come in.
+            Hello! I'm Mrs Tan, and I run Corner Mart. I've got a week of receipts and no idea what my customers buy together. That's where you come in.
           </Owner>
-          <form className="card row" onSubmit={(e) => e.preventDefault()}>
-            <label htmlFor="name" style={{ fontWeight: 700 }}>Your name</label>
-            <input id="name" className="num" style={{ fontSize: "1rem", flex: 1, minWidth: 0 }} maxLength={30} autoComplete="off" placeholder="What should Mrs Tan call you?"
-              value={p.name} onChange={(e) => { const name = e.target.value; update((q) => ({ ...q, name })); }} />
-          </form>
         </div>
         <div className="street">
           {ACTIVITIES.map((a) => {

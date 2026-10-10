@@ -21,14 +21,13 @@ export interface MissionProgress {
 
 export interface Progress {
   version: 1;
-  name: string;
   missions: Record<string, MissionProgress>;
   /** Mission key that was just unlocked, shown as "New" on the map until opened. */
   fresh?: string;
 }
 
 const KEY = "dmba-games:progress";
-const empty = (): Progress => ({ version: 1, name: "", missions: {} });
+const empty = (): Progress => ({ version: 1, missions: {} });
 
 function load(): Progress {
   try {

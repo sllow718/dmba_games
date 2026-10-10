@@ -5,7 +5,7 @@ import type { Progress } from "./progress";
 import { blankMission } from "./progress";
 
 const prog = (done: number[]): Progress => ({
-  version: 1, name: "",
+  version: 1,
   missions: Object.fromEntries(done.map((n) => [`${a.id}:${n}`, { ...blankMission(), completed: true, bestStars: 2, bestPoints: 8 }])),
 });
 
