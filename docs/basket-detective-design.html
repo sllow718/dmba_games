@@ -159,13 +159,35 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
 .qs li b { display: block; }
 .qs li span { color: var(--muted); font-size: 0.93rem; }
 /* mission loop */
-.loop { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; margin-top: 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); overflow: hidden; }
+.loop { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; margin-top: 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); overflow: hidden; }
 @media (max-width: 760px) { .loop { grid-template-columns: 1fr; } }
 .loop .step { padding: 14px; font-size: 0.92rem; border-right: 1px solid var(--line); min-width: 0; position: relative; }
 .loop .step:last-child { border-right: none; }
 @media (max-width: 760px) { .loop .step { border-right: none; border-bottom: 1px solid var(--line); } .loop .step:last-child { border-bottom: none; } }
 .loop .k { display: block; font-family: var(--font-display); font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
-.loop .step:nth-child(3), .loop .step:nth-child(4) { background: var(--hit-a); }
+.loop .step:nth-child(2) { background: var(--hit-ab); }
+.loop .step:nth-child(4), .loop .step:nth-child(5) { background: var(--hit-a); }
+@media (max-width: 960px) and (min-width: 761px) { .loop { grid-template-columns: repeat(3, minmax(0, 1fr)); } .loop .step { border-bottom: 1px solid var(--line); } }
+
+/* quick review */
+.review { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 760px) { .review { grid-template-columns: 1fr; } }
+.rv-card { border: 1px solid var(--screen-line); border-radius: 10px; padding: 18px; min-height: 270px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.rv-card h3 { font-size: 1.3rem; }
+.rv-card p { margin: 0; }
+.rv-formula { font-family: var(--font-mono); font-size: 1rem; background: var(--screen-line); border-radius: 8px; padding: 12px 14px; line-height: 1.5; overflow-x: auto; }
+.rv-formula .frac { display: inline-grid; vertical-align: middle; text-align: center; margin-inline: 4px; }
+.rv-formula .frac span:first-child { border-bottom: 1px solid var(--screen-fg); padding-bottom: 2px; }
+.rv-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.rv-steps li { border-left: 3px solid var(--tag); padding-left: 10px; }
+.rv-steps .eq { font-family: var(--font-mono); color: var(--tag); }
+.rv-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 6px; }
+.rv-dots { display: flex; gap: 6px; }
+.rv-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--screen-line); }
+.rv-dots i.now { background: var(--tag); }
+.btn.ghost { background: transparent; color: var(--screen-fg); border: 1px solid var(--screen-line); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.rv-points { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
 
 /* hint ladder */
 .hints { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
@@ -213,7 +235,7 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
 
   <section class="col">
     <h2>What students should walk away with</h2>
-    <p>Each mission targets one idea. The game never shows a formula before the student has done the counting by hand, so the formula arrives as a shortcut for something they already did.</p>
+    <p>Each mission targets one idea. A short review explains it first, in plain words and with one worked example on the receipts. The student then applies it straight away on the board and in the checkpoint questions.</p>
   </section>
   <div class="objectives">
     <div class="obj"><h3>Transactions &amp; itemsets</h3>A receipt is a transaction. Any group of items is an itemset.<span class="formula">{Bread, Butter}</span></div>
@@ -230,6 +252,7 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
   </section>
   <div class="loop">
     <div class="step"><span class="k">Brief</span>The store owner sets the problem.</div>
+    <div class="step"><span class="k">Quick review</span>1–2 minutes: what the idea is, how to calculate it, one worked example.</div>
     <div class="step"><span class="k">Explore</span>Students work with the receipts on the interactive board.</div>
     <div class="step"><span class="k">Checkpoint</span>3–5 questions on what the mission just taught.</div>
     <div class="step"><span class="k">Wrong? Hint + retry</span>A hint appears and the student tries again, as many times as needed.</div>
@@ -244,8 +267,31 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
     <li><span class="n">6</span><div class="body"><h3>Manager's Meeting</h3><p class="mech">The final challenge uses a bigger 30-receipt dataset. Students find the top three rules that pass support ≥ 20%, confidence ≥ 60% and lift &gt; 1, then pick a store action for each and defend it in one sentence.</p><div class="teach">teaches: the full pipeline, interpretation, business recommendation</div></div></li>
   </ol>
 
+  <section class="col">
+    <h2>Quick review before each mission</h2>
+    <p>Before a mission's activity starts, the student goes through a short review of what the mission teaches. It is 3–4 cards and takes 1–2 minutes. Every review uses the same four cards, so students always know where to look:</p>
+  </section>
+  <div class="hints">
+    <div class="obj"><span class="k">Card 1</span><h3>What is it?</h3><p>The idea in one or two plain sentences, tied to the store: "how common is this combination?"</p></div>
+    <div class="obj"><span class="k">Card 2</span><h3>How to calculate it</h3><p>The formula, written in words first and then in symbols.</p></div>
+    <div class="obj"><span class="k">Card 3</span><h3>Worked example</h3><p>One example on the real receipts, revealed step by step. Matching receipts light up as each step appears.</p></div>
+    <div class="obj"><span class="k">Card 4</span><h3>Remember</h3><p>2–3 key points and common mistakes, then the <b>Start mission</b> button.</p></div>
+  </div>
+  <p class="col caption">The review is required the first time and skippable on replays. A <b>Review</b> button on every mission and checkpoint screen reopens it at any point, and the step-3 hints link back to the worked example. After the mission, the cards are saved to the student's formula-card glossary.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Mission</th><th>Review covers</th><th>Formula card</th><th>Worked example</th></tr></thead>
+    <tbody>
+      <tr><td class="id">1 · Receipts</td><td>Transaction, item, itemset, support count</td><td class="mono">count(X) = receipts containing every item in X</td><td>count({Bread}) = 6</td></tr>
+      <tr><td class="id">2 · Support</td><td>Support, minimum-support threshold</td><td class="mono">supp(X) = count(X) ÷ N</td><td>supp({Bread, Butter}) = 5 ÷ 10 = 50%</td></tr>
+      <tr><td class="id">3 · Confidence</td><td>Rules X → Y, "if" and "then" sides, confidence</td><td class="mono">conf(X→Y) = count(X∪Y) ÷ count(X)</td><td>conf(Bread → Butter) = 5 ÷ 6 = 83%</td></tr>
+      <tr><td class="id">4 · Lift</td><td>Baseline rate, lift, reading lift above, at and below 1</td><td class="mono">lift(X→Y) = conf(X→Y) ÷ supp(Y)</td><td>lift(Coffee → Cookies) = 67% ÷ 30% = 2.22</td></tr>
+      <tr><td class="id">5 · Apriori</td><td>Frequent itemsets, Apriori principle, pruning</td><td class="mono">X rare ⇒ every superset of X rare</td><td>{Butter, Eggs} rare ⇒ skip {Bread, Butter, Eggs}</td></tr>
+      <tr><td class="id">6 · Manager</td><td>Recap of all three measures and the full pipeline</td><td class="mono">support → confidence → lift → action</td><td>Mission 1–5 cards in sequence</td></tr>
+    </tbody>
+  </table></div>
+
   <h2>Screen designs</h2>
-  <p class="col">Mockups of the four main screens. Screen B is playable: it runs on the real 10-receipt dataset the first missions use.</p>
+  <p class="col">Mockups of the main screens. Screens A2, B and B2 are playable and run on the real 10-receipt dataset the first missions use.</p>
 
   <h3 style="margin-top:28px">A · Activity hub</h3>
   <div class="screen" role="img" aria-label="Mockup of the activity hub">
@@ -260,9 +306,22 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
   </div>
   <p class="caption">Later activities are placeholders to show how the hub scales; the topics follow a typical DMBA syllabus.</p>
 
+  <h3 style="margin-top:36px">A2 · Quick review: Mission 2, Support (playable)</h3>
+  <div class="screen">
+    <div class="screen-bar"><span class="title">Mission 2 · Support Hunt · Quick review</span><div class="hud"><span>Card <b id="rvNum">1 / 4</b></span><span>About <b>1 min</b></span></div></div>
+    <div class="review">
+      <div class="rv-card" id="rvCard" aria-live="polite"></div>
+      <div>
+        <div class="mini-receipts" id="rvReceipts"></div>
+        <p class="caption" style="color:var(--screen-fg);opacity:.75" id="rvCap">Corner Mart's 10 receipts.</p>
+      </div>
+    </div>
+  </div>
+  <p class="caption">Go through the cards with Next. On card 3, each <b>Show next step</b> click lights up more of the receipts.</p>
+
   <h3 style="margin-top:36px">B · Mission screen: build a rule (playable)</h3>
   <div class="screen">
-    <div class="screen-bar"><span class="title">Mission 3 · If This, Then That</span><div class="hud"><span>Receipts <b>10</b></span><span>Checkpoint <b>after explore</b></span><span>Score <b>★★☆</b></span></div></div>
+    <div class="screen-bar"><span class="title">Mission 3 · If This, Then That</span><div class="hud"><span>Receipts <b>10</b></span><span>Review <b>↺</b></span><span>Score <b>★★☆</b></span></div></div>
     <div class="play">
       <div>
         <div class="receipts" id="receipts"></div>
@@ -285,7 +344,7 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
 
   <h3 style="margin-top:36px">B2 · Checkpoint questions (playable)</h3>
   <div class="screen">
-    <div class="screen-bar"><span class="title">Mission 3 · Checkpoint</span><div class="hud"><span>Question <b id="qNum">1 / 3</b></span><span>First-try <b id="qFirst">0</b></span></div></div>
+    <div class="screen-bar"><span class="title">Mission 3 · Checkpoint</span><div class="hud"><span>Question <b id="qNum">1 / 3</b></span><span>First-try <b id="qFirst">0</b></span><span>Review <b>↺</b></span></div></div>
     <div class="quiz">
       <div>
         <div class="mini-receipts" id="miniReceipts"></div>
@@ -400,17 +459,18 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
       <tr><td class="id">F-02</td><td>Activity 01 has six missions that unlock in sequence; completed missions can be replayed.</td><td><span class="pri must">Must</span></td></tr>
       <tr><td class="id">F-03</td><td>Receipts render as tappable cards; selecting items highlights matching receipts live.</td><td><span class="pri must">Must</span></td></tr>
       <tr><td class="id">F-04</td><td>A rule engine computes support, confidence and lift for any rule on any dataset, and runs Apriori with a given min support.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-05</td><td>Every mission ends with a checkpoint of 3–5 questions on what it taught. Question types: multiple choice, numeric, tap-the-receipts, sort/match.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-06</td><td>A wrong answer shows a hint and lets the student retry, with no limit. The mission completes only when every question is correct.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-07</td><td>Hints escalate per question: targeted nudge for that wrong option → point to the data → worked step. The answer itself is never revealed.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-08</td><td>Wrong multiple-choice options stay crossed out; every correct answer shows a one-line explanation.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-09</td><td>Numeric answers accept a fraction, decimal or percent, with a small rounding tolerance.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-10</td><td>Scoring: 3 / 2 / 1 points for a correct answer on the first / second / later try; stars per mission, XP total and badges.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-11</td><td>Progress, including the attempt count for each question, saves in the browser and survives a page reload.</td><td><span class="pri must">Must</span></td></tr>
-      <tr><td class="id">F-12</td><td>A "formula card" glossary unlocks each concept after the mission that teaches it.</td><td><span class="pri">Should</span></td></tr>
-      <tr><td class="id">F-13</td><td>Sandbox mode after Mission 6: students paste or build their own receipts and explore rules freely.</td><td><span class="pri">Should</span></td></tr>
-      <tr><td class="id">F-14</td><td>Missions 2–6 draw from several datasets (grocery, bookshop, café, streaming playlists) so replays get new numbers; questions and hints are templates filled from the dataset.</td><td><span class="pri">Should</span></td></tr>
-      <tr><td class="id">F-15</td><td>Teacher view: class code, per-student progress, the questions needing the most attempts, CSV export.</td><td><span class="pri">Could</span></td></tr>
+      <tr><td class="id">F-05</td><td>Every mission opens with a quick review of 3–4 cards (what it is, how to calculate it, a step-by-step worked example on the receipts, key points). It is required on the first play and skippable on replays; a Review button reopens it from any mission screen.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-06</td><td>Every mission ends with a checkpoint of 3–5 questions on what it taught. Question types: multiple choice, numeric, tap-the-receipts, sort/match.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-07</td><td>A wrong answer shows a hint and lets the student retry, with no limit. The mission completes only when every question is correct.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-08</td><td>Hints escalate per question: targeted nudge for that wrong option → point to the data → worked step. The answer itself is never revealed.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-09</td><td>Wrong multiple-choice options stay crossed out; every correct answer shows a one-line explanation.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-10</td><td>Numeric answers accept a fraction, decimal or percent, with a small rounding tolerance.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-11</td><td>Scoring: 3 / 2 / 1 points for a correct answer on the first / second / later try; stars per mission, XP total and badges.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-12</td><td>Progress, including the attempt count for each question, saves in the browser and survives a page reload.</td><td><span class="pri must">Must</span></td></tr>
+      <tr><td class="id">F-13</td><td>A "formula card" glossary unlocks each concept after the mission that teaches it.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-14</td><td>Sandbox mode after Mission 6: students paste or build their own receipts and explore rules freely.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-15</td><td>Missions 2–6 draw from several datasets (grocery, bookshop, café, streaming playlists) so replays get new numbers; questions and hints are templates filled from the dataset.</td><td><span class="pri">Should</span></td></tr>
+      <tr><td class="id">F-16</td><td>Teacher view: class code, per-student progress, the questions needing the most attempts, CSV export.</td><td><span class="pri">Could</span></td></tr>
     </tbody>
   </table></div>
 
@@ -634,5 +694,72 @@ td.id { font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; 
     $(`q${qi}num`).value = raw;
   }
   start();
+})();
+</script>
+<script>
+(function () {
+  const T = [
+    ["Bread", "Butter", "Milk"], ["Bread", "Butter"], ["Milk", "Coffee", "Cookies"],
+    ["Bread", "Butter", "Eggs"], ["Milk", "Eggs"], ["Bread", "Milk", "Butter", "Cookies"],
+    ["Coffee", "Cookies"], ["Bread", "Eggs"], ["Milk", "Coffee"], ["Bread", "Butter", "Milk", "Eggs"]
+  ];
+  const $ = (id) => document.getElementById(id);
+  let card = 0, step = 0, started = false;
+  const STEPS = [
+    { h: "Find every receipt with <b>Bread</b>.", eq: "6 receipts", cap: "Yellow: receipts with Bread (6)." },
+    { h: "Keep only the ones that <b>also</b> have <b>Butter</b>. T8 drops out: it has Bread but no Butter.", eq: "5 receipts", cap: "Green: receipts with Bread and Butter (5)." },
+    { h: "Count the total number of receipts.", eq: "N = 10", cap: "Green: receipts with Bread and Butter (5) out of 10." },
+    { h: "Divide.", eq: "supp({Bread, Butter}) = 5 ÷ 10 = 0.5 = 50%", cap: "Half of all Corner Mart customers bought Bread and Butter together." }
+  ];
+  function receipts() {
+    const showA = card === 2 && step >= 1, showAB = card === 2 && step >= 2;
+    $("rvReceipts").innerHTML = T.map((t, i) => {
+      const a = t.includes("Bread"), ab = a && t.includes("Butter");
+      const cls = showAB && ab ? " ab" : showA && a && !showAB ? " a" : "";
+      return `<div class="receipt${cls}"><div class="no"><span>T${i + 1}</span></div>` +
+        t.map((it) => `<span class="it${card === 2 && (it === "Bread" || (showAB && it === "Butter")) ? " on" : ""}">${it}</span>`).join("") + "</div>";
+    }).join("");
+    $("rvCap").textContent = card === 2 && step ? STEPS[step - 1].cap : "Corner Mart's 10 receipts.";
+  }
+  const CARDS = [
+    () => `<span class="hk" style="color:var(--tag)">1 · What is it?</span><h3>Support</h3>
+      <p>Support tells you <b>how common</b> an item, or a combination of items, is across all the receipts.</p>
+      <p>In store terms: out of all customers, what share bought this?</p>
+      <p style="opacity:.8">High support means many customers buy it. Low support means it is rare.</p>`,
+    () => `<span class="hk" style="color:var(--tag)">2 · How to calculate it</span><h3>Count, then divide</h3>
+      <div class="rv-formula">support(X) = <span class="frac"><span>number of receipts containing X</span><span>total number of receipts</span></span></div>
+      <p>For a combination like {Bread, Butter}, a receipt only counts if it has <b>every</b> item in the combination.</p>
+      <p style="opacity:.8">Multiply by 100 to get a percentage.</p>`,
+    () => `<span class="hk" style="color:var(--tag)">3 · Worked example</span><h3>Support of {Bread, Butter}</h3>
+      <ol class="rv-steps">${STEPS.slice(0, step).map((s) => `<li>${s.h}<br><span class="eq">${s.eq}</span></li>`).join("")}</ol>
+      ${step < STEPS.length ? `<p><button type="button" class="btn ghost" id="rvStep">Show next step (${step + 1} of ${STEPS.length})</button></p>` : ""}`,
+    () => `<span class="hk" style="color:var(--tag)">4 · Remember</span><h3>Key points</h3>
+      <ul class="rv-points">
+        <li>Support is always between 0% and 100%.</li>
+        <li>A combination is never more common than any single item in it: {Bread, Butter} 50% ≤ Butter 50% ≤ Bread 60%.</li>
+        <li>Common mistake: counting receipts with Bread <em>or</em> Butter. It must be both.</li>
+        <li>In this mission, Corner Mart only cares about itemsets with support of <b>at least 30%</b>.</li>
+      </ul>
+      ${started ? `<div class="hintbox ok"><span class="hk">Mission started</span>The review is saved to your formula cards. Press Review ↺ any time to see it again.</div>` : ""}`
+  ];
+  function draw() {
+    $("rvNum").textContent = `${card + 1} / ${CARDS.length}`;
+    const last = card === CARDS.length - 1;
+    $("rvCard").innerHTML = CARDS[card]() + `<div class="rv-nav">
+      <div class="rv-dots">${CARDS.map((_, i) => `<i class="${i === card ? "now" : ""}"></i>`).join("")}</div>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn ghost" id="rvBack"${card === 0 ? " disabled" : ""}>Back</button>
+        <button type="button" class="btn" id="rvNext">${last ? (started ? "Review again" : "Start mission") : "Next"}</button>
+      </div></div>`;
+    receipts();
+    $("rvBack").onclick = () => { card--; draw(); };
+    $("rvNext").onclick = () => {
+      if (!last) { card++; draw(); }
+      else if (!started) { started = true; draw(); }
+      else { started = false; card = 0; step = 0; draw(); }
+    };
+    const s = $("rvStep"); if (s) s.onclick = () => { step++; draw(); const n = $("rvStep") || $("rvNext"); n.focus(); };
+  }
+  draw();
 })();
 </script>
