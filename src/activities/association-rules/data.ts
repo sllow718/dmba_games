@@ -1,27 +1,26 @@
 import type { Transaction } from "./engine";
 
 export interface ItemInfo {
-  tag: string; // two-letter tag shown on the token, so colour is never the only signal
+  icon: string; // food emoji shown on the token, so colour is never the only signal
   color: string;
-  ink?: string; // token text colour when white is too light
 }
 
 export const ITEMS: Record<string, ItemInfo> = {
-  Bread: { tag: "Br", color: "#b07521" },
-  Butter: { tag: "Bu", color: "#e9c235", ink: "#3a2f00" },
-  Milk: { tag: "Mi", color: "#2f74cc" },
-  Eggs: { tag: "Eg", color: "#d6652a" },
-  Coffee: { tag: "Co", color: "#6e4a34" },
-  Cookies: { tag: "Ck", color: "#8458c2" },
-  Pasta: { tag: "Pa", color: "#c99a1e", ink: "#2d2200" },
-  Sauce: { tag: "Sa", color: "#c2362b" },
-  Parmesan: { tag: "Pm", color: "#7b8b2a" },
-  Chips: { tag: "Ch", color: "#d4870f", ink: "#2d1c00" },
-  Soda: { tag: "So", color: "#167f86" },
-  Wine: { tag: "Wi", color: "#7c2148" },
+  Bread: { icon: "🍞", color: "#b07521" },
+  Butter: { icon: "🧈", color: "#e9c235" },
+  Milk: { icon: "🥛", color: "#2f74cc" },
+  Eggs: { icon: "🥚", color: "#d6652a" },
+  Coffee: { icon: "☕", color: "#6e4a34" },
+  Cookies: { icon: "🍪", color: "#8458c2" },
+  Pasta: { icon: "🍝", color: "#c99a1e" },
+  Sauce: { icon: "🍅", color: "#c2362b" },
+  Parmesan: { icon: "🧀", color: "#7b8b2a" },
+  Chips: { icon: "🍟", color: "#d4870f" },
+  Soda: { icon: "🥤", color: "#167f86" },
+  Wine: { icon: "🍷", color: "#7c2148" },
 };
 
-export const itemInfo = (name: string): ItemInfo => ITEMS[name] ?? { tag: name.slice(0, 2), color: "#5d6b63" };
+export const itemInfo = (name: string): ItemInfo => ITEMS[name] ?? { icon: name.slice(0, 2), color: "#5d6b63" };
 
 /**
  * Corner Mart, Saturday morning: the 10-receipt starter set used in Missions 1–5.

@@ -7,8 +7,8 @@ const hasAll = (t: Transaction, items: readonly string[]) => items.every((i) => 
 export function Token({ item, ring }: { item: string; ring?: boolean }) {
   const info = itemInfo(item);
   return (
-    <span className={"tok" + (ring ? " ring" : "")} style={{ background: info.color, color: info.ink ?? "#fff" }} title={item} aria-label={item} role="img">
-      {info.tag}
+    <span className={"tok" + (ring ? " ring" : "")} style={{ background: info.color + "2e", borderColor: info.color }} title={item} aria-label={item} role="img">
+      {info.icon}
     </span>
   );
 }

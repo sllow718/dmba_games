@@ -87,8 +87,8 @@ button.slip[aria-pressed="true"] .no::after { content: " ✓"; color: var(--ink)
 button.slip.miss { outline: 3px dashed var(--brand); }
 button.slip.extra { outline: 3px dashed var(--brand); background: #fbe3da; }
 .toks { display: flex; flex-wrap: wrap; gap: 3px; }
-.tok { width: 23px; height: 23px; border-radius: 50%; display: inline-grid; place-items: center; font-weight: 800; font-size: 0.62rem; color: #fff; flex: 0 0 auto; }
-.slips.compact .tok { width: 20px; height: 20px; font-size: 0.56rem; }
+.tok { width: 28px; height: 28px; border-radius: 50%; border: 2px solid; box-sizing: border-box; display: inline-grid; place-items: center; font-weight: 800; font-size: 1rem; line-height: 1; color: var(--ink); flex: 0 0 auto; }
+.slips.compact .tok { width: 24px; height: 24px; font-size: 0.85rem; }
 .tok.ring { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
 .key { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 14px; font-size: 0.84rem; }
 .key span { display: inline-flex; gap: 6px; align-items: center; }
@@ -195,7 +195,7 @@ a.shop:hover .sign { text-decoration: underline; text-underline-offset: 3px; }
 /* rule builder */
 .picks { display: flex; flex-wrap: wrap; gap: 6px; }
 .pick { font-weight: 700; font-size: 0.92rem; display: inline-flex; gap: 6px; align-items: center; background: var(--paper); color: var(--ink); border: 2px solid var(--edge); border-bottom-width: 4px; border-radius: 999px; padding: 3px 12px 3px 4px; cursor: pointer; }
-.pick .tok { width: 22px; height: 22px; }
+.pick .tok { width: 26px; height: 26px; }
 .pick[aria-pressed="true"] { border-color: var(--ink); background: var(--hl); }
 .pick:disabled { opacity: 0.35; cursor: not-allowed; }
 .lbl { font-family: var(--display); font-weight: 700; font-size: 1.02rem; margin-bottom: 6px; display: block; }
