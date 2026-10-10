@@ -17,8 +17,8 @@ const a = (name: string, income: number, job: Job, credit: "Good" | "Poor", coll
 /**
  * Neighbourhood Bank: 12 past loans the tree is built from. Built so every lesson appears:
  * 6 repaid / 6 defaulted (Gini 0.5, entropy 1), Credit is the best first question (weighted Gini 0.278),
- * Income ≤ 30 makes the good-credit group pure, and Grace (poor credit, high income, repaid) tempts
- * an extra split at Income ≤ 75 that does not hold up on new applicants.
+ * Income ≤ $30k makes the good-credit group pure, and Grace (poor credit, high income, repaid) tempts
+ * an extra split at Income ≤ $75k that does not hold up on new applicants.
  */
 export const TRAIN: Applicant[] = [
   a("Aisha", 58, "Salaried", "Good", "Yes", "Repaid"),

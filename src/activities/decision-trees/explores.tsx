@@ -7,7 +7,7 @@ import { TEST } from "./data";
 import type { Measure, Test, TreeNode } from "./engine";
 import {
   CAT_TESTS, accuracy, ask, bestSplit, confusion, countOutcomes, cutPoints, depthOf, gini, leaf, leaves, prune, rules, scoreSplit, tagFor,
-  testLabel, withSplit,
+  money, testLabel, withSplit,
 } from "./engine";
 import { BANK_TREE, FULL_TREE, findNode } from "./trees";
 import { ApplicantCard, Applicants, Impurity, Tally, Tree } from "./ui";
@@ -52,7 +52,7 @@ export function ExploreReadTree({ onDone, done }: ExploreProps<Applicant>) {
     const t = cur.test!;
     if (ask(t, r) !== yes) {
       setSay(t.kind === "num"
-        ? `Look again: ${r.name}'s income is $${r.income}k. Is that ${t.cut} or less?`
+        ? `Look again: ${r.name}'s income is $${r.income}k. Is that ${money(t.cut)} or less?`
         : `Look again at ${r.name}'s card: ${t.attr} is ${r[t.attr]}.`);
       return;
     }
@@ -286,8 +286,8 @@ export function ExploreCut({ data, onDone, done }: ExploreProps<Applicant>) {
                   <b>${r.income}k</b><small>{r.name}</small><small>{r.outcome === "Repaid" ? "✓" : "✗"}</small>
                 </span>
                 {i < cuts.length && (
-                  <button type="button" className={"lu-cut" + (cut === cuts[i] ? " on" : "")} aria-pressed={cut === cuts[i]} aria-label={`Cut at income ${cuts[i]}`} onClick={() => pick(cuts[i])}>
-                    <span>≤ {cuts[i]}</span>
+                  <button type="button" className={"lu-cut" + (cut === cuts[i] ? " on" : "")} aria-pressed={cut === cuts[i]} aria-label={`Cut at income ${money(cuts[i])}`} onClick={() => pick(cuts[i])}>
+                    <span>≤ {money(cuts[i])}</span>
                   </button>
                 )}
               </span>
@@ -299,10 +299,10 @@ export function ExploreCut({ data, onDone, done }: ExploreProps<Applicant>) {
           {s ? (
             <>
               <div className="meters two">
-                <div className="meter"><div className="m">Income ≤ {cut}</div><Tally c={s.yes} /><div className="w">Gini {f3(gini(s.yes))}</div></div>
-                <div className="meter"><div className="m">Income &gt; {cut}</div><Tally c={s.no} /><div className="w">Gini {f3(gini(s.no))}</div></div>
+                <div className="meter"><div className="m">Income ≤ {money(cut!)}</div><Tally c={s.yes} /><div className="w">Gini {f3(gini(s.yes))}</div></div>
+                <div className="meter"><div className="m">Income &gt; {money(cut!)}</div><Tally c={s.no} /><div className="w">Gini {f3(gini(s.no))}</div></div>
               </div>
-              <SplitCard rows={rows} t={{ kind: "num", attr: "income", cut: cut! }} measure="gini" name={`${grp} credit, cut at ${cut}`} />
+              <SplitCard rows={rows} t={{ kind: "num", attr: "income", cut: cut! }} measure="gini" name={`${grp} credit, cut at ${money(cut!)}`} />
             </>
           ) : (
             <section className="card"><span className="k">No cut yet</span><p>Tap a ≤ button between two applicants.</p></section>
@@ -352,7 +352,7 @@ export function ExploreGrow({ data, onDone, done }: ExploreProps<Applicant>) {
   const say = depthOf(tree) === 0
     ? "One box, no questions: it predicts the same thing for everyone. Split it and the tree picks the best question for you."
     : pure
-      ? <>Every leaf is pure and the tree gets all 12 past loans right. But look at the new applicants. Grace was a one-off, and the Income ≤ 75 split learnt her by heart.</>
+      ? <>Every leaf is pure and the tree gets all 12 past loans right. But look at the new applicants. Grace was a one-off, and the Income ≤ $75k split learnt her by heart.</>
       : compared && depthOf(tree) === 1 ? "Just one question, and it does better on new applicants than the full tree. More splits isn't always better." : "Keep going. Split any leaf that is still mixed.";
 
   return (

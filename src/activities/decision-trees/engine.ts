@@ -27,20 +27,21 @@ const ATTR_LABEL: Record<CatAttr, string> = { credit: "Credit", job: "Job", coll
 
 export const ask = (t: Test, r: Applicant) => (t.kind === "num" ? r.income <= t.cut : r[t.attr] === t.value);
 
-export const testLabel = (t: Test) => (t.kind === "num" ? `Income ≤ ${fmtCut(t.cut)}?` : `${ATTR_LABEL[t.attr]} = ${t.value}?`);
+export const testLabel = (t: Test) => (t.kind === "num" ? `Income ≤ ${money(t.cut)}?` : `${ATTR_LABEL[t.attr]} = ${t.value}?`);
 
 /** Two-valued attributes name the other value on the "no" branch: Credit = Poor rather than Credit ≠ Good. */
 const OTHER: Partial<Record<CatAttr, Record<string, string>>> = { credit: { Good: "Poor", Poor: "Good" }, collateral: { Yes: "No", No: "Yes" } };
 
 /** The condition a "yes" or "no" answer stands for, as plain words for rules. */
 export function branchLabel(t: Test, yes: boolean) {
-  if (t.kind === "num") return `Income ${yes ? "≤" : ">"} ${fmtCut(t.cut)}`;
+  if (t.kind === "num") return `Income ${yes ? "≤" : ">"} ${money(t.cut)}`;
   const other = OTHER[t.attr]?.[t.value];
   if (!yes && other) return `${ATTR_LABEL[t.attr]} = ${other}`;
   return `${ATTR_LABEL[t.attr]} ${yes ? "=" : "≠"} ${t.value}`;
 }
 
-const fmtCut = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(1));
+/** An income cut as money: 30 → "$30k", 34.5 → "$34.5k". */
+export const money = (x: number) => `$${Number.isInteger(x) ? x : x.toFixed(1)}k`;
 
 /**
  * Highlight tags for the applicant cards: "credit=Good", "job!=Student", "income<=30", "income>30",

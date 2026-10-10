@@ -5,7 +5,7 @@ import type { TreeNode } from "./engine";
 /** Grown until every leaf is pure: four leaves, 12 of 12 right on the training set. */
 export const FULL_TREE = grow(TRAIN);
 
-/** The full tree with the Income ≤ 75 branch pruned: Mr Lim's working tree. */
+/** The full tree with the Income ≤ $75k branch pruned: Mr Lim's working tree. */
 export const BANK_TREE = prune(FULL_TREE, new Set(["rn"]));
 
 /** Credit history only. */

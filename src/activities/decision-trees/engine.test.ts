@@ -62,10 +62,10 @@ describe("income cut points", () => {
   it("Income ≤ 30 makes the good-credit group pure; ≤ 40 does not", () => {
     expect(scoreSplit(good, { kind: "num", attr: "income", cut: 30 }).after).toBe(0);
     expect(r3(scoreSplit(good, { kind: "num", attr: "income", cut: 40 }).after)).toBe(0.167);
-    expect(testLabel(bestSplit(good)!.test)).toBe("Income ≤ 30?");
+    expect(testLabel(bestSplit(good)!.test)).toBe("Income ≤ $30k?");
   });
   it("Income ≤ 75 isolates Grace in the poor-credit group", () => {
-    expect(testLabel(bestSplit(poor)!.test)).toBe("Income ≤ 75?");
+    expect(testLabel(bestSplit(poor)!.test)).toBe("Income ≤ $75k?");
     expect(split(poor, { kind: "num", attr: "income", cut: 75 }).no.map((r) => r.name)).toEqual(["Grace"]);
   });
 });
@@ -86,7 +86,7 @@ describe("growing, pruning and testing", () => {
     expect(depthOf(stump)).toBe(1);
   });
   it("min leaf size 2 refuses to split Dev off on his own", () => {
-    expect(testLabel(bestSplit(good, "gini", 2)!.test)).not.toBe("Income ≤ 30?");
+    expect(testLabel(bestSplit(good, "gini", 2)!.test)).not.toBe("Income ≤ $30k?");
   });
   it("on new applicants the pruned tree does best", () => {
     expect(accuracy(stump, TEST).correct).toBe(6);
@@ -103,8 +103,8 @@ describe("growing, pruning and testing", () => {
     const nikhil = TEST.find((r) => r.name === "Nikhil")!;
     expect(classify(pruned, nikhil)).toMatchObject({ path: ["r", "ry", "ryy"], leaf: { predict: "Default" } });
     expect(rules(pruned).map((r) => `${r.conditions.join(" AND ")} → ${r.predict}`)).toEqual([
-      "Credit = Good AND Income ≤ 30 → Default",
-      "Credit = Good AND Income > 30 → Repaid",
+      "Credit = Good AND Income ≤ $30k → Default",
+      "Credit = Good AND Income > $30k → Repaid",
       "Credit = Poor → Default",
     ]);
   });

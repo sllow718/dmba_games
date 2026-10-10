@@ -21,7 +21,7 @@ const m1: Mission = {
   data: TRAIN,
   dataLabel: PAST,
   brief: "Welcome to Neighbourhood Bank. Before you build a tree, learn to read one. This is the tree I use to decide who gets a loan.",
-  card: { formula: "prediction = the majority outcome in the leaf you land in", example: "Ella: good credit → income $38k > 30 → leaf of 5 repaid → Repaid" },
+  card: { formula: "prediction = the majority outcome in the leaf you land in", example: "Ella: good credit → income $38k > $30k → leaf of 5 repaid → Repaid" },
   review: {
     title: "Roots, branches and leaves",
     what: (
@@ -40,14 +40,14 @@ const m1: Mission = {
     exampleTitle: "Where does Ella go?",
     steps: [
       { text: <>Root: <b>Credit = Good?</b> Ella has good credit, so go down the yes branch.</>, eq: "yes →", say: "Six past applicants had good credit. Ella is one of them.", highlight: { lit: [good] } },
-      { text: <>Next: <b>Income ≤ 30?</b> Ella earns $38k, so go down the no branch.</>, eq: "38 > 30 → no →", say: "Of the good-credit six, only Dev earned $30k or less.", highlight: { lit: [good], both: ["income>30"], only: true } },
+      { text: <>Next: <b>Income ≤ $30k?</b> Ella earns $38k, so go down the no branch.</>, eq: "$38k > $30k → no →", say: "Of the good-credit six, only Dev earned $30k or less.", highlight: { lit: [good], both: ["income>30"], only: true } },
       { text: "That's a leaf. All 5 past loans there were repaid.", eq: "predict Repaid · 5 of 5 = 100%", say: "So I'd lend to someone like Ella.", highlight: { lit: [good, "income>30"], both: [repaid] } },
     ],
     remember: [
       "The root is the first question. Leaves are where the questions end.",
       "Each leaf predicts the most common outcome of the past loans that landed in it.",
       "The share of that majority tells you how sure the leaf is: the poor-credit leaf is 5 of 6, about 83%.",
-      "Every path from root to leaf reads as a rule: IF good credit AND income > 30 THEN Repaid.",
+      "Every path from root to leaf reads as a rule: IF good credit AND income > $30k THEN Repaid.",
     ],
     says: ["First, the parts of a tree.", "Reading a tree is just answering questions in order.", "Let's follow one applicant down.", "Ready? Let's read some trees."],
   },
@@ -70,8 +70,8 @@ const m1: Mission = {
         { text: "Repaid", hint: "Good credit is only the first question. Check the income question too." },
         { text: "Default", correct: true },
       ],
-      ladder: ["Good credit: go down the yes branch. Then answer the income question.", "$25k is 30 or less, so take the yes branch to the Default leaf."],
-      explain: "Good credit → yes; $25k ≤ 30 → yes; that leaf predicts Default.",
+      ladder: ["Good credit: go down the yes branch. Then answer the income question.", "$25k is $30k or less, so take the yes branch to the Default leaf."],
+      explain: "Good credit → yes; $25k ≤ $30k → yes; that leaf predicts Default.",
       highlight: { lit: [good, "income<=30"] },
     },
     {
@@ -84,20 +84,20 @@ const m1: Mission = {
     },
     {
       id: "t1-tap", type: "tap", prompt: "Tap every past applicant who lands in the Repaid leaf.", items: [good, "income>30"], need: "good credit and an income over $30k",
-      ladder: ["The Repaid leaf is good credit, then income over 30.", "Aisha, Ben, Chloe, Ella and Farid all have good credit and earn over $30k."],
+      ladder: ["The Repaid leaf is good credit, then income over $30k.", "Aisha, Ben, Chloe, Ella and Farid all have good credit and earn over $30k."],
       explain: "Five applicants land there, and all five repaid.",
       highlight: { lit: [good, "income>30"] },
     },
     {
       id: "t1-rule", type: "mc", prompt: "Which rule does this tree contain?", layout: "list", figure: <Tree node={BANK_TREE} />,
       options: [
-        { text: "IF income > 30 THEN Repaid", hint: "Income is only asked after good credit. Poor-credit applicants are declined at any income." },
+        { text: "IF income > $30k THEN Repaid", hint: "Income is only asked after good credit. Poor-credit applicants are declined at any income." },
         { text: "IF poor credit THEN Repaid", hint: "The poor-credit leaf predicts Default." },
-        { text: "IF good credit AND income > 30 THEN Repaid", correct: true },
+        { text: "IF good credit AND income > $30k THEN Repaid", correct: true },
         { text: "IF good credit THEN Default", hint: "Most good-credit applicants land in the Repaid leaf." },
       ],
       ladder: ["A rule is one path from the root to a leaf.", "Follow yes, then no, to the green leaf. Which conditions did you pass?"],
-      explain: "Each path is a rule. Yes to good credit and no to income ≤ 30 gives Repaid.",
+      explain: "Each path is a rule. Yes to good credit and no to income ≤ $30k gives Repaid.",
     },
   ],
 };
@@ -286,7 +286,7 @@ const m4: Mission = {
   data: TRAIN,
   dataLabel: PAST,
   brief: "Income is a number, not a yes/no. Where should the tree draw the line?",
-  card: { formula: "candidate cut = (xᵢ + xᵢ₊₁) ÷ 2 · keep the lowest weighted impurity", example: "Good credit: Income ≤ 30 → weighted Gini 0" },
+  card: { formula: "candidate cut = (xᵢ + xᵢ₊₁) ÷ 2 · keep the lowest weighted impurity", example: "Good credit: Income ≤ $30k → weighted Gini 0" },
   review: {
     title: "Numeric splits",
     what: (
@@ -303,10 +303,10 @@ const m4: Mission = {
     ),
     exampleTitle: "Best income cut for the good-credit group",
     steps: [
-      { text: "Sort the six good-credit applicants by income.", eq: "22 ✗ · 38 ✓ · 42 ✓ · 58 ✓ · 66 ✓ · 75 ✓", say: "Dev, the only default, earns the least.", highlight: { lit: [good] } },
-      { text: "Find the halfway points between neighbours.", eq: "30 · 40 · 50 · 62 · 70.5", say: "Five gaps, so five candidate cuts.", highlight: { lit: [good] } },
-      { text: <>Try <b>Income ≤ 40</b>: Dev and Ella against the other four.</>, eq: "2/6 × 0.5 + 4/6 × 0 = 0.167", say: "The low side mixes Dev and Ella.", highlight: { lit: [good], both: ["income<=40"] } },
-      { text: <>Try <b>Income ≤ 30</b>: Dev alone against five who repaid.</>, eq: "1/6 × 0 + 5/6 × 0 = 0", say: "Both sides pure. That's the best possible cut.", highlight: { lit: [good], both: ["income<=30"] } },
+      { text: "Sort the six good-credit applicants by income.", eq: "$22k ✗ · $38k ✓ · $42k ✓ · $58k ✓ · $66k ✓ · $75k ✓", say: "Dev, the only default, earns the least.", highlight: { lit: [good] } },
+      { text: "Find the halfway points between neighbours.", eq: "$30k · $40k · $50k · $62k · $70.5k", say: "Five gaps, so five candidate cuts.", highlight: { lit: [good] } },
+      { text: <>Try <b>Income ≤ $40k</b>: Dev and Ella against the other four.</>, eq: "2/6 × 0.5 + 4/6 × 0 = 0.167", say: "The low side mixes Dev and Ella.", highlight: { lit: [good], both: ["income<=40"] } },
+      { text: <>Try <b>Income ≤ $30k</b>: Dev alone against five who repaid.</>, eq: "1/6 × 0 + 5/6 × 0 = 0", say: "Both sides pure. That's the best possible cut.", highlight: { lit: [good], both: ["income<=30"] } },
     ],
     remember: [
       "With k different values there are k − 1 candidate cuts.",
@@ -319,15 +319,15 @@ const m4: Mission = {
   explore: { goal: "Try income cuts in each credit group and find the best ones.", Component: ExploreCut },
   questions: [
     {
-      id: "t4-cand", type: "mc", prompt: "The poor-credit incomes, sorted, are 28, 31, 47, 52, 66 and 84. Which of these is a candidate cut?",
+      id: "t4-cand", type: "mc", prompt: "The poor-credit incomes, sorted, are $28k, $31k, $47k, $52k, $66k and $84k. Which of these is a candidate cut?",
       options: [
-        { text: "60", hint: "Cuts go exactly halfway between two neighbours. 52 and 66 give 59." },
-        { text: "75", correct: true },
-        { text: "84", hint: "That's an income itself. Cuts go between incomes." },
-        { text: "100", hint: "That's above everyone, so it doesn't divide the group." },
+        { text: "$60k", hint: "Cuts go exactly halfway between two neighbours. $52k and $66k give $59k." },
+        { text: "$75k", correct: true },
+        { text: "$84k", hint: "That's an income itself. Cuts go between incomes." },
+        { text: "$100k", hint: "That's above everyone, so it doesn't divide the group." },
       ],
-      ladder: ["Add two neighbouring incomes and halve the total.", "(66 + 84) ÷ 2 = …?"],
-      explain: "(66 + 84) ÷ 2 = 75, halfway between Ivy and Grace.",
+      ladder: ["Add two neighbouring incomes and halve the total.", "($66k + $84k) ÷ 2 = …?"],
+      explain: "($66k + $84k) ÷ 2 = $75k, halfway between Ivy and Grace.",
       highlight: { lit: [poor] },
     },
     {
@@ -338,7 +338,7 @@ const m4: Mission = {
       explain: "Six values leave five gaps, so five candidate cuts.",
     },
     {
-      id: "t4-50", type: "num", kind: "decimal", prompt: "Good-credit group, Income ≤ 50: Dev ✗, Ella ✓, Ben ✓ on one side; Aisha, Farid, Chloe ✓ on the other. What is the weighted Gini?", answer: (3 / 6) * (4 / 9),
+      id: "t4-50", type: "num", kind: "decimal", prompt: "Good-credit group, Income ≤ $50k: Dev ✗, Ella ✓, Ben ✓ on one side; Aisha, Farid, Chloe ✓ on the other. What is the weighted Gini?", answer: (3 / 6) * (4 / 9),
       traps: [{ value: 4 / 9, hint: "That's the Gini of the low side. Weight it by 3/6 and add the high side." }],
       first: "Gini of each side, then weight by 3/6 each.",
       ladder: ["Low side: 2 ✓ 1 ✗ → Gini 0.444. High side is pure → 0.", "3/6 × 0.444 + 3/6 × 0 = …?"],
@@ -348,19 +348,19 @@ const m4: Mission = {
     {
       id: "t4-best", type: "mc", prompt: "Which cut is best for the good-credit group?",
       options: [
-        { text: "Income ≤ 70.5", hint: "That leaves Dev mixed in with four who repaid." },
-        { text: "Income ≤ 50", hint: "Weighted Gini 0.222. Is there a cleaner cut?" },
-        { text: "Income ≤ 40", hint: "That leaves Dev and Ella mixed together: weighted Gini 0.167." },
-        { text: "Income ≤ 30", correct: true },
+        { text: "Income ≤ $70.5k", hint: "That leaves Dev mixed in with four who repaid." },
+        { text: "Income ≤ $50k", hint: "Weighted Gini 0.222. Is there a cleaner cut?" },
+        { text: "Income ≤ $40k", hint: "That leaves Dev and Ella mixed together: weighted Gini 0.167." },
+        { text: "Income ≤ $30k", correct: true },
       ],
       ladder: ["The best cut has the lowest weighted Gini.", "Can any cut make both sides pure?"],
-      explain: "Income ≤ 30 puts Dev alone and the five who repaid together: weighted Gini 0.",
+      explain: "Income ≤ $30k puts Dev alone and the five who repaid together: weighted Gini 0.",
       highlight: { lit: [good], both: ["income<=30"] },
     },
     {
-      id: "t4-root", type: "mc", prompt: "Across all 12 applicants, the best income cut (≤ 34.5) has weighted Gini 0.333. Credit = Good? has 0.278. Which goes at the root?",
+      id: "t4-root", type: "mc", prompt: "Across all 12 applicants, the best income cut (≤ $34.5k) has weighted Gini 0.333. Credit = Good? has 0.278. Which goes at the root?",
       options: [
-        { text: "Income ≤ 34.5?", hint: "Lower weighted Gini is better. Compare 0.333 with 0.278." },
+        { text: "Income ≤ $34.5k?", hint: "Lower weighted Gini is better. Compare 0.333 with 0.278." },
         { text: "Credit = Good?", correct: true },
       ],
       ladder: ["Numeric cuts compete with every other question.", "Pick the lower weighted Gini."],
@@ -401,8 +401,8 @@ const m5: Mission = {
     exampleTitle: "Growing Mr Lim's tree all the way",
     steps: [
       { text: <>Root: <b>Credit = Good?</b> is the best question.</>, eq: "5 ✓ 1 ✗ | 1 ✓ 5 ✗", say: "We worked this out at Counter 3.", highlight: { lit: [good], both: [repaid] } },
-      { text: <>Good-credit branch: best question is <b>Income ≤ 30?</b></>, eq: "Dev ✗ | 5 ✓ → both pure", say: "That one makes sense: very low income, harder to repay.", highlight: { lit: [good], both: ["income<=30"] } },
-      { text: <>Poor-credit branch: best question is <b>Income ≤ 75?</b></>, eq: "5 ✗ | Grace ✓ → both pure", say: "This split exists just for Grace. She was a one-off.", highlight: { lit: [poor], both: ["income>75"] } },
+      { text: <>Good-credit branch: best question is <b>Income ≤ $30k?</b></>, eq: "Dev ✗ | 5 ✓ → both pure", say: "That one makes sense: very low income, harder to repay.", highlight: { lit: [good], both: ["income<=30"] } },
+      { text: <>Poor-credit branch: best question is <b>Income ≤ $75k?</b></>, eq: "5 ✗ | Grace ✓ → both pure", say: "This split exists just for Grace. She was a one-off.", highlight: { lit: [poor], both: ["income>75"] } },
       { text: "Every leaf is pure. Now score it.", eq: "training 12/12 = 100% · test 5/8 = 62.5%", say: "Perfect on the past, poor on the new. That's overfitting." },
     ],
     remember: [
@@ -446,7 +446,7 @@ const m5: Mission = {
         { text: "Gini should have been entropy", hint: "Both measures grow the same tree here." },
       ],
       ladder: ["Compare how it does on loans it learnt from with loans it never saw.", "Which split was made for just one person?"],
-      explain: "The Income ≤ 75 split fits Grace, a one-off. New high-income, poor-credit applicants default.",
+      explain: "The Income ≤ $75k split fits Grace, a one-off. New high-income, poor-credit applicants default.",
     },
     {
       id: "t5-min", type: "mc", prompt: "With a minimum leaf size of 2, could the tree split Grace off on her own?",
@@ -499,7 +499,7 @@ const m6: Mission = {
     ),
     exampleTitle: "Score the pruned tree on 8 new applicants",
     steps: [
-      { text: <>The pruned tree: good credit and income over 30 → Repaid. Everyone else → Default.</>, eq: "predicted Repaid: Mei, Omar, Pooja", say: "Outlined: the three it would lend to.", highlight: { lit: [good, "income>30"] } },
+      { text: <>The pruned tree: good credit and income over $30k → Repaid. Everyone else → Default.</>, eq: "predicted Repaid: Mei, Omar, Pooja", say: "Outlined: the three it would lend to.", highlight: { lit: [good, "income>30"] } },
       { text: "Who actually defaulted? Nikhil, Oscar, Priya and Quinn. The tree predicted Default for all four.", eq: "caught 4 · missed 0", say: "No defaulter slips through.", highlight: { lit: [defaulted] } },
       { text: "Who actually repaid? Mei, Omar and Pooja were cleared. Rosa was declined.", eq: "cleared 3 · false alarm 1", say: "Rosa had poor credit but paid us back.", highlight: { lit: [repaid], both: [good] } },
       { text: "Add up the right answers.", eq: "accuracy = (4 + 3) ÷ 8 = 87.5%", say: "Better than the full tree's 5 of 8." },
@@ -516,7 +516,7 @@ const m6: Mission = {
   questions: [
     {
       id: "t6-full", type: "num", kind: "count", prompt: "Use the full tree below. How many of the 8 new applicants does it get right?", answer: 5, figure: <Tree node={FULL_TREE} />,
-      traps: [{ value: 7, hint: "That's the pruned tree. The full tree also lends to anyone with poor credit and income over 75." }, { value: 8, hint: "Check Oscar and Priya: poor credit, income over 75." }],
+      traps: [{ value: 7, hint: "That's the pruned tree. The full tree also lends to anyone with poor credit and income over $75k." }, { value: 8, hint: "Check Oscar and Priya: poor credit, income over $75k." }],
       first: "Send each applicant down the tree and compare with their stamp.",
       ladder: ["The full tree lends to poor-credit applicants earning over $75k.", "Oscar and Priya earn over $75k with poor credit, and both defaulted. Rosa is declined but repaid."],
       explain: "It gets Oscar, Priya and Rosa wrong, so 5 of 8.",
@@ -541,13 +541,13 @@ const m6: Mission = {
     {
       id: "t6-prune", type: "mc", prompt: "Which branch of the full tree should be pruned?", layout: "list", figure: <Tree node={FULL_TREE} />,
       options: [
-        { text: "Income ≤ 30? on the good-credit side", hint: "Without it, the tree also lends to Nikhil, who defaulted. Test accuracy falls to 4 of 8." },
-        { text: "Income ≤ 75? on the poor-credit side", correct: true },
+        { text: "Income ≤ $30k? on the good-credit side", hint: "Without it, the tree also lends to Nikhil, who defaulted. Test accuracy falls to 4 of 8." },
+        { text: "Income ≤ $75k? on the poor-credit side", correct: true },
         { text: "Credit = Good? at the root", hint: "Pruning the root leaves one leaf that predicts the same for everyone." },
         { text: "None. The full tree is best", hint: "The full tree only gets 5 of 8 test applicants right." },
       ],
-      ladder: ["Which split was made for just one past applicant?", "The Income ≤ 75 split exists for Grace, and it lends to Oscar and Priya."],
-      explain: "Pruning Income ≤ 75 lifts test accuracy from 5 of 8 to 7 of 8.",
+      ladder: ["Which split was made for just one past applicant?", "The Income ≤ $75k split exists for Grace, and it lends to Oscar and Priya."],
+      explain: "Pruning Income ≤ $75k lifts test accuracy from 5 of 8 to 7 of 8.",
       highlight: { lit: [poor], both: ["income>75"] },
     },
     {
@@ -558,7 +558,7 @@ const m6: Mission = {
         { text: "IF good credit AND income over $30k THEN lend", correct: true },
         { text: "IF student THEN decline", hint: "Job isn't in the pruned tree at all." },
       ],
-      ladder: ["Read the Repaid leaf's path in the pruned tree.", "Good credit, then income over 30."],
+      ladder: ["Read the Repaid leaf's path in the pruned tree.", "Good credit, then income over $30k."],
       explain: "That's the pruned tree's only Repaid leaf, written as a rule.",
       highlight: { lit: [good, "income>30"] },
     },
