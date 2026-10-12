@@ -1,13 +1,45 @@
 import { useMemo, useState } from "react";
-import type { ReactNode } from "react";
+import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import type { ExploreProps } from "../../core/types";
 import { Owner, Tasks } from "../../components/ui";
 import type { Listing } from "./data";
 import type { Line } from "./engine";
-import { AREA, fit, makeFlats, predict, r2, sse } from "./engine";
+import { AREA, PRICE, fit, makeFlats, predict, r2, sse } from "./engine";
 import { LineMark, Plot, PredictionGuide, Residuals, sx, sy } from "./ui";
 
 const fmtLine = (l: Line) => `price ≈ $${Math.round(l.intercept)}k + $${(Math.round(l.slope * 10) / 10).toFixed(1)}k × area`;
+
+/** Where the two draggable ends of the student's line sit: inside the data, so both are always on screen. */
+const LEFT_X = 60, RIGHT_X = 130;
+const lineThrough = (left: number, right: number): Line => {
+  const slope = (right - left) / (RIGHT_X - LEFT_X);
+  return { slope, intercept: left - slope * LEFT_X };
+};
+
+/** A round handle on the line that can be dragged up and down (or nudged with the arrow keys). */
+function Handle({ x, y, label, onMove }: { x: number; y: number; label: string; onMove: (price: number) => void }) {
+  const clampP = (v: number) => Math.round(Math.min(PRICE.max, Math.max(PRICE.min, v)) / 5) * 5;
+  const toPrice = (e: ReactPointerEvent<SVGGElement>) => {
+    const svg = (e.currentTarget as SVGGElement).ownerSVGElement!;
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM()!.inverse());
+    // Invert sy(): price at this vertical position on the chart.
+    const top = sy(PRICE.max), bottom = sy(PRICE.min);
+    return PRICE.min + ((bottom - pt.y) / (bottom - top)) * (PRICE.max - PRICE.min);
+  };
+  return (
+    <g className="handle" role="slider" tabIndex={0} aria-label={label} aria-valuemin={PRICE.min} aria-valuemax={PRICE.max} aria-valuenow={y}
+      onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); onMove(clampP(toPrice(e))); }}
+      onPointerMove={(e) => { if (e.currentTarget.hasPointerCapture(e.pointerId)) onMove(clampP(toPrice(e))); }}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowUp" || e.key === "ArrowRight") { e.preventDefault(); onMove(clampP(y + 10)); }
+        if (e.key === "ArrowDown" || e.key === "ArrowLeft") { e.preventDefault(); onMove(clampP(y - 10)); }
+      }}>
+      <circle cx={sx(x)} cy={sy(y)} r={16} className="hit" />
+      <circle cx={sx(x)} cy={sy(y)} r={8} className="knob" />
+      <path d={`M ${sx(x)} ${sy(y) - 15} l -4 5 h 8 z M ${sx(x)} ${sy(y) + 15} l -4 -5 h 8 z`} className="arrows" />
+    </g>
+  );
+}
 
 /* Mission 1: fit a line by eye, see the residuals, then compare with least squares. */
 export function ExploreFit({ onDone, done }: ExploreProps<Listing>) {
@@ -15,16 +47,18 @@ export function ExploreFit({ onDone, done }: ExploreProps<Listing>) {
   const [seed, setSeed] = useState(4);
   const points = useMemo(() => makeFlats(n, seed, 22), [n, seed]);
   const best = useMemo(() => fit(points), [points]);
-  const [mine, setMine] = useState<Line>({ intercept: 450, slope: 1 });
+  // The student moves the line by its two ends; slope and intercept follow from them.
+  const [ends, setEnds] = useState({ left: 600, right: 600 });
+  const mine = lineThrough(ends.left, ends.right);
   const [showGaps, setShowGaps] = useState(false);
   const [showBest, setShowBest] = useState(false);
   const [t, setT] = useState({ close: false, gaps: false, best: false });
 
   const ratio = sse(mine, points) / Math.max(1, sse(best, points));
   const tick = (nt: typeof t) => { setT(nt); if (!done && nt.close && nt.gaps && nt.best) onDone(); };
-  const move = (l: Line) => {
-    setMine(l);
-    const r = sse(l, points) / Math.max(1, sse(best, points));
+  const move = (e: typeof ends) => {
+    setEnds(e);
+    const r = sse(lineThrough(e.left, e.right), points) / Math.max(1, sse(best, points));
     if (r <= 1.5 && !t.close) tick({ ...t, close: true });
   };
   const newData = (f: () => void) => { f(); setShowBest(false); };
@@ -34,7 +68,7 @@ export function ExploreFit({ onDone, done }: ExploreProps<Listing>) {
       ? "Your line is practically the least-squares line. Nicely done."
       : <>The dashed line is the least-squares line. No other straight line has a smaller total of squared gaps. Yours is {ratio.toFixed(1)}× bigger.</>
     : ratio > 3
-      ? "Your line misses most flats by a lot. Move the slope and intercept so the line runs through the middle of the dots."
+      ? "Your line misses most flats by a lot. Drag the two round handles so the line runs through the middle of the dots."
       : ratio > 1.5
         ? "Getting closer. Try to have about as many flats above the line as below it."
         : "That's a good fit by eye. Now show the gaps, then reveal the least-squares line.";
@@ -43,7 +77,7 @@ export function ExploreFit({ onDone, done }: ExploreProps<Listing>) {
     <div className="split">
       <div className="stack">
         <Tasks items={[
-          { text: "Move the slope and intercept until your line follows the flats", done: t.close },
+          { text: "Drag the two ends of your line until it follows the flats", done: t.close },
           { text: "Turn on “Show the gaps” to see each flat's residual", done: t.gaps },
           { text: "Reveal the least-squares line and compare it with yours", done: t.best },
         ]} />
@@ -53,6 +87,8 @@ export function ExploreFit({ onDone, done }: ExploreProps<Listing>) {
             {showBest && <LineMark l={best} className="fitline best" />}
             <LineMark l={mine} className="fitline mine" />
             {points.map((p, i) => <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r={4.5} className="kp" fill="#2f74cc" />)}
+            <Handle x={LEFT_X} y={ends.left} label="Left end of your line" onMove={(v) => move({ ...ends, left: v })} />
+            <Handle x={RIGHT_X} y={ends.right} label="Right end of your line" onMove={(v) => move({ ...ends, right: v })} />
           </Plot>
           <p className="worth" style={{ margin: "6px 4px 0" }}>
             <span className="key-line mine" /> your line{showBest && <> · <span className="key-line best" /> least-squares line</>}
@@ -66,13 +102,14 @@ export function ExploreFit({ onDone, done }: ExploreProps<Listing>) {
           <span className="k">Your line</span>
           <div className="formula" style={{ margin: 0 }}>{fmtLine(mine)}</div>
           <label className="kfield">
-            <span>Slope <b>${mine.slope.toFixed(1)}k per sqm</b> (how steep)</span>
-            <input type="range" className="slider" min={0} max={10} step={0.1} value={mine.slope} onChange={(e) => move({ ...mine, slope: Number(e.target.value) })} />
+            <span>Left end, at {LEFT_X} sqm: <b>${ends.left}k</b></span>
+            <input type="range" className="slider" min={PRICE.min} max={PRICE.max} step={5} value={ends.left} onChange={(e) => move({ ...ends, left: Number(e.target.value) })} />
           </label>
           <label className="kfield">
-            <span>Intercept <b>${mine.intercept}k</b> (moves the line up or down)</span>
-            <input type="range" className="slider" min={-300} max={600} step={10} value={mine.intercept} onChange={(e) => move({ ...mine, intercept: Number(e.target.value) })} />
+            <span>Right end, at {RIGHT_X} sqm: <b>${ends.right}k</b></span>
+            <input type="range" className="slider" min={PRICE.min} max={PRICE.max} step={5} value={ends.right} onChange={(e) => move({ ...ends, right: Number(e.target.value) })} />
           </label>
+          <p className="worth" style={{ margin: 0 }}>Or drag the round handles on the chart. The slope and intercept above follow from where the ends are.</p>
           <div className="row">
             <button type="button" className="btn alt small" aria-pressed={showGaps} onClick={() => { setShowGaps(!showGaps); if (!showGaps) tick({ ...t, gaps: true }); }}>{showGaps ? "Hide the gaps" : "Show the gaps"}</button>
             <button type="button" className="btn small" onClick={() => { setShowBest(true); tick({ ...t, best: true }); }} disabled={showBest}>Reveal the least-squares line</button>

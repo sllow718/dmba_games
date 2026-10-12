@@ -394,6 +394,12 @@ a.topic-card:hover .name { text-decoration: underline; text-underline-offset: 3p
 .kplot .fpt.sel .dotm { stroke: var(--ink); stroke-width: 3; r: 7px; }
 .kplot .fpt.sel .hit { fill: var(--hl); opacity: .8; }
 .kplot .fpt.miss .hit, .kplot .fpt.extra .hit { stroke: var(--brand); stroke-width: 2; stroke-dasharray: 3 2; }
+.kplot .handle { cursor: ns-resize; touch-action: none; }
+.kplot .handle .hit { fill: transparent; }
+.kplot .handle .knob { fill: #fff; stroke: var(--brand); stroke-width: 3; }
+.kplot .handle .arrows { fill: var(--brand); }
+.kplot .handle:focus { outline: none; }
+.kplot .handle:focus-visible .knob, .kplot .handle:hover .knob { fill: var(--hl); }
 .key-line { display: inline-block; width: 18px; height: 0; border-top: 3px solid var(--brand); vertical-align: middle; }
 .key-line.best { border-top: 3px dashed var(--ink); }
 .up-txt { color: var(--ok); font-weight: 800; }
