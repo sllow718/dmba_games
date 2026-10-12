@@ -44,7 +44,7 @@ function narrate(s: KState, k: number): ReactNode {
 }
 
 /** Guided k-means: pick n and k, then step through place → assign → move until it converges. */
-export function KMeansLab({ onEvent, extra }: { onEvent?: (e: RunEvent) => void; extra?: (ctx: { n: number; k: number; dataSeed: number }) => ReactNode }) {
+export function KMeansLab({ onEvent }: { onEvent?: (e: RunEvent) => void }) {
   const [n, setN] = useState(30);
   const [k, setK] = useState(3);
   const [dataSeed, setDataSeed] = useState(7);
@@ -130,7 +130,6 @@ export function KMeansLab({ onEvent, extra }: { onEvent?: (e: RunEvent) => void;
             ))}
           </ol>
         </section>
-        {extra?.({ n, k, dataSeed })}
       </div>
     </div>
   );
@@ -171,77 +170,6 @@ export function ExploreSteps({ onDone, done }: ExploreProps<Member>) {
         { text: "Change n or k, then run it again to the end", done: t.changed },
       ]} />
       <KMeansLab onEvent={onEvent} />
-    </>
-  );
-}
-
-/** Lowest total distance reached for each k on the current data, as a small bar chart. */
-function ElbowChart({ best, onPick, picked }: { best: Record<number, number>; onPick: (k: number) => void; picked: number | null }) {
-  const ks = [1, 2, 3, 4, 5, 6];
-  const max = Math.max(1, ...Object.values(best));
-  return (
-    <section className="card">
-      <span className="k">Total distance by k (this data)</span>
-      <div className="elbow" role="group" aria-label="Total within-cluster distance for each k. Tap the elbow.">
-        {ks.map((k) => (
-          <button key={k} type="button" className={"ebar" + (picked === k ? " on" : "")} disabled={best[k] === undefined} onClick={() => onPick(k)} aria-label={best[k] === undefined ? `k = ${k}: not run yet` : `k = ${k}: ${Math.round(best[k])}`}>
-            <span className="val">{best[k] === undefined ? "" : Math.round(best[k])}</span>
-            <span className="bar"><i style={{ height: `${best[k] === undefined ? 0 : Math.max(3, (best[k] / max) * 100)}%` }} /></span>
-            <span className="kk">k={k}</span>
-          </button>
-        ))}
-      </div>
-      <p className="worth" style={{ marginTop: 6 }}>Run to the end with different k to fill in the bars. Then tap the elbow.</p>
-    </section>
-  );
-}
-
-/* Mission 2: compare k values and starting points. */
-export function ExploreElbow({ onDone, done }: ExploreProps<Member>) {
-  const [dataSeed, setDataSeed] = useState(7);
-  const [n, setN] = useState(30);
-  const [best, setBest] = useState<Record<number, number>>({});
-  const [starts, setStarts] = useState<Record<number, Set<number>>>({});
-  const [elbow, setElbow] = useState(false);
-  const [picked, setPicked] = useState<number | null>(null);
-  const [say, setSay] = useState<ReactNode>("Run k-means to the end with several values of k. I'll keep the lowest total distance for each k in the chart.");
-  const tried = Object.keys(best).length;
-  const restarted = Object.values(starts).some((x) => x.size >= 2);
-
-  const check = (b: Record<number, number>, st: Record<number, Set<number>>, e: boolean) => {
-    if (!done && Object.keys(b).length >= 4 && Object.values(st).some((x) => x.size >= 2) && e) onDone();
-  };
-  const onEvent = (ev: RunEvent) => {
-    if (ev.phase !== "done") return;
-    let b = best, st = starts;
-    if (ev.dataSeed !== dataSeed || ev.n !== n) { b = {}; st = {}; setDataSeed(ev.dataSeed); setN(ev.n); setPicked(null); }
-    b = { ...b, [ev.k]: Math.min(b[ev.k] ?? Infinity, ev.wcss) };
-    const set = new Set(st[ev.k] ?? []).add(ev.startSeed);
-    st = { ...st, [ev.k]: set };
-    setBest(b); setStarts(st);
-    const prev = best[ev.k];
-    setSay(set.size >= 2 && prev !== undefined && Math.round(prev) !== Math.round(ev.wcss)
-      ? <>Same k, different start, different answer: {Math.round(ev.wcss)} this time against a best of {Math.round(Math.min(prev, ev.wcss))}. Starting centroids matter, so it's worth running k-means a few times.</>
-      : <>k = {ev.k} finished with a total distance of {Math.round(ev.wcss)}. Smaller means tighter clusters.</>);
-    check(b, st, elbow);
-  };
-  const pick = (k: number) => {
-    setPicked(k);
-    const ok = k === 3;
-    if (ok) { setElbow(true); check(best, starts, true); }
-    setSay(ok
-      ? "That's the elbow. Going from 2 to 3 clusters cuts the distance a lot; going past 3 barely helps. Three segments it is."
-      : k < 3 ? "The distance still drops a lot after this k. Look for where the bars stop shrinking much." : "Adding clusters always shrinks the distance a little. The elbow is where the big drops stop.");
-  };
-
-  return (
-    <>
-      <Header say={say} tasks={[
-        { text: "Run to the end with at least 4 different values of k", done: tried >= 4 },
-        { text: "Run the same k again with new starting centroids", done: restarted },
-        { text: "Tap the elbow in the chart", done: elbow },
-      ]} />
-      <KMeansLab onEvent={onEvent} extra={() => <ElbowChart best={best} onPick={pick} picked={picked} />} />
     </>
   );
 }

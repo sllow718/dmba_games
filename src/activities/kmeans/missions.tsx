@@ -1,14 +1,13 @@
-import type { ActivityDef, MissionDef } from "../../core/types";
-import type { Member } from "./data";
-import { MEMBERS } from "./data";
-import { ExploreElbow, ExploreSteps } from "./explores";
-import { ElbowFigure, MemberPlot, hasTag } from "./ui";
+import type { AnyActivity, MissionDef } from "../../core/types";
+import type { Member, Shopper } from "./data";
+import { MEMBERS, SHOPPERS } from "./data";
+import { ExploreSteps } from "./explores";
+import { ExploreNormalise, ShopperPlot, hasShopperTag } from "./norm";
+import { MemberPlot, hasTag } from "./ui";
 
 type Mission = MissionDef<Member>;
 
 const LABEL = "Gym & Juice · 12 members · visits per month vs spend per visit";
-/** Lowest total within-cluster distance for the 12 members at each k (checked in content.test.ts). */
-export const MEMBER_WCSS = { 1: 1998, 2: 768, 3: 118, 4: 93, 5: 75 };
 
 const m1: Mission = {
   n: 1,
@@ -18,7 +17,7 @@ const m1: Mission = {
   data: MEMBERS,
   dataLabel: LABEL,
   brief: "Welcome to Gym & Juice. I want to group my members into types so I can plan offers for each. K-means can find the groups. Let's see how it works.",
-  card: { formula: "repeat: assign each point to its nearest centroid → move each centroid to the average of its points", example: "Members 1, 4, 7, 10 → centroid (5 visits, $24)" },
+  card: { formula: "repeat: assign each point to its nearest centroid → move each centroid to the average of its points", example: "Members 1, 4, 7 and 10 → centroid around 5 visits and $24 a visit" },
   review: {
     title: "Clusters and centroids",
     what: (
@@ -92,14 +91,6 @@ const m1: Mission = {
       explain: "Each centroid moves to the average of its points, the middle of its cluster.",
     },
     {
-      id: "k1-mean", type: "num", kind: "decimal", prompt: "Members 1, 4, 7 and 10 visit 4, 6, 3 and 7 times a month. What is the visits value of their centroid?", answer: 5,
-      traps: [{ value: 20, hint: "That's the total. The centroid is the average: divide by 4." }],
-      first: "Add the four visit counts and divide by how many members there are.",
-      ladder: ["4 + 6 + 3 + 7 = 20.", "20 ÷ 4 = …?"],
-      explain: "20 ÷ 4 = 5 visits a month. Do the same for spend and the centroid is (5, $24).",
-      highlight: { lit: ["c=0"] },
-    },
-    {
       id: "k1-tap", type: "tap", prompt: "Tap every member in the cluster of regulars who spend little.", items: ["c=1"], need: "lots of visits and low spend",
       ladder: ["Look bottom right: many visits, low spend.", "Members 2, 5, 8 and 11 sit at the bottom right."],
       explain: "Members 2, 5, 8 and 11 visit often but spend about $5 a visit.",
@@ -119,120 +110,140 @@ const m1: Mission = {
   ],
 };
 
-const m2: Mission = {
+const SCALE_LABEL = "Gym & Juice · 12 members · visits per month and yearly spend";
+
+const m2: MissionDef<Shopper> = {
   n: 2,
-  title: "Choosing k",
-  concept: "Choosing k & reading clusters",
-  badge: "Segment Spotter",
-  data: MEMBERS,
-  dataLabel: LABEL,
-  brief: "K-means always gives me exactly k groups, even if k is a bad choice. How do I pick k, and can I trust the answer?",
-  card: { formula: "WCSS = Σ (distance from each point to its centroid)² · pick k at the elbow", example: "12 members: 1998, 768, 118, 93 for k = 1–4 → elbow at k = 3" },
+  title: "Scale Matters",
+  concept: "Normalising before k-means",
+  badge: "Fair Scaler",
+  data: SHOPPERS,
+  dataLabel: SCALE_LABEL,
+  view: { Grid: ShopperPlot, has: hasShopperTag },
+  brief: "I added yearly spend in dollars next to visits per month, ran k-means, and got strange groups. Casual and regular members ended up mixed together. Let's find out why.",
+  card: { formula: "normalise each variable to the same scale (e.g. 0–1) before k-means", example: "Without it, $ differences in the hundreds swamp visit differences of 20" },
   review: {
-    title: "Total distance and the elbow",
+    title: "Why scale matters",
     what: (
       <>
-        <p>K-means can't choose k for you, and its answer depends on where the centroids start.</p>
-        <p>To judge a result, measure how <b>tight</b> the clusters are: the total within-cluster distance, often called <b>WCSS</b>. Smaller means members sit closer to their centroid.</p>
+        <p>K-means groups members by <b>distance</b>. Distance adds up the differences on every variable.</p>
+        <p>If one variable is measured in much bigger numbers, its differences swamp the others. A $100 gap in yearly spend outweighs a gap of 20 visits a month, even though 20 visits is a huge difference in behaviour.</p>
+        <p style={{ color: "var(--sub)" }}>The result: k-means effectively ignores the small-number variable.</p>
       </>
     ),
-    howHeading: ["How to judge it", "Reading WCSS"],
+    howHeading: ["How to fix it", "Normalise first"],
     how: (
       <>
-        <div className="formula">WCSS = add up (distance from each point to its own centroid)²</div>
-        <p><b>More clusters always lower WCSS</b>, so the smallest value isn't the answer. With one cluster per point it would be 0.</p>
-        <p>Plot WCSS for each k and look for the <b>elbow</b>: the k where the big drops stop. Also run k-means a few times with new starting centroids and keep the run with the lowest WCSS.</p>
+        <p><b>Normalising</b> rescales every variable onto the same scale before k-means runs. A common way is <b>min–max</b>: the smallest value becomes 0, the largest becomes 1, and everything else falls in between.</p>
+        <table className="mini">
+          <thead><tr><th scope="col" /><th scope="col">Visits / month</th><th scope="col">Yearly spend</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Raw range</th><td>2 to 27</td><td>$380 to $1,500</td></tr>
+            <tr><th scope="row">After normalising</th><td>0 to 1</td><td>0 to 1</td></tr>
+          </tbody>
+        </table>
+        <p>Now a big difference in visits counts as much as a big difference in spend. Another common option is the <b>z-score</b>, which rescales each variable by its average and spread.</p>
       </>
     ),
-    exampleTitle: "Choosing k for the 12 members",
+    exampleTitle: "Clustering the 12 members, before and after",
     steps: [
-      { text: "One cluster: everyone around one centroid.", eq: "k = 1 · WCSS 1998", say: "One big blob. Not useful." },
-      { text: "Two clusters.", eq: "k = 2 · WCSS 768", say: "Better, but two different types are still lumped together." },
-      { text: "Three clusters.", eq: "k = 3 · WCSS 118", say: "A huge drop. Each type gets its own cluster.", highlight: { lit: ["all", "centroids"] } },
-      { text: "Four clusters.", eq: "k = 4 · WCSS 93", say: "Only a small drop. It's just splitting a group that belongs together." },
-      { text: "The drops stop being big after k = 3.", eq: "elbow at k = 3", say: "Three member types it is.", highlight: { lit: ["all", "centroids"] } },
+      { text: "Casual members (purple) visit 2–6 times a month. Regulars (teal) visit 21–27. Both spend anywhere from $380 to $1,500 a year.", eq: "the real groups differ by visits", say: "The two types are easy to see on the chart.", highlight: { lit: ["type"] } },
+      { text: "Run k-means with k = 2 on the raw numbers.", eq: "split: lower spenders vs higher spenders", say: "Casual and regular members are mixed in both clusters.", highlight: { lit: ["raw"] } },
+      { text: "Why? Draw it the way raw distances measure it: 1 visit counts the same as $1.", eq: "visit gap ≈ 25 · spend gap ≈ 1,100", say: "Visits squash into a thin strip. K-means can hardly see them.", highlight: { lit: ["seen", "raw"] } },
+      { text: "Normalise both variables to 0–1, then run k-means again.", eq: "split: casual vs regular", say: "Now visits count as much as spend, and the real groups appear.", highlight: { lit: ["scaled", "norm"] } },
+      { text: "Back on the normal chart, the new clusters match the member types.", eq: "cluster 1 ≈ 4 visits · cluster 2 ≈ 24 visits", say: "Same data, same k. The only change was the scale.", highlight: { lit: ["norm"] } },
     ],
     remember: [
-      "WCSS always goes down (or stays the same) as k goes up.",
-      "Choose k at the elbow, where adding clusters stops helping much.",
-      "Different starting centroids can give different clusters. Run it a few times and keep the lowest WCSS.",
-      "Describe each cluster by its centroid: (5 visits, $24) means occasional visitors who spend a lot.",
+      "K-means uses distance, so variables with bigger numbers count for more.",
+      "Normalise when variables are in different units or have very different ranges.",
+      "Min–max normalising puts every variable on a 0–1 scale.",
+      "Normalising changes how distance is measured, not the members. Describe the clusters in the original units.",
     ],
-    says: ["Two problems: choosing k, and trusting the answer.", "One number to judge a clustering.", "Let's try k = 1 to 4 on my members.", "Now find the elbow yourself."],
+    says: ["Something went wrong with my clusters.", "One fix: put everything on the same scale.", "Watch the same 12 members, before and after.", "Now try it on more members."],
   },
-  explore: { goal: "Run k-means with different k and different starts, then find the elbow.", Component: ExploreElbow },
+  explore: { goal: "Run k-means with and without normalising, and see what changes.", Component: ExploreNormalise },
   questions: [
     {
-      id: "k2-trend", type: "mc", prompt: "What happens to total within-cluster distance (WCSS) as k goes up?", layout: "list",
+      id: "k2-why", type: "mc", prompt: "Without normalising, k-means split the members by spend and ignored visits. Why?", layout: "list",
       options: [
-        { text: "It goes up", hint: "More centroids means each point has one closer by." },
-        { text: "It goes down or stays the same", correct: true },
-        { text: "It stays exactly the same", hint: "Compare 1998 for k = 1 with 768 for k = 2." },
-        { text: "It goes up and down at random", hint: "With the best runs, it only ever goes down." },
+        { text: "Visits don't matter for gym members", hint: "Casual and regular members are very different. Visits matter a lot." },
+        { text: "Spend is measured in much bigger numbers, so it dominates the distance", correct: true },
+        { text: "K-means always uses the second variable", hint: "K-means treats every variable the same way. The size of the numbers is the issue." },
+        { text: "k = 2 was the wrong choice", hint: "Two groups is right here. The problem is the scale." },
       ],
-      ladder: ["More centroids means points have more chances to be close to one.", "Look at 1998, 768, 118, 93."],
-      explain: "More clusters can only bring points closer to a centroid, so WCSS goes down. That's why you can't just pick the smallest.",
+      ladder: ["K-means groups by distance.", "Compare a gap of 20 visits with a gap of $500."],
+      explain: "Dollar differences run into the hundreds while visit differences are under 30, so spend swamps visits in the distance.",
+      highlight: { lit: ["raw"] },
     },
     {
-      id: "k2-elbow", type: "mc", prompt: "Here is WCSS for the 12 members. Where is the elbow?", figure: <ElbowFigure values={MEMBER_WCSS} />,
+      id: "k2-gap", type: "mc", prompt: "Member A visits 20 more times a month than member B. Member B spends $300 more a year. Without normalising, which gap counts for more in k-means?", layout: "list",
       options: [
-        { text: "k = 2", hint: "There's still a huge drop from 768 to 118 after this." },
-        { text: "k = 5", hint: "The smallest WCSS isn't the elbow. More k always lowers it." },
-        { text: "k = 3", correct: true },
-        { text: "k = 1", hint: "One cluster has the highest WCSS of all." },
+        { text: "The 20 visits", hint: "In raw distance, 20 visits counts the same as $20." },
+        { text: "Both count the same", hint: "Distance compares the raw numbers: 20 against 300." },
+        { text: "The $300", correct: true },
       ],
-      ladder: ["Find where the big drops stop.", "768 → 118 is big; 118 → 93 is small."],
-      explain: "WCSS falls sharply up to k = 3, then barely changes. The elbow is k = 3.",
+      ladder: ["Raw distance just compares the numbers.", "Which is bigger: 20 or 300?"],
+      explain: "300 is far bigger than 20, so the spend gap dominates, even though 20 extra visits is the bigger change in behaviour.",
     },
     {
-      id: "k2-twelve", type: "mc", prompt: "Why not choose k = 12, one cluster for each member?", layout: "list",
+      id: "k2-what", type: "mc", prompt: "What does min–max normalisation do?", layout: "list",
       options: [
-        { text: "WCSS would be 0, but every cluster is one member, so you learn nothing", correct: true },
-        { text: "K-means can't run with k = 12", hint: "It can. Each member would be its own centroid." },
-        { text: "WCSS would be very high", hint: "Every point would sit exactly on its own centroid." },
-        { text: "It would take too long to compute", hint: "Speed isn't the problem. Think about what the clusters would tell you." },
+        { text: "Removes the members with extreme values", hint: "Every member stays. Only the scale changes." },
+        { text: "Rounds every value to a whole number", hint: "It actually produces values between 0 and 1." },
+        { text: "Rescales each variable to run from 0 to 1", correct: true },
+        { text: "Adds the variables together", hint: "Each variable is rescaled on its own." },
       ],
-      ladder: ["Where would each centroid be?", "Each centroid is one member, so the distance is 0. Is that useful?"],
-      explain: "With one cluster per member, WCSS is 0 but there are no groups at all. The aim is a few meaningful segments.",
+      ladder: ["Think about the smallest and largest value of each variable.", "The smallest becomes 0 and the largest becomes 1."],
+      explain: "Each variable is rescaled so its smallest value is 0 and its largest is 1, so every variable counts on the same scale.",
     },
     {
-      id: "k2-start", type: "mc", prompt: "Two runs with k = 3 on the same data give different clusters. Why?", layout: "list",
+      id: "k2-after", type: "mc", prompt: "After normalising, what did k-means find in the 12 members?", layout: "list",
       options: [
-        { text: "The data changed between runs", hint: "Same data both times." },
-        { text: "They started from different random centroids", correct: true },
-        { text: "K-means makes mistakes in the assign step", hint: "Assigning is exact: nearest centroid every time." },
-        { text: "k = 3 is always wrong", hint: "k = 3 is the elbow here. The difference comes from somewhere else." },
+        { text: "Casual visitors and regular visitors", correct: true },
+        { text: "Lower spenders and higher spenders", hint: "That was before normalising." },
+        { text: "One cluster for every member", hint: "k was still 2." },
+        { text: "The same clusters as before", hint: "Compare the colours before and after: they changed." },
       ],
-      ladder: ["Which step uses randomness?", "Only the starting centroids are random."],
-      explain: "Different starting centroids can settle into different clusterings. Run it several times and keep the lowest WCSS.",
+      ladder: ["Look at the average visits of each new cluster.", "About 4 visits against about 24 visits."],
+      explain: "With both variables on the same scale, the big difference in visits shows up, and the clusters match casual and regular members.",
+      highlight: { lit: ["norm"] },
     },
     {
-      id: "k2-read", type: "mc", prompt: "One centroid sits at 23 visits a month and $25 a visit. How would you describe that segment?", layout: "list",
+      id: "k2-when", type: "mc", prompt: "When should you normalise before running k-means?", layout: "list",
       options: [
-        { text: "Occasional visitors who spend a lot", hint: "23 visits a month is a lot of visits." },
-        { text: "Regulars who spend little", hint: "$25 a visit is high spend here." },
-        { text: "Regulars who spend a lot", correct: true },
-        { text: "Occasional visitors who spend little", hint: "Check both numbers: visits and spend are both high." },
+        { text: "Only when there are more than 100 members", hint: "The number of members doesn't matter. The scales do." },
+        { text: "When the variables are in different units or have very different ranges", correct: true },
+        { text: "Never: it changes the members' data", hint: "It changes how distance is measured. You can still describe clusters in real units." },
+        { text: "Only when k is bigger than 3", hint: "k doesn't decide this. The variables' scales do." },
       ],
-      ladder: ["Read the centroid like a typical member.", "High visits and high spend."],
-      explain: "Many visits and high spend: regulars who spend a lot. Coach Ana's best customers.",
-      highlight: { lit: ["c=2"] },
+      ladder: ["The problem came from mixing visits and dollars.", "Different units, very different ranges."],
+      explain: "Normalise whenever variables use different units or ranges, so no single variable dominates the distance.",
+    },
+    {
+      id: "k2-describe", type: "mc", prompt: "After normalising, how should you describe each cluster to Coach Ana?", layout: "list",
+      options: [
+        { text: "In normalised values, like 0.1 visits and 0.6 spend", hint: "Those numbers mean nothing to a gym owner." },
+        { text: "In the original units, like 4 visits a month and $950 a year", correct: true },
+        { text: "Only by cluster number", hint: "A number alone doesn't say what the members are like." },
+      ],
+      ladder: ["Who is the description for?", "Coach Ana thinks in visits and dollars."],
+      explain: "Normalising is only for measuring distance. Describe the clusters in real units so they make sense.",
     },
   ],
 };
 
-export const customerTribes: ActivityDef<Member> = {
+export const customerTribes: AnyActivity = {
   id: "customer-tribes",
   shop: "Gym & Juice",
   title: "Customer Tribes",
   topic: "K-means clustering",
-  summary: "Group gym members into segments by stepping through k-means, then choose k with the elbow.",
+  summary: "Group gym members into segments by stepping through k-means, and see why normalising the data matters.",
   theme: {
     owner: { name: "Coach Ana", initials: "CA" },
     stop: "Mission",
     rows: ["member", "members"],
     intro: "K-means clustering at Coach Ana's gym café. Each mission is a quick review, a guided hands-on run and a checkpoint.",
-    finale: "That's both missions done. You can run k-means step by step and pick a sensible k. My member offers are sorted.",
+    finale: "That's both missions done. You can run k-means step by step and know to normalise first. My member offers are sorted.",
   },
   view: { Grid: MemberPlot, has: hasTag },
   missions: [m1, m2],

@@ -132,3 +132,25 @@ export function bestRun(points: readonly Pt[], k: number, tries = 10, seed = 1):
   }
   return best!;
 }
+
+/** Min–max normalisation: rescale each axis to run from 0 to 1, so both count equally in distances. */
+export function normalise(points: readonly Pt[]): Pt[] {
+  const range = (vs: number[]) => [Math.min(...vs), Math.max(...vs)];
+  const [x0, x1] = range(points.map((p) => p.x)), [y0, y1] = range(points.map((p) => p.y));
+  return points.map((p) => ({ x: x1 > x0 ? (p.x - x0) / (x1 - x0) : 0, y: y1 > y0 ? (p.y - y0) / (y1 - y0) : 0 }));
+}
+
+export const SPEND_MAX = 2000;
+
+/**
+ * Members for the normalisation lesson: x = visits per month, y = yearly spend in $.
+ * Half are casual (1–8 visits), half regular (19–29 visits); spend is spread $200–$1,900 for both,
+ * so the real groups differ by visits while the dollar numbers are far bigger.
+ */
+export function makeShoppers(n: number, seed: number): Pt[] {
+  const r = rng(seed);
+  return Array.from({ length: n }, (_, i) => {
+    const regular = i % 2 === 1;
+    return { x: round1((regular ? 19 : 1) + r() * (regular ? 10 : 7)), y: Math.round((200 + r() * 1700) / 10) * 10 };
+  });
+}

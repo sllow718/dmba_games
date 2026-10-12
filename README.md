@@ -13,19 +13,19 @@ A learning app that teaches data mining for business analytics to polytechnic st
 | 5 | Apriori Climb | Apriori principle, pruning |
 | 6 | Manager's Meeting | support + confidence + lift → a store decision |
 
+**Customer Tribes** (k-means clustering): students help Coach Ana at the Gym & Juice café group members into segments. The hands-on lab lets them set the number of points (n) and clusters (k), then step through place → assign → move until k-means converges, with each step explained as it happens.
+
+| Mission | Teaches |
+| --- | --- |
+| 1 · Step Through K-Means | clusters, centroids, the assign/move loop, convergence |
+| 2 · Scale Matters | why variables on different scales distort k-means, and how normalising fixes it |
+
 **Loan Officer** (decision trees): students help Mr Lim, manager of Neighbourhood Bank, read the loan-approval tree he built from 12 past loans and interpret what its numbers mean.
 
 | Counter | Mission | Teaches |
 | --- | --- | --- |
 | 1 | Read the Tree | root, branches, leaves, classifying an applicant, leaf confidence |
 | 2 | Pure or Mixed? | interpreting impurity: what Gini and entropy values say about a group (no calculation) |
-
-**Customer Tribes** (k-means clustering): students help Coach Ana at the Gym & Juice café group members by visits per month and spend per visit. The hands-on lab lets them set the number of points (n) and clusters (k), then step through place → assign → move until k-means converges, with each step explained as it happens.
-
-| Mission | Teaches |
-| --- | --- |
-| 1 · Step Through K-Means | clusters, centroids, the assign/move loop, convergence |
-| 2 · Choosing k | total within-cluster distance (WCSS), the elbow, sensitivity to starting centroids, describing segments |
 
 Each mission is its own page and has four stages:
 
@@ -79,10 +79,11 @@ src/
       explores.tsx      the hands-on task for each mission
       ui.tsx            applicant cards, the drawn tree, impurity meters
     kmeans/
-      engine.ts         seeded data, starting centroids, assign, move, WCSS, step-by-step state
-      data.ts           the 12 gym members used in the lessons
+      engine.ts         seeded data, starting centroids, assign, move, WCSS, step-by-step state, normalising
+      data.ts           the members used in each lesson
       missions.tsx      review cards, briefs and checkpoint questions for both missions
-      explores.tsx      the guided k-means lab (n, k, step, run) and the elbow chart
+      explores.tsx      the guided k-means lab (n, k, step, run)
+      norm.tsx          the normalising lesson chart and lab
       ui.tsx            scatter plot, centroids and the member chart
 docs/                   design proposal and visual directions
 ```

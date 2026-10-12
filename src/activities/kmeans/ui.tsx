@@ -99,19 +99,3 @@ export function MemberPlot({ data, highlight, selected, onToggle, marks, label }
     </div>
   );
 }
-
-/** A fixed bar chart of total distance by k, for reading the elbow. */
-export function ElbowFigure({ values }: { values: Record<number, number> }) {
-  const max = Math.max(...Object.values(values));
-  return (
-    <div className="elbow static" role="img" aria-label={Object.entries(values).map(([k, v]) => `k = ${k}: ${v}`).join(", ")}>
-      {Object.entries(values).map(([k, v]) => (
-        <div key={k} className="ebar">
-          <span className="val">{v}</span>
-          <span className="bar"><i style={{ height: `${Math.max(3, (v / max) * 100)}%` }} /></span>
-          <span className="kk">k={k}</span>
-        </div>
-      ))}
-    </div>
-  );
-}

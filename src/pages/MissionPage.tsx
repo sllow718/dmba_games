@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { AnyActivity, AnyMission } from "../core/types";
 import { getMission, missionKey, patchMission, starsFor, update, useProgress } from "../core/progress";
 import { isOpen } from "../core/unlock";
+import { ActivityContext } from "../core/activity";
 import { navigate, setFlash } from "../core/router";
 import { Review } from "../components/Review";
 import { Checkpoint } from "../components/Checkpoint";
@@ -86,7 +87,7 @@ export function MissionPage({ activity, n }: { activity: AnyActivity; n: number 
   const backLabel = `Back to ${STAGES[stage].toLowerCase()}`;
 
   return (
-    <>
+    <ActivityContext.Provider value={m.view ? { ...activity, view: m.view } : activity}>
       <TopBar title={`${stop} ${n} · ${m.title}`} sub={STAGES[shown]} home={mapPath}>
         <span className="pips" aria-hidden="true">{STAGES.map((_, i) => <i key={i} className={i < stage ? "d" : i === stage ? "n" : ""} />)}</span>
         {stage > 0 && stage < 3 && <button type="button" className="link" onClick={() => openView(view === 0 ? stage : 0)}>{view === 0 ? "Close review" : "Review ↺"}</button>}
@@ -159,7 +160,7 @@ export function MissionPage({ activity, n }: { activity: AnyActivity; n: number 
           <Results mission={m} last={mp.last} best={mp.bestStars} next={next} activity={activity} onReplay={() => setStage(0)} />
         )}
       </main>
-    </>
+    </ActivityContext.Provider>
   );
 }
 

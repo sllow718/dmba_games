@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MEMBERS } from "./data";
-import { assign, bestRun, initial, makeData, pickStart, run, step, update, wcss } from "./engine";
+import { assign, bestRun, initial, makeData, makeShoppers, normalise, pickStart, run, step, update, wcss } from "./engine";
 
 describe("k-means steps", () => {
   const pts = [{ x: 0, y: 0 }, { x: 2, y: 0 }, { x: 10, y: 10 }, { x: 12, y: 10 }];
@@ -29,6 +29,20 @@ describe("k-means steps", () => {
   it("can get stuck from a bad start", () => {
     const scores = [1, 2, 3].map((seed) => Math.round(wcss(MEMBERS, run(MEMBERS, 3, seed).labels, run(MEMBERS, 3, seed).centroids)));
     expect(Math.max(...scores)).toBeGreaterThan(Math.min(...scores));
+  });
+});
+
+describe("normalising", () => {
+  it("rescales each axis to 0–1", () => {
+    expect(normalise([{ x: 2, y: 100 }, { x: 4, y: 300 }, { x: 3, y: 200 }])).toEqual([{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 0.5, y: 0.5 }]);
+  });
+  it("on generated members, raw k-means splits by spend and normalised k-means by visits", () => {
+    const byType = (ls: number[]) => ls.every((l, i) => l === ls[i % 2]) && ls[0] !== ls[1];
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const d = makeShoppers(40, seed);
+      expect(byType(bestRun(d, 2, 8).labels)).toBe(false);
+      expect(byType(bestRun(normalise(d), 2, 8).labels)).toBe(true);
+    }
   });
 });
 

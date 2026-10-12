@@ -101,6 +101,8 @@ export interface MissionDef<R = Transaction> {
   questions: Question[];
   /** Formula card saved to the collection once complete. */
   card: { formula: string; example: string };
+  /** A different way to draw this mission's data, when it isn't the topic's usual kind of row. */
+  view?: DataView<R>;
 }
 
 export interface GridProps<R> {

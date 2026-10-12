@@ -318,7 +318,7 @@ a.topic-card:hover .name { text-decoration: underline; text-underline-offset: 3p
 .mini tbody th { font-weight: 700; white-space: nowrap; }
 .mini td { font-variant-numeric: tabular-nums; font-weight: 800; }
 
-/* K-means: scatter plot, guided steps and elbow chart */
+/* K-means: scatter plot, guided steps, normalising lab */
 .kplot-wrap { background: var(--paper); border-radius: 14px; padding: 8px; box-shadow: 0 3px 0 rgba(35,48,42,.1); }
 .kplot { width: 100%; height: auto; display: block; max-height: 460px; }
 .kplot .gridline { stroke: var(--edge); stroke-width: 1; }
@@ -350,16 +350,11 @@ a.topic-card:hover .name { text-decoration: underline; text-underline-offset: 3p
 .ksteps.static li::before { background: var(--hl); }
 .kstats { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--sub); }
 .kstats b { color: var(--ink); font-variant-numeric: tabular-nums; }
-.elbow { display: flex; gap: 6px; align-items: stretch; margin-top: 8px; }
-.ebar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: 0; padding: 0; color: var(--ink); font: inherit; min-width: 0; }
-button.ebar { cursor: pointer; }
-button.ebar:disabled { cursor: default; opacity: .5; }
-.ebar .val { font-size: 0.74rem; font-weight: 800; font-variant-numeric: tabular-nums; min-height: 1.1em; }
-.ebar .bar { width: 100%; height: 90px; display: flex; align-items: flex-end; background: var(--counter); border-radius: 6px; overflow: hidden; }
-.ebar .bar i { display: block; width: 100%; background: var(--ink); border-radius: 6px 6px 0 0; transition: height .3s; }
-.ebar.on .bar i { background: var(--brand); }
-.ebar .kk { font-size: 0.78rem; font-weight: 700; color: var(--sub); }
-.elbow.static { max-width: 340px; }
+.seg-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg-row .pick { padding: 3px 12px; }
+.toggle { display: flex; gap: 10px; align-items: flex-start; font-size: 0.95rem; cursor: pointer; }
+.toggle input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--brand); flex: 0 0 auto; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
