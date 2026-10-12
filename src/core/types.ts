@@ -43,6 +43,8 @@ interface QuestionBase {
   explain: string;
   /** Rows to light up from hint 2 onwards and after a correct answer. */
   highlight?: Highlight;
+  /** What the chart shows from the start, before any hint: something students need to answer, like a line. */
+  show?: Highlight;
   /** Extra visual shown under the prompt, such as a tree to read. */
   figure?: ReactNode;
 }

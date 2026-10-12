@@ -387,6 +387,13 @@ a.topic-card:hover .name { text-decoration: underline; text-underline-offset: 3p
 .kplot .line-tag { font-family: var(--display); font-weight: 800; font-size: 13px; }
 .kplot .line-tag.a { fill: var(--brand); }
 .kplot .line-tag.b { fill: var(--ink); }
+.kplot .fpt .dotm { stroke: #fff; stroke-width: 1.5; transition: fill .3s, opacity .3s; }
+.kplot .fpt text { font-size: 10px; font-weight: 800; fill: var(--ink); font-family: var(--body); pointer-events: none; }
+.kplot .fpt .hit { fill: transparent; }
+.kplot .fpt.dim { opacity: .3; }
+.kplot .fpt.sel .dotm { stroke: var(--ink); stroke-width: 3; r: 7px; }
+.kplot .fpt.sel .hit { fill: var(--hl); opacity: .8; }
+.kplot .fpt.miss .hit, .kplot .fpt.extra .hit { stroke: var(--brand); stroke-width: 2; stroke-dasharray: 3 2; }
 .key-line { display: inline-block; width: 18px; height: 0; border-top: 3px solid var(--brand); vertical-align: middle; }
 .key-line.best { border-top: 3px dashed var(--ink); }
 .up-txt { color: var(--ok); font-weight: 800; }

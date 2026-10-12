@@ -50,7 +50,7 @@ export function Checkpoint({ questions, data, dataLabel, compact, initial, onPro
   useEffect(() => { if (solved) nextRef.current?.focus(); }, [solved]);
 
   const showData = solved || wrong >= 2;
-  const highlight = showData ? q.highlight : null;
+  const highlight = showData ? q.highlight : q.show ?? null;
 
   function miss(spec: string | undefined) {
     const w = wrong + 1;
@@ -137,7 +137,7 @@ export function Checkpoint({ questions, data, dataLabel, compact, initial, onPro
       <div className="stack">
         <p className="data-label">{dataLabel}{q.type === "tap" && !solved ? " · tap to select" : ""}</p>
         {q.type === "tap" ? (
-          <view.Grid data={data} compact={compact} selected={picked} onToggle={toggle} marks={marks} highlight={solved ? q.highlight : null} label={`${cap(many)}: tap to select`} />
+          <view.Grid data={data} compact={compact} selected={picked} onToggle={toggle} marks={marks} highlight={solved ? q.highlight : q.show ?? null} label={`${cap(many)}: tap to select`} />
         ) : (
           <view.Grid data={data} compact={compact} highlight={highlight} />
         )}

@@ -106,6 +106,7 @@ const m1: Mission = {
     },
     {
       id: "r1-above", type: "tap", prompt: "Tap every flat that sold for more than the line predicts.", items: ["above"], need: "a price above the line",
+      show: { lit: ["all", "line"] },
       ladder: ["Look for dots that sit above the line.", "Flats 1, 3, 5, 8, 10 and 12 are above the line."],
       explain: "These flats have positive residuals: they sold for more than the line predicts.",
       highlight: { lit: ["above", "line", "resid"] },

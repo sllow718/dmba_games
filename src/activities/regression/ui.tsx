@@ -1,3 +1,4 @@
+import { createContext, useContext, useId } from "react";
 import type { ReactNode } from "react";
 import type { GridProps } from "../../core/types";
 import { slipState } from "../../components/ui";
@@ -7,22 +8,41 @@ import type { Flat, Line } from "./engine";
 import { AREA, PRICE, fit, predict } from "./engine";
 
 const W = 356, H = 300, L = 52, R = 12, T = 10, B = 34;
-export const sx = (x: number) => L + ((x - AREA.min) / (AREA.max - AREA.min)) * (W - L - R);
-export const sy = (y: number) => T + (1 - (y - PRICE.min) / (PRICE.max - PRICE.min)) * (H - T - B);
+
+interface Scale { sx: (x: number) => number; sy: (y: number) => number; yMin: number; yMax: number; yTicks: number[] }
+const makeScale = (yMin: number, yMax: number, yTicks: number[]): Scale => ({
+  sx: (x) => L + ((x - AREA.min) / (AREA.max - AREA.min)) * (W - L - R),
+  sy: (y) => T + (1 - (y - yMin) / (yMax - yMin)) * (H - T - B),
+  yMin, yMax, yTicks,
+});
+/** The full price range, used by the labs. */
+const FULL = makeScale(PRICE.min, PRICE.max, [200, 400, 600, 800]);
+/** Zoomed in on the lesson flats ($415k–$745k), so each flat's gap from the line is easy to see. */
+const ZOOM = makeScale(350, 800, [400, 500, 600, 700, 800]);
+const ScaleContext = createContext<Scale>(FULL);
+
+export const sx = FULL.sx;
+export const sy = FULL.sy;
 /** The least-squares line for the 12 lesson flats. */
 export const LESSON_FIT = fit(LISTINGS);
 const clampX = (x: number) => Math.min(AREA.max, Math.max(AREA.min, x));
 
-/** Axes for floor area (x) against price (y). */
-export function Plot({ label, children }: { label: string; children: ReactNode }) {
-  const xt = [40, 60, 80, 100, 120, 140], yt = [200, 400, 600, 800];
+/** Axes for floor area (x) against price (y). Lines and points inside are clipped to the plot area. */
+export function Plot({ label, children, zoom }: { label: string; children: ReactNode; zoom?: boolean }) {
+  const scale = zoom ? ZOOM : FULL;
+  const { sx, sy, yTicks: yt } = scale;
+  const y = { min: scale.yMin, max: scale.yMax };
+  const xt = [40, 60, 80, 100, 120, 140];
+  const clip = useId().replace(/:/g, "");
   return (
+    <ScaleContext.Provider value={scale}>
     <svg className="kplot" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label}>
+      <defs><clipPath id={clip}><rect x={sx(AREA.min)} y={sy(y.max) - 12} width={sx(AREA.max) - sx(AREA.min)} height={sy(y.min) - sy(y.max) + 12} /></clipPath></defs>
       <g className="axes" aria-hidden="true">
         {xt.map((t) => (
           <g key={"x" + t}>
-            <line x1={sx(t)} x2={sx(t)} y1={sy(PRICE.min)} y2={sy(PRICE.max)} className="gridline" />
-            <text x={sx(t)} y={sy(PRICE.min) + 14} textAnchor="middle">{t}</text>
+            <line x1={sx(t)} x2={sx(t)} y1={sy(y.min)} y2={sy(y.max)} className="gridline" />
+            <text x={sx(t)} y={sy(y.min) + 14} textAnchor="middle">{t}</text>
           </g>
         ))}
         {yt.map((t) => (
@@ -32,20 +52,23 @@ export function Plot({ label, children }: { label: string; children: ReactNode }
           </g>
         ))}
         <text x={(sx(AREA.min) + sx(AREA.max)) / 2} y={H - 2} textAnchor="middle" className="axis-title">Floor area (sqm) →</text>
-        <text x={10} y={(sy(PRICE.min) + sy(PRICE.max)) / 2} textAnchor="middle" className="axis-title" transform={`rotate(-90 10 ${(sy(PRICE.min) + sy(PRICE.max)) / 2})`}>Price →</text>
+        <text x={10} y={(sy(y.min) + sy(y.max)) / 2} textAnchor="middle" className="axis-title" transform={`rotate(-90 10 ${(sy(y.min) + sy(y.max)) / 2})`}>Price →</text>
       </g>
-      {children}
+      <g clipPath={`url(#${clip})`}>{children}</g>
     </svg>
+    </ScaleContext.Provider>
   );
 }
 
 /** A straight line across the chart. */
 export function LineMark({ l, className }: { l: Line; className: string }) {
+  const { sx, sy } = useContext(ScaleContext);
   return <line x1={sx(AREA.min)} y1={sy(predict(l, AREA.min))} x2={sx(AREA.max)} y2={sy(predict(l, AREA.max))} className={className} />;
 }
 
 /** Vertical gaps from each flat to the line: green when it sold above the line, red when below. */
 export function Residuals({ l, points }: { l: Line; points: readonly Flat[] }) {
+  const { sx, sy } = useContext(ScaleContext);
   return (
     <g>
       {points.map((p, i) => {
@@ -58,10 +81,11 @@ export function Residuals({ l, points }: { l: Line; points: readonly Flat[] }) {
 
 /** Dashed guides from a floor area up to the line and across to the price axis. */
 export function PredictionGuide({ l, x }: { l: Line; x: number }) {
+  const { sx, sy, yMin } = useContext(ScaleContext);
   const y = predict(l, x), cx = clampX(x);
   return (
     <g className="guide">
-      <line x1={sx(cx)} x2={sx(cx)} y1={sy(PRICE.min)} y2={sy(y)} />
+      <line x1={sx(cx)} x2={sx(cx)} y1={sy(yMin)} y2={sy(y)} />
       <line x1={sx(AREA.min)} x2={sx(cx)} y1={sy(y)} y2={sy(y)} />
       <circle cx={sx(cx)} cy={sy(y)} r={6} />
     </g>
@@ -85,9 +109,10 @@ export function FlatPlot({ data, highlight, selected, onToggle, marks, label }: 
   const tags = [...(highlight?.lit ?? []), ...(highlight?.both ?? [])];
   const l = fit(data);
   const pred = tags.find((t) => t.startsWith("pred="));
+  const { sx: zx, sy: zy } = ZOOM;
   return (
     <div className="kplot-wrap">
-      <Plot label={label ?? `Scatter plot of ${data.length} flats: floor area against price`}>
+      <Plot zoom label={label ?? `Scatter plot of ${data.length} flats: floor area against price`}>
         {tags.includes("resid") && <Residuals l={l} points={data} />}
         {tags.includes("line") && <LineMark l={l} className="fitline" />}
         {pred && <PredictionGuide l={l} x={Number(pred.slice(5))} />}
@@ -95,9 +120,11 @@ export function FlatPlot({ data, highlight, selected, onToggle, marks, label }: 
           const st = slipState(m, highlight, hasListingTag);
           const sel = selected?.has(i), mark = marks?.get(i);
           const dot = (
-            <g className={"mpt" + (st === "dim" ? " dim" : "") + (sel ? " sel" : "") + (mark ? " " + mark : "")}>
-              <circle cx={sx(m.x)} cy={sy(m.y)} r={onToggle ? 10 : 8.5} fill={st === "lit" || st === "both" ? "#2f74cc" : "#7d8a80"} />
-              <text x={sx(m.x)} y={sy(m.y) + 3.5} textAnchor="middle">{m.id}</text>
+            // Small dots with the number beside them, so the line stays visible next to each flat.
+            <g className={"fpt" + (st === "dim" ? " dim" : "") + (sel ? " sel" : "") + (mark ? " " + mark : "")}>
+              {onToggle && <circle cx={zx(m.x)} cy={zy(m.y)} r={13} className="hit" />}
+              <circle cx={zx(m.x)} cy={zy(m.y)} r={5} fill={st === "lit" || st === "both" ? "#2f74cc" : "#7d8a80"} className="dotm" />
+              <text x={zx(m.x)} y={zy(m.y) - 9} textAnchor="middle">{m.id}</text>
             </g>
           );
           const desc = `Flat ${m.id}: ${m.x} sqm, $${m.y}k`;
