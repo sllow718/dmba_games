@@ -26,26 +26,78 @@ function ItemPicker({ items, value, onChange, label }: { items: readonly string[
   );
 }
 
-/* Mission 1: tap the Bread receipts, then count anything. */
+/** Receipts as a 0/1 table: one row per transaction, one column per item. */
+function BasketTable({ data, items, cells, onToggle, totals }: { data: readonly (readonly string[])[]; items: readonly string[]; cells?: Set<string>; onToggle?: (key: string) => void; totals?: boolean }) {
+  const on = (r: number, it: string) => (cells ? cells.has(r + "," + it) : data[r].includes(it));
+  return (
+    <div className="tablewrap">
+      <table className="grid01">
+        <thead><tr><th scope="col">Receipt</th>{items.map((it) => <th key={it} scope="col" title={it}><Token item={it} /><span className="sr-only">{it}</span></th>)}</tr></thead>
+        <tbody>
+          {data.map((_, r) => (
+            <tr key={r}>
+              <th scope="row">#{r + 1}</th>
+              {items.map((it) => (
+                <td key={it}>
+                  {onToggle
+                    ? <button type="button" className={"cell" + (on(r, it) ? " on" : "")} aria-pressed={on(r, it)} aria-label={`Receipt ${r + 1}, ${it}: ${on(r, it) ? 1 : 0}`} onClick={() => onToggle(r + "," + it)}>{on(r, it) ? 1 : 0}</button>
+                    : <span className={"cell" + (on(r, it) ? " on" : "")}>{on(r, it) ? 1 : 0}</span>}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+        {totals && (
+          <tfoot><tr><th scope="row">Total</th>{items.map((it) => <td key={it}><b>{data.filter((t) => t.includes(it)).length}</b></td>)}</tr></tfoot>
+        )}
+      </table>
+    </div>
+  );
+}
+
+const TABLE_ROWS = 4;
+
+/* Mission 1: tap the Bread receipts, turn receipts into a 0/1 table, then count an itemset and build a rule. */
 export function ExploreReceipts({ data, onDone, done }: ExploreProps) {
   const target = data.map((t, i) => (t.includes("Bread") ? i : -1)).filter((i) => i >= 0);
+  const [phase, setPhase] = useState(done ? 2 : 0);
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const [msg, setMsg] = useState<string | null>(null);
   const [tries, setTries] = useState(0);
+  const [cells, setCells] = useState<Set<string>>(new Set());
   const [free, setFree] = useState<string[]>(["Eggs"]);
+  const [counted, setCounted] = useState(false);
+  const [ante, setAnte] = useState<string[]>([]);
+  const [cons, setCons] = useState<string[]>([]);
+  const ruleBuilt = ante.length > 0 && cons.length > 0;
+  const tasks = [
+    { text: "Tap every receipt with bread", done: phase > 0 },
+    { text: "Fill in the first four rows of the receipt table", done: phase > 1 },
+    { text: "Count an itemset of your own", done: counted },
+    { text: "Build a rule: choose its antecedent and consequent", done: ruleBuilt },
+  ];
 
-  const check = () => {
+  const checkTap = () => {
     const missed = target.filter((i) => !picked.has(i));
     const extra = [...picked].filter((i) => !target.includes(i));
-    if (!missed.length && !extra.length) { setMsg(null); onDone(); return; }
+    if (!missed.length && !extra.length) { setMsg(null); setPhase(1); return; }
     setTries(tries + 1);
     const bits = [];
     if (missed.length) bits.push(tries ? `Look again at ${missed.map((i) => "#" + (i + 1)).join(", ")}.` : `You've missed ${missed.length}.`);
     if (extra.length) bits.push(`${extra.map((i) => "#" + (i + 1)).join(", ")} ${extra.length > 1 ? "have" : "has"} no bread.`);
     setMsg(bits.join(" "));
   };
+  const checkTable = () => {
+    const bad = data.slice(0, TABLE_ROWS).map((t, r) => (SATURDAY_ITEMS.every((it) => cells.has(r + "," + it) === t.includes(it)) ? -1 : r)).filter((r) => r >= 0);
+    if (!bad.length) { setMsg(null); setPhase(2); return; }
+    setMsg(`Check row ${bad.map((r) => "#" + (r + 1)).join(", ")} against its receipt. A 1 means the item is on the receipt, a 0 means it isn't.`);
+  };
+  // An item can only sit on one side of a rule; the checkpoint opens once both sides have something.
+  const setSides = (a: string[], c: string[]) => { setAnte(a); setCons(c); if (a.length && c.length && !done) onDone(); };
+  const pickAnte = (v: string[]) => setSides(v, cons.filter((x) => !v.includes(x)));
+  const pickCons = (v: string[]) => setSides(ante.filter((x) => !v.includes(x)), v);
 
-  if (!done) {
+  if (phase === 0) {
     return (
       <div className="split">
         <div className="stack">
@@ -55,13 +107,37 @@ export function ExploreReceipts({ data, onDone, done }: ExploreProps) {
           <ItemKey items={SATURDAY_ITEMS} />
         </div>
         <div className="stack">
+          <Tasks items={tasks} />
           <section className="card">
-            <span className="k">Task</span>
+            <span className="k">Task 1</span>
             <h2>Tap every receipt that has <Token item="Bread" /> Bread</h2>
             <p>Each receipt is one customer's basket, which is one <b>transaction</b>. Each token is one <b>item</b>.</p>
-            <div className="row"><button type="button" className="btn" disabled={!picked.size} onClick={check}>Check my picks</button><span className="worth" style={{ marginTop: 0 }}>{picked.size} selected</span></div>
+            <div className="row"><button type="button" className="btn" disabled={!picked.size} onClick={checkTap}>Check my picks</button><span className="worth" style={{ marginTop: 0 }}>{picked.size} selected</span></div>
           </section>
           <Owner level={msg ? "Try again" : undefined}>{msg ?? "I want to know how many of Saturday's customers bought bread. Tap their receipts."}</Owner>
+        </div>
+      </div>
+    );
+  }
+  if (phase === 1) {
+    return (
+      <div className="split">
+        <div className="stack">
+          <p className="data-label">{SAT_LABEL}</p>
+          <Slips data={data.slice(0, TABLE_ROWS)} label="The first four receipts" />
+          <ItemKey items={SATURDAY_ITEMS} />
+        </div>
+        <div className="stack">
+          <Tasks items={tasks} />
+          <section className="card">
+            <span className="k">Task 2</span>
+            <h2>Turn the receipts into a table</h2>
+            <p>Computers store receipts as a table: one <b>row</b> per transaction, one <b>column</b> per item. Tap a cell to switch it between <b>0</b> (not bought) and <b>1</b> (bought).</p>
+            <BasketTable data={data.slice(0, TABLE_ROWS)} items={SATURDAY_ITEMS} cells={cells}
+              onToggle={(k) => { const n = new Set(cells); n.has(k) ? n.delete(k) : n.add(k); setCells(n); }} />
+            <div className="row" style={{ marginTop: 10 }}><button type="button" className="btn" onClick={checkTable}>Check my table</button></div>
+          </section>
+          <Owner level={msg ? "Try again" : undefined}>{msg ?? "The shop's computer can't read slips. Copy the first four receipts into the table."}</Owner>
         </div>
       </div>
     );
@@ -72,16 +148,33 @@ export function ExploreReceipts({ data, onDone, done }: ExploreProps) {
       <div className="stack">
         <p className="data-label">{SAT_LABEL}</p>
         <Slips data={data} highlight={free.length ? { lit: free } : null} />
-        <ItemKey items={SATURDAY_ITEMS} />
+        <section className="card">
+          <span className="k">All ten receipts as a table</span>
+          <BasketTable data={data} items={SATURDAY_ITEMS} totals />
+          <p className="worth">Add up a column of 1s and you get that item's count. Bread: 6.</p>
+        </section>
       </div>
       <div className="stack">
-        <Owner tone="ok">Six bread buyers. That number is the <b>support count</b> of {"{Bread}"}. Now try a few itemsets of your own.</Owner>
+        <Tasks items={tasks} />
+        <Owner tone="ok">That's the same data, ready for a computer. Now try an itemset and a rule of your own.</Owner>
         <section className="card">
-          <ItemPicker items={SATURDAY_ITEMS} value={free} onChange={setFree} label="Build an itemset" />
+          <span className="k">Task 3 · Itemset</span>
+          <ItemPicker items={SATURDAY_ITEMS} value={free} onChange={(v) => { setFree(v); setCounted(true); }} label="Build an itemset" />
           <p style={{ marginTop: 12 }}>
             {free.length ? <>Receipts with <b>{free.join(" and ")}</b>: <span className="eq" style={{ display: "inline", fontSize: "1.3rem" }}>{c}</span></> : "Pick one or more items."}
           </p>
           <p className="worth">A receipt only counts if it has every item in the itemset.</p>
+        </section>
+        <section className="card">
+          <span className="k">Task 4 · Rule</span>
+          <ItemPicker items={SATURDAY_ITEMS} value={ante} onChange={pickAnte} label="IF the customer buys… (antecedent)" />
+          <div style={{ height: 8 }} />
+          <ItemPicker items={SATURDAY_ITEMS} value={cons} onChange={pickCons} label="THEN they also buy… (consequent)" />
+          <p style={{ marginTop: 12 }}>
+            {ruleBuilt
+              ? <><b>{ruleName(ante, cons)}</b>: if a customer buys {ante.join(" and ")}, then they buy {cons.join(" and ")}. The <b>antecedent</b> is {"{"}{ante.join(", ")}{"}"} and the <b>consequent</b> is {"{"}{cons.join(", ")}{"}"}.</>
+              : "Pick at least one item for each side. An item can't be on both sides."}
+          </p>
         </section>
       </div>
     </div>
