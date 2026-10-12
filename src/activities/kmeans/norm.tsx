@@ -33,14 +33,24 @@ const AXES: Record<View, [Axis, Axis]> = {
   ],
 };
 
+export interface Note {
+  title: string;
+  lines: string[];
+  /** Point (in raw visits/spend) for an arrow from the note, e.g. the squashed strip. */
+  arrowTo?: Pt;
+}
+
 /** A scatter plot frame for one view; `place` maps a member's raw (visits, spend) to the screen. */
-function Frame({ view, label, children }: { view: View; label: string; children: (place: (p: Pt, normed?: Pt) => [number, number]) => ReactNode }) {
+function Frame({ view, label, note, children }: { view: View; label: string; note?: Note; children: (place: (p: Pt, normed?: Pt) => [number, number]) => ReactNode }) {
   const [ax, ay] = AXES[view];
+  // Room for the title, the lines and a gap before the plot starts.
+  const noteH = note ? 48 + note.lines.length * 15 : 0;
+  const top = T + noteH, height = H + noteH;
   const sx = (v: number) => L + (v / ax.max) * (W - L - R);
-  const sy = (v: number) => T + (1 - v / ay.max) * (H - T - B);
+  const sy = (v: number) => top + (1 - v / ay.max) * (height - top - B);
   const place = (p: Pt, normed?: Pt): [number, number] => (view === "norm" && normed ? [sx(normed.x), sy(normed.y)] : [sx(p.x), sy(p.y)]);
   return (
-    <svg className="kplot" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label}>
+    <svg className="kplot" viewBox={`0 0 ${W} ${height}`} role="img" aria-label={label}>
       <g className="axes" aria-hidden="true">
         {ax.ticks.map((t) => (
           <g key={"x" + t}>
@@ -54,11 +64,34 @@ function Frame({ view, label, children }: { view: View; label: string; children:
             <text x={sx(0) - 12} y={sy(t) + 4} textAnchor="end">{ay.fmt(t)}</text>
           </g>
         ))}
-        <text x={(sx(0) + sx(ax.max)) / 2} y={H - 2} textAnchor="middle" className="axis-title">{ax.title}</text>
+        <text x={(sx(0) + sx(ax.max)) / 2} y={height - 2} textAnchor="middle" className="axis-title">{ax.title}</text>
         <text x={10} y={(sy(0) + sy(ay.max)) / 2} textAnchor="middle" className="axis-title" transform={`rotate(-90 10 ${(sy(0) + sy(ay.max)) / 2})`}>{ay.title}</text>
       </g>
       {children(place)}
+      {note && <NotePanel note={note} height={noteH} target={note.arrowTo && place(note.arrowTo)} />}
     </svg>
+  );
+}
+
+/** The walkthrough note at the top of the chart. */
+function NotePanel({ note, height, target }: { note: Note; height: number; target?: [number, number] }) {
+  const x0 = 6, y0 = 4, w = W - 12, h = height - 18;
+  return (
+    <g className="seen-note" role="note" aria-label={`${note.title}. ${note.lines.join(" ")}`}>
+      <rect x={x0} y={y0} width={w} height={h} rx={8} />
+      <text x={x0 + 10} y={y0 + 18} className="hd">{note.title}</text>
+      {note.lines.map((l, i) => <text key={i} x={x0 + 10} y={y0 + 36 + i * 15}>{l}</text>)}
+      {target && (
+        <>
+          <path d={`M ${x0 + 70} ${y0 + h} Q ${target[0] + 40} ${y0 + h + 10} ${target[0] + 7} ${target[1]}`} className="arrow" markerEnd="url(#seen-arrow)" />
+          <defs>
+            <marker id="seen-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" />
+            </marker>
+          </defs>
+        </>
+      )}
+    </g>
   );
 }
 
@@ -109,33 +142,6 @@ export function ShopperPlot({ data, highlight, label }: GridProps<Shopper>) {
 
 /* Hands-on lab */
 
-/** Callout inside the raw-distance view, shown before k-means runs: why the model can't tell visits apart. */
-function SeenNote({ place }: { place: (p: Pt) => [number, number] }) {
-  const [x0, y0] = place({ x: 330, y: 1960 });
-  const [x1] = place({ x: 1960, y: 0 });
-  const [ax, ay] = place({ x: 40, y: 1100 });
-  const lines = [
-    "1 visit counts the same as $1,",
-    "so visits (0 to 30) shrink into",
-    "this thin strip. It can't tell",
-    "3 visits from 25 visits: only",
-    "yearly spend makes a difference.",
-  ];
-  return (
-    <g className="seen-note" role="note" aria-label={`How k-means will read this data: ${lines.join(" ")}`}>
-      <rect x={x0} y={y0} width={x1 - x0} height={112} rx={8} />
-      <text x={x0 + 10} y={y0 + 19} className="hd">How k-means will read this data</text>
-      {lines.map((l, i) => <text key={i} x={x0 + 10} y={y0 + 38 + i * 15}>{l}</text>)}
-      <path d={`M ${x0} ${y0 + 46} Q ${ax + 30} ${y0 + 46} ${ax + 6} ${ay}`} className="arrow" markerEnd="url(#seen-arrow)" />
-      <defs>
-        <marker id="seen-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" />
-        </marker>
-      </defs>
-    </g>
-  );
-}
-
 /** Average visits and spend of each cluster, in the members' real units. */
 function profiles(points: readonly Pt[], labels: readonly number[]) {
   return [0, 1].map((k) => {
@@ -145,38 +151,73 @@ function profiles(points: readonly Pt[], labels: readonly number[]) {
   });
 }
 
-/* Mission 2: run k-means with and without normalising. */
+/** The guided walkthrough in the distance view: raw → raw clusters → normalised → normalised clusters. */
+const WALK: { scaled: boolean; run: boolean; note: Note }[] = [
+  { scaled: false, run: false, note: { title: "Step 1 of 4 · How k-means reads the raw data", arrowTo: { x: 0, y: 1100 }, lines: [
+    "1 visit counts the same as $1, so visits (0 to 30)",
+    "shrink into this thin strip. K-means can't tell",
+    "3 visits from 25 visits: only spend makes a difference.",
+  ] } },
+  { scaled: false, run: true, note: { title: "Step 2 of 4 · K-means on the raw numbers", arrowTo: { x: 0, y: 1100 }, lines: [
+    "The clusters split by spend alone: higher spenders",
+    "in one, lower spenders in the other. Casual and",
+    "regular members end up mixed in both clusters.",
+  ] } },
+  { scaled: true, run: false, note: { title: "Step 3 of 4 · Normalise", lines: [
+    "Both variables are rescaled to run from 0 to 1.",
+    "Now a gap of 25 visits counts as much as a gap",
+    "of $1,700 in spend, so the two groups pull apart.",
+  ] } },
+  { scaled: true, run: true, note: { title: "Step 4 of 4 · K-means on the normalised data", lines: [
+    "With both variables counting, k-means separates",
+    "casual members (left) from regulars (right).",
+    "Press Next to see these clusters on the normal chart.",
+  ] } },
+];
+
+/* Mission 2: run k-means on the raw numbers, then walk through what normalising changes. */
 export function ExploreNormalise({ onDone, done }: ExploreProps<Shopper>) {
   const [n, setN] = useState(40);
   const [seed, setSeed] = useState(3);
   const [scaled, setScaled] = useState(false);
   const [view, setView] = useState<View>("chart");
+  const [step, setStep] = useState(0);
   const [labels, setLabels] = useState<number[] | null>(null);
-  const [t, setT] = useState({ raw: false, seen: false, norm: false });
+  const [t, setT] = useState({ raw: false, walked: false, compared: false });
   const points = useMemo(() => makeShoppers(n, seed), [n, seed]);
   const normed = useMemo(() => normalise(points), [points]);
 
-  const tick = (nt: typeof t) => { setT(nt); if (!done && nt.raw && nt.seen && nt.norm) onDone(); };
-  const runIt = () => {
-    const ls = bestRun(scaled ? normed : points, 2, 8).labels;
+  const tick = (nt: typeof t) => { setT(nt); if (!done && nt.raw && nt.walked && nt.compared) onDone(); };
+  const cluster = (useScaled: boolean) => {
+    const ls = bestRun(useScaled ? normed : points, 2, 8).labels;
     // Number clusters so cluster 1 is always the lower-visit one: colours stay put between runs.
     const lowVisit = profiles(points, ls).sort((a, b) => a.visits - b.visits)[0].k;
-    setLabels(ls.map((l) => (l === lowVisit ? 0 : 1)));
-    tick({ ...t, raw: t.raw || !scaled, norm: t.norm || scaled });
+    return ls.map((l) => (l === lowVisit ? 0 : 1));
   };
-  const changeView = (v: View) => { setView(v); if (v !== "chart" && !scaled) tick({ ...t, seen: true }); };
-  const toggleScale = (v: boolean) => { setScaled(v); setLabels(null); if (view !== "chart") setView(v ? "norm" : "seen"); };
+  const goTo = (i: number) => {
+    const w = WALK[i];
+    setStep(i); setScaled(w.scaled); setLabels(w.run ? cluster(w.scaled) : null);
+    if (i === WALK.length - 1) tick({ ...t, walked: true, raw: true });
+  };
+  const openWalk = () => { setView("seen"); goTo(0); };
+  const next = () => {
+    if (step < WALK.length - 1) goTo(step + 1);
+    else { setView("chart"); tick({ ...t, walked: true, compared: true }); }
+  };
   const reset = (f: () => void) => { f(); setLabels(null); };
 
+  const walking = view !== "chart";
   const prof = labels ? profiles(points, labels) : null;
   const visitsGap = prof ? Math.abs(prof[0].visits - prof[1].visits) : 0;
-  const say = !labels
-    ? scaled ? "Normalising is on: both variables now run from 0 to 1. Run k-means again and compare." : "These members are casual or regular visitors, and spend varies a lot either way. Run k-means with k = 2 and see what it finds."
-    : visitsGap > 10
-      ? "Now the clusters split casual visitors from regulars. Both variables counted, and visits turned out to be what separates the groups."
-      : <>Look at the averages: both clusters visit about the same number of times. K-means split them by <b>spend</b> only, because dollar differences are hundreds of times bigger than visit differences. Try the other view.</>;
+  const say = walking
+    ? "Follow the note in the chart, and press Next when you're ready for the next step."
+    : !labels
+      ? "These members are casual or regular visitors, and spend varies a lot either way. Run k-means with k = 2 and see what it finds."
+      : visitsGap > 10
+        ? "These are the clusters from the normalised data. They split casual visitors from regulars: both variables counted, and visits turned out to be what separates the groups."
+        : <>Look at the averages: both clusters visit about the same number of times. K-means split them by <b>spend</b> only. Open “How k-means measures distance” to see why.</>;
 
-  const effView: View = view === "chart" ? "chart" : scaled ? "norm" : "seen";
+  const effView: View = !walking ? "chart" : scaled ? "norm" : "seen";
 
   return (
     <>
@@ -184,51 +225,46 @@ export function ExploreNormalise({ onDone, done }: ExploreProps<Shopper>) {
         <div className="stack">
           <Tasks items={[
             { text: "Run k-means on the raw numbers", done: t.raw },
-            { text: "Switch to “How k-means measures distance” to see why", done: t.seen },
-            { text: "In that view, tick “Normalise first” and run k-means again", done: t.norm },
+            { text: "Open “How k-means measures distance” and press Next through all 4 steps", done: t.walked },
+            { text: "Back on the normal chart, compare the new clusters", done: t.compared },
           ]} />
           <div className="kplot-wrap">
-            <Frame view={effView} label={`${n} members, ${scaled ? "normalised" : "raw numbers"}, ${labels ? "clustered" : "not clustered yet"}`}>
-              {(place) => (
-                <>
-                  {points.map((p, i) => {
-                    const [x, y] = place(p, normed[i]);
-                    return <circle key={i} cx={x} cy={y} r={4.5} className="kp" fill={labels ? COLORS[labels[i]] : "#9aa69a"} />;
-                  })}
-                  {effView === "seen" && !labels && <SeenNote place={place} />}
-                </>
-              )}
+            <Frame view={effView} note={walking ? WALK[step].note : undefined}
+              label={`${n} members, ${scaled ? "normalised" : "raw numbers"}, ${labels ? "clustered" : "not clustered yet"}`}>
+              {(place) => points.map((p, i) => {
+                const [x, y] = place(p, normed[i]);
+                return <circle key={i} cx={x} cy={y} r={4.5} className="kp" fill={labels ? COLORS[labels[i]] : "#9aa69a"} />;
+              })}
             </Frame>
-            <p className="worth" style={{ margin: "6px 4px 0" }}>{VIEW_NOTE[effView]}</p>
+            {!walking && <p className="worth" style={{ margin: "6px 4px 0" }}>{VIEW_NOTE[effView]}</p>}
           </div>
+          {walking && (
+            <div className="row">
+              <button type="button" className="btn" onClick={next}>{step < WALK.length - 1 ? "Next →" : "Back to the normal chart →"}</button>
+              {step > 0 && <button type="button" className="btn alt small" onClick={() => goTo(step - 1)}>← Back a step</button>}
+            </div>
+          )}
           <div className="seg-row" role="group" aria-label="Chart view">
-            <button type="button" className="pick" aria-pressed={view === "chart"} onClick={() => changeView("chart")}>Normal chart</button>
-            <button type="button" className="pick" aria-pressed={view !== "chart"} onClick={() => changeView("seen")}>How k-means measures distance</button>
+            <button type="button" className="pick" aria-pressed={!walking} onClick={() => setView("chart")}>Normal chart</button>
+            <button type="button" className="pick" aria-pressed={walking} onClick={openWalk}>How k-means measures distance</button>
           </div>
         </div>
         <div className="stack">
           <Owner>{say}</Owner>
-          <section className="card kcontrols">
-            <span className="k">Settings</span>
-            {view === "chart" ? (
-              <p className="worth" style={{ margin: 0 }}>
-                Normalising is <b>{scaled ? "on" : "off"}</b>. Switch to “How k-means measures distance” to change it.
-              </p>
-            ) : (
-              <label className="toggle">
-                <input type="checkbox" checked={scaled} onChange={(e) => toggleScale(e.target.checked)} />
-                <span><b>Normalise first</b> (rescale visits and spend to 0–1)</span>
+          {!walking && (
+            <section className="card kcontrols">
+              <span className="k">Settings</span>
+              <p className="worth" style={{ margin: 0 }}>Normalising is <b>{scaled ? "on" : "off"}</b>.{scaled ? " These clusters come from the walkthrough." : ""}</p>
+              <label className="kfield">
+                <span>Number of members <b>n = {n}</b></span>
+                <input type="range" className="slider" min={10} max={150} step={10} value={n} onChange={(e) => reset(() => { setN(Number(e.target.value)); setScaled(false); })} />
               </label>
-            )}
-            <label className="kfield">
-              <span>Number of members <b>n = {n}</b></span>
-              <input type="range" className="slider" min={10} max={150} step={10} value={n} onChange={(e) => reset(() => setN(Number(e.target.value)))} />
-            </label>
-            <div className="row">
-              <button type="button" className="btn" onClick={runIt}>Run k-means (k = 2)</button>
-              <button type="button" className="btn alt small" onClick={() => reset(() => setSeed(seed + 1))}>New data</button>
-            </div>
-          </section>
+              <div className="row">
+                <button type="button" className="btn" onClick={() => { setScaled(false); setLabels(cluster(false)); tick({ ...t, raw: true }); }}>Run k-means (k = 2)</button>
+                <button type="button" className="btn alt small" onClick={() => reset(() => { setSeed(seed + 1); setScaled(false); })}>New data</button>
+              </div>
+            </section>
+          )}
           {prof && (
             <table className="mini">
               <thead><tr><th scope="col">Cluster</th><th scope="col">Members</th><th scope="col">Avg visits / month</th><th scope="col">Avg yearly spend</th></tr></thead>
