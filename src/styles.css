@@ -262,3 +262,15 @@ a.shop:hover .sign { text-decoration: underline; text-underline-offset: 3px; }
   * { transition: none !important; }
   .slip { transform: none !important; }
 }
+
+/* 0/1 receipt table (Mission 1) */
+.tablewrap { overflow-x: auto; }
+.grid01 { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.grid01 th, .grid01 td { padding: 4px; text-align: center; font-size: 0.85rem; }
+.grid01 th[scope="row"] { text-align: left; color: var(--sub); font-weight: 800; }
+.grid01 tbody tr:nth-child(odd) { background: rgba(35,48,42,.04); }
+.grid01 tfoot td, .grid01 tfoot th { border-top: 2px solid var(--edge); }
+.grid01 .tok { width: 24px; height: 24px; font-size: 0.6rem; }
+.cell { display: inline-block; min-width: 34px; padding: 4px 0; border-radius: 6px; font-weight: 800; color: var(--sub); background: transparent; border: 2px solid var(--edge); font-family: inherit; }
+button.cell { cursor: pointer; background: var(--paper); }
+.cell.on { background: var(--brand-dk); border-color: var(--brand-dk); color: #fff; }

@@ -6,7 +6,7 @@ Browser games that teach data mining for business analytics to polytechnic stude
 
 | Aisle | Mission | Teaches |
 | --- | --- | --- |
-| 1 | Read the Receipts | transactions, itemsets, support count |
+| 1 | Read the Receipts | transactions, the 0/1 receipt table, itemsets, antecedent and consequent, support count |
 | 2 | Support Hunt | support, minimum-support threshold |
 | 3 | If This, Then That | rules, confidence, direction |
 | 4 | The Lift Lens | lift, baseline, misleading rules |

@@ -9,7 +9,7 @@ const set = (...xs: string[]) => `{${xs.join(", ")}}`;
 const m1: MissionDef = {
   n: 1,
   title: "Read the Receipts",
-  concept: "Transactions & itemsets",
+  concept: "Transactions, itemsets & rules",
   badge: "Receipt Reader",
   data: SATURDAY,
   dataLabel: SAT,
@@ -21,6 +21,7 @@ const m1: MissionDef = {
       <>
         <p>A <b>transaction</b> is one customer's receipt. An <b>item</b> is one product on it.</p>
         <p>An <b>itemset</b> is any group of items, like {set("Bread", "Butter")}. The order doesn't matter.</p>
+        <p>Shops store receipts as a table: one <b>row</b> per transaction, one <b>column</b> per item, <b>1</b> if it was bought and <b>0</b> if not.</p>
       </>
     ),
     how: (
@@ -38,22 +39,23 @@ const m1: MissionDef = {
       "One receipt = one transaction = one customer's basket.",
       "An itemset is a group of items. {Bread, Eggs} is the same itemset as {Eggs, Bread}.",
       "The support count of an itemset is the number of receipts that contain all of its items.",
+      "In a receipt table, each row is a transaction, each column is an item, and 1 means bought.",
+      "A rule is If-Then. The If part is the antecedent and the Then part is the consequent. Both are itemsets.",
     ],
     says: ["Let's start with the vocabulary.", "Counting is all you need for this aisle.", "Watch the receipts light up.", "Ready? Let's count some receipts."],
   },
-  explore: { goal: "Tap the bread receipts, then count your own itemsets.", Component: ExploreReceipts },
+  explore: { goal: "Tap the bread receipts, fill in the receipt table, then count an itemset and build a rule.", Component: ExploreReceipts },
   questions: [
     {
-      id: "m1-milk", type: "mc", prompt: "How many receipts contain Milk?",
+      id: "m1-table", type: "mc", prompt: "In the receipt table, row #5 has a 1 under Eggs and a 0 under Bread. What does that say?", layout: "list",
       options: [
-        { text: "4", hint: "More than that. Check every receipt, including the long ones." },
-        { text: "5", hint: "Close. Did you check #9? Milk and coffee." },
-        { text: "6", correct: true },
-        { text: "7", hint: "Too many. #2 is just bread and butter." },
+        { text: "Customer #5 bought eggs but not bread", correct: true },
+        { text: "Customer #5 bought one pack of eggs and no loaves", hint: "The table only records bought (1) or not bought (0). It doesn't record how many." },
+        { text: "Customer #5 bought bread but not eggs", hint: "A 1 means the item is on the receipt. The 1 is under Eggs." },
+        { text: "Customer #5 didn't buy anything", hint: "A row of all 0s would say that. This row has a 1." },
       ],
-      ladder: ["Milk is on #1, #3 and #5. Keep going from #6. I've outlined the milk receipts.", "Milk is on #1, #3, #5, #6, #9 and #10. How many is that?"],
-      explain: "Milk is on 6 of the 10 receipts, so the support count of {Milk} is 6.",
-      highlight: { lit: ["Milk"] },
+      ladder: ["Read each cell on its own: 1 means bought, 0 means not bought.", "Receipt #5 is Milk and Eggs. No bread on it."],
+      explain: "A 1 means that item is on the receipt and a 0 means it isn't. Receipt #5 has eggs and no bread.",
     },
     {
       id: "m1-tap", type: "tap", prompt: "Tap every receipt that contains both Bread and Butter.", items: ["Bread", "Butter"],
@@ -66,7 +68,7 @@ const m1: MissionDef = {
       options: [
         { text: "Receipt #4", hint: "A receipt is a transaction: one customer's basket. An itemset is a group of items." },
         { text: "{Bread, Butter}", correct: true },
-        { text: "Bread → Butter", hint: "That's a rule, with an \"if\" side and a \"then\" side. Rules come in Aisle 3." },
+        { text: "Bread → Butter", hint: "That's a rule, with an \"if\" side and a \"then\" side. An itemset is just a group of items." },
         { text: "6", hint: "That's a count, not a group of items." },
       ],
       ladder: ["Itemsets are written in curly brackets.", "Look for the option that is just a group of products."],
@@ -79,6 +81,17 @@ const m1: MissionDef = {
       ladder: ["Coffee is on #3, #7 and #9. Which of those also have cookies?", "#3 and #7 have both. #9 has coffee but no cookies."],
       explain: "Only #3 and #7 have both, so the count is 2.",
       highlight: { lit: ["Coffee"], both: ["Cookies"] },
+    },
+    {
+      id: "m1-rule", type: "mc", prompt: "In the rule {Bread} → {Butter}, which part is the consequent?", layout: "list",
+      options: [
+        { text: "{Butter}, the Then part", correct: true },
+        { text: "{Bread}, the If part", hint: "The If part is the antecedent. The consequent is the other side of the arrow." },
+        { text: "Both {Bread} and {Butter}", hint: "A rule has two sides. Each side has its own name." },
+        { text: "The arrow →", hint: "The arrow only separates the two itemsets. Each side is an itemset." },
+      ],
+      ladder: ["Read the rule as If Bread, Then Butter.", "Antecedent comes first (If). Consequent comes after (Then)."],
+      explain: "The consequent is the Then part, {Butter}. The antecedent is the If part, {Bread}.",
     },
   ],
 };
