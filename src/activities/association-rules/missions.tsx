@@ -395,7 +395,7 @@ const m5: MissionDef = {
     ],
     says: ["This is how real tools cope with thousands of products.", "It's the support rule from Aisle 2, used as a shortcut.", "Here's one skip in action.", "Let's stock the shelves."],
   },
-  explore: { goal: "Count the shelves at 30% and decide which triples are worth counting.", Component: ExploreApriori },
+  explore: { goal: "Count single items, then pairs, then decide which triples are worth counting.", Component: ExploreApriori },
   questions: [
     {
       id: "m5-skip", type: "mc", prompt: "{Butter, Eggs} is on 2 receipts, below the minimum of 3. Do we need to count {Bread, Butter, Eggs}?", layout: "list",
@@ -436,8 +436,8 @@ const m5: MissionDef = {
         { text: "It throws away rare items before counting anything", hint: "It counts single items first. It can't know they're rare until it counts them." },
         { text: "It only ever looks at pairs", hint: "It goes as far as it needs: pairs, triples and beyond." },
       ],
-      ladder: ["In the shelves, which boxes were never counted?", "The dashed boxes were skipped because a smaller set inside them was already rare."],
-      explain: "Pruning supersets of rare itemsets is what turned 630 receipt checks into 220.",
+      ladder: ["In the Explore task, which triples did you skip?", "Each skipped triple contained a pair that was already too rare."],
+      explain: "Skipping every bigger itemset that contains a rare one is the saving: 22 counts instead of all 63 combinations here.",
     },
   ],
 };

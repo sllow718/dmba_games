@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import type { ExploreProps } from "../../core/types";
 import { ItemKey, Owner, Slips, Tasks, Token, pct } from "../../components/ui";
 import { SATURDAY_ITEMS, WEEK } from "./data";
@@ -186,92 +187,133 @@ export function ExploreLift({ data, onDone, done }: ExploreProps) {
   );
 }
 
-/* Mission 5: Apriori on the shelves at 30%. */
+/* Mission 5: Apriori, one level at a time: singles → pairs → only the triples worth counting. */
 export function ExploreApriori({ data, onDone, done }: ExploreProps) {
   const MIN = 3;
   const res = useMemo(() => apriori(data, MIN, SATURDAY_ITEMS), [data]);
-  const [pairsCounted, setPairsCounted] = useState(false);
+  const [stage, setStage] = useState(0);
   const [l3, setL3] = useState<Record<string, "counted" | "skipped">>({});
-  const [say, setSay] = useState("Shelf 1 is done: every single item turns up on at least 3 receipts. Now count the pairs.");
   const l1 = res.levels[0].candidates, l2 = res.levels[1].candidates, l3c = res.levels[2].candidates;
   const n = data.length;
-  const checks = n * l1.length + (pairsCounted ? n * l2.length : 0) + n * Object.values(l3).filter((v) => v === "counted").length;
-  const allDone = l3c.every((c) => l3[c.items.join("·")]);
-  const skipped = Object.values(l3).filter((v) => v === "skipped").length;
+  const pairStatus = new Map(l2.map((c) => [c.items.join("·"), c.status === "frequent"]));
+  const frequentPairs = l2.filter((c) => c.status === "frequent").length;
+  const tripleKey = (c: (typeof l3c)[number]) => c.items.join("·");
+  const allDone = l3c.every((c) => l3[tripleKey(c)]);
+  const counted = (stage >= 1 ? l1.length : 0) + (stage >= 2 ? l2.length : 0) + Object.values(l3).filter((v) => v === "counted").length;
+  const allCombos = res.naiveChecks / n;
+  const name = (items: readonly string[]) => items.join(" + ");
 
+  const intro = <>Apriori finds the itemsets that are on at least <b>{MIN} of my {n} receipts</b> (30% support). It goes one size at a time: single items, then pairs, then triples. Start with the single items.</>;
+  const [say, setSay] = useState<ReactNode>(intro);
+
+  const countSingles = () => { setStage(1); setSay(<>All {l1.length} items are on at least {MIN} receipts, so all {l1.length} are frequent. Next, count every pair of them.</>); };
+  const countPairs = () => {
+    setStage(2);
+    setSay(<>Only {frequentPairs} of the {l2.length} pairs are frequent. Now the triples. <b>A triple can only be frequent if all three of its pairs are.</b> Look at each triple's pairs, then count it or skip it.</>);
+  };
   const act = (c: (typeof l3c)[number], choice: "counted" | "skipped") => {
-    const k = c.items.join("·");
+    const k = name(c.items);
     if (choice === "skipped" && c.status !== "pruned") {
-      setSay(`Careful. Every pair inside ${k} is frequent, so it might be frequent too. You have to count this one.`);
+      setSay(<>Careful. All three pairs inside {k} are frequent, so it might be frequent too. You have to count this one.</>);
       return;
     }
-    const next = { ...l3, [k]: choice };
+    const next = { ...l3, [tripleKey(c)]: choice };
     setL3(next);
-    if (choice === "skipped") setSay(`Good call. ${c.rareSubset!.join(" · ")} is already rare, so ${k} must be too. No counting needed.`);
-    else if (c.status === "pruned") setSay(`It came out at ${count(data, c.items)}, too rare as expected. You could have skipped it: ${c.rareSubset!.join(" · ")} was already rare.`);
-    else setSay(`${k} appears on ${c.count} receipts, so it's frequent. That one did need counting.`);
-    if (!done && l3c.every((x) => next[x.items.join("·")])) onDone();
+    if (choice === "skipped") setSay(<>Good call. {name(c.rareSubset!)} is already too rare, so {k} must be too. No counting needed.</>);
+    else if (c.status === "pruned") setSay(<>It's on only {count(data, c.items)} receipt{count(data, c.items) === 1 ? "" : "s"}: too rare, as expected. You could have skipped it, because {name(c.rareSubset!)} was already too rare.</>);
+    else setSay(<>{k} is on {c.count} receipts, so it's frequent. That one did need counting.</>);
+    if (!done && l3c.every((x) => next[tripleKey(x)])) onDone();
   };
 
-  const Box = ({ items, ct, cls }: { items: readonly string[]; ct: string | number; cls?: string }) => (
-    <div className={"box " + (cls ?? "")} aria-label={`${items.join(", ")}: ${cls === "rare" ? "too rare, " : cls === "skip" ? "skipped, " : ""}${ct}`}>
-      <span className="toks">{items.map((i) => <Token key={i} item={i} />)}</span>
-      <span className="ct">{ct}</span>
-    </div>
-  );
+  const Box = ({ items, ct }: { items: readonly string[]; ct?: number }) => {
+    const ok = ct !== undefined && ct >= MIN;
+    return (
+      <div className={"box" + (ct === undefined ? "" : ok ? " ok" : " rare")} aria-label={`${name(items)}: ${ct === undefined ? "not counted yet" : `${ct} receipts, ${ok ? "frequent" : "too rare"}`}`}>
+        <span className="toks">{items.map((i) => <Token key={i} item={i} />)}</span>
+        <span className="nm">{name(items)}</span>
+        <span className="ct">{ct === undefined ? "?" : <>{ct} <small>{ok ? "✓ frequent" : "too rare"}</small></>}</span>
+      </div>
+    );
+  };
+
+  const skipped = Object.values(l3).filter((v) => v === "skipped").length;
 
   return (
-    <div className="split">
-      <div className="stack">
-        <p className="data-label">Minimum support 30% (3 of 10 receipts) · receipt checks used: <b>{checks}</b> (brute force: {res.naiveChecks})</p>
-        <div className="shelves">
-          <div className="shelf">
-            <div className="lab">Shelf 1 · single items</div>
-            <div className="boxes">{l1.map((c) => <Box key={c.items.join()} items={c.items} ct={c.count!} />)}</div>
-          </div>
-          <div className="shelf">
-            <div className="lab">Shelf 2 · pairs {!pairsCounted && <button type="button" className="btn small" onClick={() => { setPairsCounted(true); setSay("Four pairs are frequent. The rest are stamped too rare. Now the triples: only combine frequent pairs, and think before you count."); }}>Count all {l2.length} pairs</button>}</div>
-            <div className="boxes">
-              {l2.map((c) => <Box key={c.items.join()} items={c.items} ct={pairsCounted ? c.count! : "?"} cls={pairsCounted && c.status === "rare" ? "rare" : ""} />)}
-            </div>
-          </div>
-          {pairsCounted && (
+    <>
+      <div className="split" style={{ marginBottom: 16 }}>
+        <Tasks items={[
+          { text: "Step 1: count the single items", done: stage >= 1 },
+          { text: "Step 2: count the pairs", done: stage >= 2 },
+          { text: "Step 3: for each triple, check its pairs, then count it or skip it", done: allDone },
+        ]} />
+        <Owner tone={allDone ? "ok" : undefined}>
+          {allDone ? <>Done. You counted {counted} itemsets instead of all {allCombos} possible combinations{skipped ? <>, and skipped {skipped} triple{skipped > 1 ? "s" : ""} without counting</> : null}. That's the saving Apriori gives.</> : say}
+        </Owner>
+      </div>
+      <div className="split">
+        <div className="stack">
+          <div className="shelves">
             <div className="shelf">
-              <div className="lab">Shelf 3 · triples built from frequent pairs</div>
-              <div className="boxes">
-                {l3c.map((c) => {
-                  const k = c.items.join("·"), st = l3[k];
-                  if (!st) return (
-                    <div key={k} className="box wait">
-                      <span className="toks">{c.items.map((i) => <Token key={i} item={i} />)}</span>
-                      <span className="acts">
-                        <button type="button" className="btn alt small" onClick={() => act(c, "counted")} aria-label={`Count ${k}`}>Count</button>
-                        <button type="button" className="btn small" onClick={() => act(c, "skipped")} aria-label={`Skip ${k}`}>Skip</button>
-                      </span>
-                    </div>
-                  );
-                  if (st === "skipped") return <Box key={k} items={c.items} ct="skipped" cls="skip" />;
-                  const ct = count(data, c.items);
-                  return <Box key={k} items={c.items} ct={ct} cls={ct < MIN ? "rare" : ""} />;
-                })}
-              </div>
+              <div className="lab">Step 1 · Single items {stage === 0 && <button type="button" className="btn small" onClick={countSingles}>Count the {l1.length} items</button>}</div>
+              <div className="boxes">{l1.map((c) => <Box key={c.items.join()} items={c.items} ct={stage >= 1 ? c.count! : undefined} />)}</div>
             </div>
-          )}
+            {stage >= 1 && (
+              <div className="shelf">
+                <div className="lab">Step 2 · Pairs of frequent items {stage === 1 && <button type="button" className="btn small" onClick={countPairs}>Count all {l2.length} pairs</button>}</div>
+                <div className="boxes">{l2.map((c) => <Box key={c.items.join()} items={c.items} ct={stage >= 2 ? c.count! : undefined} />)}</div>
+              </div>
+            )}
+            {stage >= 2 && (
+              <div className="shelf">
+                <div className="lab">Step 3 · Triples: count or skip?</div>
+                <div className="boxes triples">
+                  {l3c.map((c) => {
+                    const k = tripleKey(c), st = l3[k];
+                    const ct = st === "counted" ? count(data, c.items) : undefined;
+                    return (
+                      <div key={k} className={"triple" + (!st ? " wait" : st === "skipped" ? " skip" : ct! >= MIN ? " ok" : " rare")}>
+                        <span className="toks">{c.items.map((i) => <Token key={i} item={i} />)}</span>
+                        <span className="nm">{name(c.items)}</span>
+                        <span className="sub">Its pairs:</span>
+                        <ul className="pairs">
+                          {[[0, 1], [0, 2], [1, 2]].map(([a, b]) => {
+                            const pr = [c.items[a], c.items[b]];
+                            const fq = pairStatus.get(pr.join("·"));
+                            return <li key={pr.join()} className={fq ? "y" : "n"}>{name(pr)} <b>{fq ? "✓ frequent" : "✗ too rare"}</b></li>;
+                          })}
+                        </ul>
+                        {!st ? (
+                          <span className="acts">
+                            <button type="button" className="btn alt small" onClick={() => act(c, "counted")} aria-label={`Count ${name(c.items)}`}>Count it</button>
+                            <button type="button" className="btn small" onClick={() => act(c, "skipped")} aria-label={`Skip ${name(c.items)}`}>Skip it</button>
+                          </span>
+                        ) : (
+                          <span className="ct">{st === "skipped" ? "Skipped: not counted" : <>On {ct} receipt{ct === 1 ? "" : "s"} · {ct! >= MIN ? "✓ frequent" : "too rare"}</>}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="stack">
+          <section className="card">
+            <span className="k">The rule for this aisle</span>
+            <p style={{ margin: 0 }}>An itemset is <b>frequent</b> if it is on at least <b>{MIN} of the {n} receipts</b>. Anything less is <b>too rare</b>.</p>
+          </section>
+          <section className="card">
+            <span className="k">The Apriori shortcut</span>
+            <p style={{ margin: 0 }}>If a pair is too rare, any triple that contains it must be too rare as well. You can't buy all three items more often than you buy two of them. So a triple only needs counting when <b>all three of its pairs are frequent</b>.</p>
+          </section>
+          <section className="card">
+            <span className="k">Counting saved</span>
+            <p style={{ margin: 0 }}>Itemsets counted so far: <b>{counted}</b>. Counting every possible combination of {l1.length} items would mean {allCombos} counts.</p>
+          </section>
         </div>
       </div>
-      <div className="stack">
-        <Owner tone={allDone ? "ok" : undefined}>{allDone ? `${say} You used ${checks} receipt checks instead of ${res.naiveChecks}${skipped ? `, and skipped ${skipped} triple${skipped > 1 ? "s" : ""} without counting` : ""}.` : say}</Owner>
-        <section className="card">
-          <span className="k">The Apriori principle</span>
-          <p>If an itemset is rare, every bigger itemset that contains it is rare too. So a triple only needs counting if <b>all three of its pairs</b> are frequent.</p>
-        </section>
-        <div className="key">
-          <span><span className="box" style={{ padding: "2px 6px", minWidth: 0 }}>3</span> frequent</span>
-          <span><span className="box" style={{ padding: "2px 6px", minWidth: 0, opacity: 0.6 }}>2</span> stamped too rare</span>
-          <span><span className="box skip" style={{ padding: "2px 6px", minWidth: 0 }}>–</span> skipped, never counted</span>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
 
