@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DMBA Learn</title>
+<!--
+  Firebase Hosting serves this page for any path that isn't a real file (see "rewrites" in firebase.json).
+  It turns /basket-detective/mission-1 into /#/basket-detective/mission-1. PowerPoint and some other
+  apps drop everything after "#" when a link is clicked, so slides link to the path form instead.
+-->
+<script>
+  location.replace("/#" + (location.pathname.replace(/\/+$/, "") || "/"));
+</script>
+</head>
+<body>
+<p><a href="/">Open DMBA Learn</a></p>
+</body>
+</html>

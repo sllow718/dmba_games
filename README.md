@@ -56,7 +56,7 @@ npm run build      # static site in dist/
 
 ## Deploy
 
-`.github/workflows/ci.yml` runs the type check, the tests and the build on every pull request. It publishes `main` to GitHub Pages; enable that once under **Settings → Pages → Source: GitHub Actions**. The build uses relative paths and hash routing, so `dist/` also works on any other static host.
+`.github/workflows/ci.yml` runs the type check, the tests and the build on every pull request. It publishes `main` to GitHub Pages; enable that once under **Settings → Pages → Source: GitHub Actions**. The build uses relative paths and hash routing, so `dist/` also works on any other static host. On Firebase Hosting, links without the hash (e.g. `https://dmba-learn.web.app/basket-detective/mission-1`) also work: `public/go.html` forwards them to the hash route. Use that form in slides, because PowerPoint drops everything after `#` when a link is clicked.
 
 ### Firebase MCP
 
