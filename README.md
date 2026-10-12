@@ -27,6 +27,13 @@ A learning app that teaches data mining for business analytics to polytechnic st
 | 1 | Read the Tree | root, branches, leaves, classifying an applicant, leaf confidence |
 | 2 | Pure or Mixed? | interpreting impurity: what Gini and entropy values say about a group (no calculation) |
 
+**Price Predictor** (linear regression): students help Ms Wong, a property agent, predict flat prices from floor area.
+
+| Mission | Teaches |
+| --- | --- |
+| 1 · Fit the Line | the regression line, slope and intercept, residuals, least squares (students fit a line by eye with sliders, then compare it with the least-squares line) |
+| 2 · Read the Model | interpreting the slope, predicting from the line, R², and the danger of extrapolating outside the data |
+
 Each mission is its own page and has four stages:
 
 1. **Review:** four short cards with a step-by-step worked example on the data.
@@ -85,6 +92,12 @@ src/
       explores.tsx      the guided k-means lab (n, k, step, run)
       norm.tsx          the normalising lesson chart and lab
       ui.tsx            scatter plot, centroids and the member chart
+    regression/
+      engine.ts         least-squares fit, residuals, squared error, R², seeded flat prices
+      data.ts           the 12 flats used in the lessons
+      missions.tsx      review cards, briefs and checkpoint questions for both missions
+      explores.tsx      the fit-a-line lab and the prediction lab
+      ui.tsx            scatter plot, lines, residuals and prediction guides
 docs/                   design proposal and visual directions
 ```
 

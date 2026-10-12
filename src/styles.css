@@ -374,6 +374,28 @@ a.topic-card:hover .name { text-decoration: underline; text-underline-offset: 3p
 .toggle input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--brand); flex: 0 0 auto; }
 .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; }
 
+/* Linear regression: lines, residuals, prediction guides */
+.kplot .fitline { stroke: var(--ink); stroke-width: 2.5; }
+.kplot .fitline.mine { stroke: var(--brand); stroke-width: 3; }
+.kplot .fitline.best { stroke: var(--ink); stroke-dasharray: 6 4; }
+.kplot .resid { stroke-width: 2; }
+.kplot .resid.up { stroke: var(--ok); }
+.kplot .resid.down { stroke: var(--brand-dk); }
+.kplot .guide line { stroke: var(--brand-dk); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.kplot .guide circle { fill: var(--lit); stroke: var(--ink); stroke-width: 2; }
+.kplot .range-band { fill: var(--hl); opacity: .55; }
+.kplot .line-tag { font-family: var(--display); font-weight: 800; font-size: 13px; }
+.kplot .line-tag.a { fill: var(--brand); }
+.kplot .line-tag.b { fill: var(--ink); }
+.key-line { display: inline-block; width: 18px; height: 0; border-top: 3px solid var(--brand); vertical-align: middle; }
+.key-line.best { border-top: 3px dashed var(--ink); }
+.up-txt { color: var(--ok); font-weight: 800; }
+.down-txt { color: var(--brand-dk); font-weight: 800; }
+.meter-row { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 4.5em; gap: 8px; align-items: center; font-size: 0.9rem; margin-top: 4px; }
+.meter-row .bar { height: 10px; border-radius: 5px; background: var(--edge); overflow: hidden; }
+.meter-row .bar i { display: block; height: 100%; background: var(--ok); transition: width .25s; }
+.meter-row b { text-align: right; font-variant-numeric: tabular-nums; }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
   .slip { transform: none !important; }
