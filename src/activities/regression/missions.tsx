@@ -3,7 +3,7 @@ import type { Listing } from "./data";
 import { LISTINGS } from "./data";
 import { predict, r2 } from "./engine";
 import { ExploreFit, ExplorePredict } from "./explores";
-import { FlatPlot, LESSON_FIT, LineMark, Plot, hasListingTag, sx, sy } from "./ui";
+import { FlatPlot, LESSON_FIT, hasListingTag } from "./ui";
 
 type Mission = MissionDef<Listing>;
 
@@ -17,22 +17,6 @@ const R2 = Math.round(r2(LESSON_FIT, LISTINGS) * 100) / 100; // 0.96
 const P90 = Math.round(predict(LESSON_FIT, 90) / 10) * 10; // 550 ($k)
 const money = (n: number) => `$${n.toLocaleString("en-US")}`;
 const lineText = `price ≈ $${INTERCEPT}k + $${SLOPE_K}k × floor area`;
-
-/** Two candidate lines through the lesson flats, for "which fits better?". */
-function TwoLines() {
-  const a = { intercept: 300, slope: 3 };
-  return (
-    <div className="kplot-wrap" style={{ maxWidth: 360 }}>
-      <Plot label="Two lines through the 12 flats: line A is shallow and misses the big flats; line B follows the flats">
-        <LineMark l={a} className="fitline mine" />
-        <LineMark l={LESSON_FIT} className="fitline" />
-        {LISTINGS.map((m) => <circle key={m.id} cx={sx(m.x)} cy={sy(m.y)} r={4.5} className="kp" fill="#2f74cc" />)}
-        <text x={sx(140) - 4} y={sy(predict(a, 140)) + 14} textAnchor="end" className="line-tag a">A</text>
-        <text x={sx(140) - 4} y={sy(predict(LESSON_FIT, 140)) - 6} textAnchor="end" className="line-tag b">B</text>
-      </Plot>
-    </div>
-  );
-}
 
 const m1: Mission = {
   n: 1,
@@ -112,7 +96,9 @@ const m1: Mission = {
       highlight: { lit: ["above", "line", "resid"] },
     },
     {
-      id: "r1-best", type: "mc", prompt: "Which line fits the flats better?", figure: <TwoLines />,
+      id: "r1-best", type: "mc", prompt: "Look at lines A and B on the chart. Which line fits the flats better?",
+      show: { lit: ["all", "twolines"] },
+      highlight: { lit: ["all", "twolines"] },
       options: [
         { text: "Line A", hint: "Line A misses the big flats by a lot: they sit far above it." },
         { text: "Line B", correct: true },

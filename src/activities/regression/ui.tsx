@@ -123,7 +123,21 @@ export function hasListingTag(m: Listing, tag: string) {
     const r = m.y - predict(LESSON_FIT, m.x);
     return tag === "above" ? r > 0 : r < 0;
   }
-  return tag === "all" || tag === "line" || tag === "resid" || tag.startsWith("pred=");
+  return tag === "all" || tag === "line" || tag === "resid" || tag === "twolines" || tag.startsWith("pred=");
+}
+
+/** Line A (too shallow) against line B (least squares), for "which line fits better?". */
+export const LINE_A: Line = { intercept: 300, slope: 3 };
+function TwoLinesMark() {
+  const { sx, sy } = useContext(ScaleContext);
+  return (
+    <g>
+      <LineMark l={LINE_A} className="fitline mine" />
+      <LineMark l={LESSON_FIT} className="fitline" />
+      <text x={sx(140)} y={sy(predict(LINE_A, 140)) + 18} textAnchor="middle" className="line-tag a">A</text>
+      <text x={sx(136)} y={sy(predict(LESSON_FIT, 136)) - 10} textAnchor="middle" className="line-tag b">B</text>
+    </g>
+  );
 }
 
 /** The 12 lesson flats, with the line, residuals and prediction the highlight asks for. */
@@ -137,6 +151,7 @@ export function FlatPlot({ data, highlight, selected, onToggle, marks, label }: 
       <Plot zoom label={label ?? `Scatter plot of ${data.length} flats: floor area against price`}>
         {tags.includes("resid") && <Residuals l={l} points={data} />}
         {tags.includes("line") && <LineMark l={l} className="fitline" />}
+        {tags.includes("twolines") && <TwoLinesMark />}
         {pred && <PredictionGuide l={l} x={Number(pred.slice(5))} />}
         {data.map((m, i) => {
           const st = slipState(m, highlight, hasListingTag);
