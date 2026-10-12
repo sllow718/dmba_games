@@ -78,7 +78,7 @@ const m1: Mission = {
     ],
     says: ["First, what regression is for.", "Two numbers describe a line: slope and intercept.", "Here's the line through my recent sales.", "Now try fitting one yourself."],
   },
-  explore: { goal: "Fit a line by eye, look at the gaps, then compare with least squares.", Component: ExploreFit },
+  explore: { goal: "Press Next to go from a first guess to the least-squares line, step by step.", Component: ExploreFit },
   questions: [
     {
       id: "r1-line", type: "mc", prompt: "What does the regression line show?", layout: "list",

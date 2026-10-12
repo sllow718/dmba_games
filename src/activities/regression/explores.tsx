@@ -1,138 +1,104 @@
 import { useMemo, useState } from "react";
-import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { ExploreProps } from "../../core/types";
 import { Owner, Tasks } from "../../components/ui";
 import type { Listing } from "./data";
 import type { Line } from "./engine";
-import { AREA, PRICE, fit, makeFlats, predict, r2, sse } from "./engine";
-import { LineMark, Plot, PredictionGuide, Residuals, sx, sy } from "./ui";
+import { AREA, fit, makeFlats, predict, r2, sse } from "./engine";
+import type { Note } from "./ui";
+import { Dots, LESSON_FIT, LineMark, Plot, PredictionGuide, Residuals, sx, sy } from "./ui";
+import { LISTINGS } from "./data";
 
 const fmtLine = (l: Line) => `price ≈ $${Math.round(l.intercept)}k + $${(Math.round(l.slope * 10) / 10).toFixed(1)}k × area`;
 
-/** Where the two draggable ends of the student's line sit: inside the data, so both are always on screen. */
-const LEFT_X = 60, RIGHT_X = 130;
-const lineThrough = (left: number, right: number): Line => {
-  const slope = (right - left) / (RIGHT_X - LEFT_X);
-  return { slope, intercept: left - slope * LEFT_X };
-};
+/* Mission 1: a guided walk from a flat guess to the least-squares line, on the 12 lesson flats. */
+const MEAN_X = LISTINGS.reduce((t, m) => t + m.x, 0) / LISTINGS.length;
+const MEAN_Y = LISTINGS.reduce((t, m) => t + m.y, 0) / LISTINGS.length;
+/** First guess: the average price for every flat. */
+const GUESS: Line = { slope: 0, intercept: MEAN_Y };
+/** A tilted line through the middle of the data, but not as steep as the best line. */
+const TILT: Line = { slope: 3, intercept: MEAN_Y - 3 * MEAN_X };
+const k = (v: number) => `$${Math.round(v)}k`;
 
-/** A round handle on the line that can be dragged up and down (or nudged with the arrow keys). */
-function Handle({ x, y, label, onMove }: { x: number; y: number; label: string; onMove: (price: number) => void }) {
-  const clampP = (v: number) => Math.round(Math.min(PRICE.max, Math.max(PRICE.min, v)) / 5) * 5;
-  const toPrice = (e: ReactPointerEvent<SVGGElement>) => {
-    const svg = (e.currentTarget as SVGGElement).ownerSVGElement!;
-    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM()!.inverse());
-    // Invert sy(): price at this vertical position on the chart.
-    const top = sy(PRICE.max), bottom = sy(PRICE.min);
-    return PRICE.min + ((bottom - pt.y) / (bottom - top)) * (PRICE.max - PRICE.min);
-  };
-  return (
-    <g className="handle" role="slider" tabIndex={0} aria-label={label} aria-valuemin={PRICE.min} aria-valuemax={PRICE.max} aria-valuenow={y}
-      onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); onMove(clampP(toPrice(e))); }}
-      onPointerMove={(e) => { if (e.currentTarget.hasPointerCapture(e.pointerId)) onMove(clampP(toPrice(e))); }}
-      onKeyDown={(e) => {
-        if (e.key === "ArrowUp" || e.key === "ArrowRight") { e.preventDefault(); onMove(clampP(y + 10)); }
-        if (e.key === "ArrowDown" || e.key === "ArrowLeft") { e.preventDefault(); onMove(clampP(y - 10)); }
-      }}>
-      <circle cx={sx(x)} cy={sy(y)} r={16} className="hit" />
-      <circle cx={sx(x)} cy={sy(y)} r={8} className="knob" />
-      <path d={`M ${sx(x)} ${sy(y) - 15} l -4 5 h 8 z M ${sx(x)} ${sy(y) + 15} l -4 -5 h 8 z`} className="arrows" />
-    </g>
-  );
-}
+const FIT_STEPS: { line: Line | null; gaps: boolean; say: string; note: Note }[] = [
+  { line: null, gaps: false, say: "Let's find the line that fits my sales best. Read the note in the chart, then press Next.", note: { title: "Step 1 of 5 · The data", lines: [
+    "Each dot is one of the 12 flats that sold recently.",
+    "Bigger flats sell for more: the dots rise to the right.",
+  ] } },
+  { line: GUESS, gaps: false, say: "A lazy first guess: quote everyone the average price.", note: { title: "Step 2 of 5 · A first guess", lines: [
+    `A flat line at the average price, ${k(MEAN_Y)}.`,
+    "It predicts the same price for every flat,",
+    "whatever its size.",
+  ] } },
+  { line: GUESS, gaps: true, say: "Those gaps are the guess's mistakes. Long gaps mean bad predictions.", note: { title: "Step 3 of 5 · Look at the gaps", lines: [
+    "Each coloured line is a residual: the gap between a",
+    "flat's real price and the line's prediction.",
+    "Small flats sit far below, big flats far above.",
+  ] } },
+  { line: TILT, gaps: true, say: "Better. Watch the total squared gap on the right drop.", note: { title: "Step 4 of 5 · Tilt the line", lines: [
+    "Tilting the line so it rises with floor area",
+    "makes most of the gaps shorter.",
+  ] } },
+  { line: LESSON_FIT, gaps: true, say: "That's the line least squares picks. No other straight line has a smaller total of squared gaps.", note: { title: "Step 5 of 5 · The least-squares line", lines: [
+    "Least squares finds the one line with the",
+    "smallest total of squared gaps:",
+    `price ≈ ${k(LESSON_FIT.intercept)} + $${(Math.round(LESSON_FIT.slope * 10) / 10).toFixed(1)}k × floor area`,
+  ] } },
+];
 
-/* Mission 1: fit a line by eye, see the residuals, then compare with least squares. */
 export function ExploreFit({ onDone, done }: ExploreProps<Listing>) {
-  const [n, setN] = useState(20);
-  const [seed, setSeed] = useState(4);
-  const points = useMemo(() => makeFlats(n, seed, 22), [n, seed]);
-  const best = useMemo(() => fit(points), [points]);
-  // The student moves the line by its two ends; slope and intercept follow from them.
-  const [ends, setEnds] = useState({ left: 600, right: 600 });
-  const mine = lineThrough(ends.left, ends.right);
-  const [showGaps, setShowGaps] = useState(false);
-  const [showBest, setShowBest] = useState(false);
-  const [t, setT] = useState({ close: false, gaps: false, best: false });
-
-  const ratio = sse(mine, points) / Math.max(1, sse(best, points));
-  const tick = (nt: typeof t) => { setT(nt); if (!done && nt.close && nt.gaps && nt.best) onDone(); };
-  const move = (e: typeof ends) => {
-    setEnds(e);
-    const r = sse(lineThrough(e.left, e.right), points) / Math.max(1, sse(best, points));
-    if (r <= 1.5 && !t.close) tick({ ...t, close: true });
-  };
-  const newData = (f: () => void) => { f(); setShowBest(false); };
-
-  const say: ReactNode = showBest
-    ? ratio < 1.05
-      ? "Your line is practically the least-squares line. Nicely done."
-      : <>The dashed line is the least-squares line. No other straight line has a smaller total of squared gaps. Yours is {ratio.toFixed(1)}× bigger.</>
-    : ratio > 3
-      ? "Your line misses most flats by a lot. Drag the two round handles so the line runs through the middle of the dots."
-      : ratio > 1.5
-        ? "Getting closer. Try to have about as many flats above the line as below it."
-        : "That's a good fit by eye. Now show the gaps, then reveal the least-squares line.";
+  const [step, setStep] = useState(0);
+  const cur = FIT_STEPS[step];
+  const last = step === FIT_STEPS.length - 1;
+  const go = (i: number) => { setStep(i); if (!done && i === FIT_STEPS.length - 1) onDone(); };
+  const guessErr = sse(GUESS, LISTINGS);
+  const err = cur.line ? sse(cur.line, LISTINGS) : null;
 
   return (
     <div className="split">
       <div className="stack">
         <Tasks items={[
-          { text: "Drag the two ends of your line until it follows the flats", done: t.close },
-          { text: "Turn on “Show the gaps” to see each flat's residual", done: t.gaps },
-          { text: "Reveal the least-squares line and compare it with yours", done: t.best },
+          { text: "See a first guess and its gaps", done: step >= 2 },
+          { text: "Tilt the line and watch the total gap shrink", done: step >= 3 },
+          { text: "Meet the least-squares line", done: last },
         ]} />
         <div className="kplot-wrap">
-          <Plot label={`${n} flats with your line${showBest ? " and the least-squares line" : ""}`}>
-            {showGaps && <Residuals l={mine} points={points} />}
-            {showBest && <LineMark l={best} className="fitline best" />}
-            <LineMark l={mine} className="fitline mine" />
-            {points.map((p, i) => <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r={4.5} className="kp" fill="#2f74cc" />)}
-            <Handle x={LEFT_X} y={ends.left} label="Left end of your line" onMove={(v) => move({ ...ends, left: v })} />
-            <Handle x={RIGHT_X} y={ends.right} label="Right end of your line" onMove={(v) => move({ ...ends, right: v })} />
+          <Plot zoom note={cur.note} label={`12 flats, ${cur.note.title}`}>
+            {cur.gaps && cur.line && <Residuals l={cur.line} points={LISTINGS} />}
+            {cur.line && <LineMark l={cur.line} className={"fitline" + (cur.line === LESSON_FIT ? "" : " mine")} />}
+            <Dots points={LISTINGS} />
           </Plot>
-          <p className="worth" style={{ margin: "6px 4px 0" }}>
-            <span className="key-line mine" /> your line{showBest && <> · <span className="key-line best" /> least-squares line</>}
-            {showGaps && <> · gaps: <span className="up-txt">above</span> / <span className="down-txt">below</span> the line</>}
-          </p>
+          {cur.gaps && <p className="worth" style={{ margin: "6px 4px 0" }}>Gaps: <span className="up-txt">above</span> / <span className="down-txt">below</span> the line</p>}
+        </div>
+        <div className="row">
+          <button type="button" className="btn" disabled={last} onClick={() => go(step + 1)}>{last ? "Done" : "Next →"}</button>
+          {step > 0 && <button type="button" className="btn alt small" onClick={() => go(step - 1)}>← Back a step</button>}
         </div>
       </div>
       <div className="stack">
-        <Owner>{say}</Owner>
-        <section className="card kcontrols">
-          <span className="k">Your line</span>
-          <div className="formula" style={{ margin: 0 }}>{fmtLine(mine)}</div>
-          <label className="kfield">
-            <span>Left end, at {LEFT_X} sqm: <b>${ends.left}k</b></span>
-            <input type="range" className="slider" min={PRICE.min} max={PRICE.max} step={5} value={ends.left} onChange={(e) => move({ ...ends, left: Number(e.target.value) })} />
-          </label>
-          <label className="kfield">
-            <span>Right end, at {RIGHT_X} sqm: <b>${ends.right}k</b></span>
-            <input type="range" className="slider" min={PRICE.min} max={PRICE.max} step={5} value={ends.right} onChange={(e) => move({ ...ends, right: Number(e.target.value) })} />
-          </label>
-          <p className="worth" style={{ margin: 0 }}>Or drag the round handles on the chart. The slope and intercept above follow from where the ends are.</p>
-          <div className="row">
-            <button type="button" className="btn alt small" aria-pressed={showGaps} onClick={() => { setShowGaps(!showGaps); if (!showGaps) tick({ ...t, gaps: true }); }}>{showGaps ? "Hide the gaps" : "Show the gaps"}</button>
-            <button type="button" className="btn small" onClick={() => { setShowBest(true); tick({ ...t, best: true }); }} disabled={showBest}>Reveal the least-squares line</button>
-          </div>
-        </section>
+        <Owner>{cur.say}</Owner>
         <section className="card">
-          <span className="k">How good is your line?</span>
-          <div className="meter-row">
-            <span>Your total squared gap</span>
-            <span className="bar"><i style={{ width: `${Math.min(100, (1 / ratio) * 100)}%` }} /></span>
-            <b>{ratio < 1.005 ? "best" : `${ratio.toFixed(1)}× best`}</b>
-          </div>
-          <p className="worth" style={{ marginTop: 6 }}>Least squares finds the line with the smallest total of squared gaps. The fuller the bar, the closer you are.</p>
-          {showBest && <p style={{ margin: "6px 0 0" }}><b>Least squares:</b> {fmtLine(best)}</p>}
+          <span className="k">Total squared gap</span>
+          {err === null ? (
+            <p className="worth" style={{ margin: 0 }}>No line yet. Press Next.</p>
+          ) : (
+            <>
+              <div className="meter-row">
+                <span>{cur.line === GUESS ? "First guess" : cur.line === TILT ? "Tilted line" : "Least squares"}</span>
+                <span className="bar"><i style={{ width: `${(err / guessErr) * 100}%`, background: "var(--brand)" }} /></span>
+                <b>{Math.round((err / guessErr) * 100)}%</b>
+              </div>
+              <p className="worth" style={{ marginTop: 6 }}>Shown as a share of the first guess's total. Square each gap and add them up: the smaller the total, the better the line fits.</p>
+            </>
+          )}
         </section>
-        <section className="card kcontrols">
-          <span className="k">Data</span>
-          <label className="kfield">
-            <span>Number of flats <b>n = {n}</b></span>
-            <input type="range" className="slider" min={8} max={80} step={4} value={n} onChange={(e) => newData(() => setN(Number(e.target.value)))} />
-          </label>
-          <button type="button" className="btn alt small" onClick={() => newData(() => setSeed(seed + 1))}>New data</button>
-        </section>
+        {cur.line && (
+          <section className="card">
+            <span className="k">This line</span>
+            <div className="formula" style={{ margin: 0 }}>{fmtLine(cur.line)}</div>
+            <p className="worth" style={{ marginTop: 6 }}>Slope: price added per extra sqm. Intercept: where the line starts, at 0 sqm.</p>
+          </section>
+        )}
       </div>
     </div>
   );

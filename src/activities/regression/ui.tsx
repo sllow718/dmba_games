@@ -28,7 +28,14 @@ export const LESSON_FIT = fit(LISTINGS);
 const clampX = (x: number) => Math.min(AREA.max, Math.max(AREA.min, x));
 
 /** Axes for floor area (x) against price (y). Lines and points inside are clipped to the plot area. */
-export function Plot({ label, children, zoom }: { label: string; children: ReactNode; zoom?: boolean }) {
+export interface Note {
+  title: string;
+  lines: string[];
+}
+
+/** Axes for floor area (x) against price (y). Lines and points inside are clipped to the plot area. A `note` sits above the plot, inside the chart. */
+export function Plot({ label, children, zoom, note }: { label: string; children: ReactNode; zoom?: boolean; note?: Note }) {
+  const noteH = note ? 36 + note.lines.length * 15 : 0;
   const scale = zoom ? ZOOM : FULL;
   const { sx, sy, yTicks: yt } = scale;
   const y = { min: scale.yMin, max: scale.yMax };
@@ -36,7 +43,15 @@ export function Plot({ label, children, zoom }: { label: string; children: React
   const clip = useId().replace(/:/g, "");
   return (
     <ScaleContext.Provider value={scale}>
-    <svg className="kplot" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label}>
+    <svg className={"kplot" + (note ? " with-note" : "")} viewBox={`0 0 ${W} ${H + noteH}`} role="img" aria-label={label}>
+      {note && (
+        <g className="seen-note" role="note" aria-label={`${note.title}. ${note.lines.join(" ")}`}>
+          <rect x={6} y={4} width={W - 12} height={noteH - 10} rx={8} />
+          <text x={16} y={22} className="hd">{note.title}</text>
+          {note.lines.map((l, i) => <text key={i} x={16} y={40 + i * 15}>{l}</text>)}
+        </g>
+      )}
+      <g transform={`translate(0 ${noteH})`}>
       <defs><clipPath id={clip}><rect x={sx(AREA.min)} y={sy(y.max) - 12} width={sx(AREA.max) - sx(AREA.min)} height={sy(y.min) - sy(y.max) + 12} /></clipPath></defs>
       <g className="axes" aria-hidden="true">
         {xt.map((t) => (
@@ -55,6 +70,7 @@ export function Plot({ label, children, zoom }: { label: string; children: React
         <text x={10} y={(sy(y.min) + sy(y.max)) / 2} textAnchor="middle" className="axis-title" transform={`rotate(-90 10 ${(sy(y.min) + sy(y.max)) / 2})`}>Price →</text>
       </g>
       <g clipPath={`url(#${clip})`}>{children}</g>
+      </g>
     </svg>
     </ScaleContext.Provider>
   );
@@ -64,6 +80,12 @@ export function Plot({ label, children, zoom }: { label: string; children: React
 export function LineMark({ l, className }: { l: Line; className: string }) {
   const { sx, sy } = useContext(ScaleContext);
   return <line x1={sx(AREA.min)} y1={sy(predict(l, AREA.min))} x2={sx(AREA.max)} y2={sy(predict(l, AREA.max))} className={className} />;
+}
+
+/** Plain dots for flats, on the surrounding Plot's scale. */
+export function Dots({ points }: { points: readonly Flat[] }) {
+  const { sx, sy } = useContext(ScaleContext);
+  return <g>{points.map((p, i) => <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r={5} className="kp" fill="#2f74cc" />)}</g>;
 }
 
 /** Vertical gaps from each flat to the line: green when it sold above the line, red when below. */

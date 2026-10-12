@@ -31,7 +31,7 @@ A learning app that teaches data mining for business analytics to polytechnic st
 
 | Mission | Teaches |
 | --- | --- |
-| 1 · Fit the Line | the regression line, slope and intercept, residuals, least squares (students fit a line by eye with sliders, then compare it with the least-squares line) |
+| 1 · Fit the Line | the regression line, slope and intercept, residuals, least squares (a guided walkthrough from a flat first guess to the least-squares line, with notes in the chart at each step) |
 | 2 · Read the Model | interpreting the slope, predicting from the line, R², and the danger of extrapolating outside the data |
 
 Each mission is its own page and has four stages:
