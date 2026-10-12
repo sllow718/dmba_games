@@ -15,9 +15,9 @@ const m1: MissionDef = {
   data: SATURDAY,
   dataLabel: SAT,
   brief: "Welcome to Corner Mart. These are Saturday morning's receipts. Before we find any patterns, let's agree on the words.",
-  card: { formula: "count(X) = receipts containing every item in X", example: "count({Bread}) = 6" },
+  card: { formula: "rule: antecedent → consequent", example: "{Bread} → {Eggs}: if bread, then eggs" },
   review: {
-    title: "Receipts, items and itemsets",
+    title: "Receipts, itemsets and rules",
     what: (
       <>
         <p><b>Association rule mining</b>, also called <b>market basket analysis</b>, is an unsupervised learning method. It finds items that are bought together.</p>
@@ -28,23 +28,22 @@ const m1: MissionDef = {
     how: (
       <>
         <p>The data is a <b>0/1 table</b>: one row per transaction, one column per item. 1 means the item was bought, 0 means it wasn't.</p>
-        <div className="formula">support count of X = number of receipts that contain <u>every</u> item in X</div>
+        <div className="formula">rule: {"{antecedent}"} → {"{consequent}"} &nbsp;·&nbsp; read as "if antecedent, then consequent"</div>
       </>
     ),
-    exampleTitle: "Count {Bread}, then {Bread, Eggs}",
+    exampleTitle: "Receipt #8, from slip to row to rule",
     steps: [
-      { text: <>Look for <b>Bread</b> on every receipt.</>, eq: "count({Bread}) = 6", say: "Six of my ten customers bought bread.", highlight: { lit: ["Bread"] } },
-      { text: <>Now keep only receipts with <b>Bread and Eggs</b>.</>, eq: "count({Bread, Eggs}) = 3", say: "#4, #8 and #10 have both. Bread on its own doesn't count.", highlight: { lit: ["Bread"], both: ["Eggs"], only: true } },
+      { text: <>Receipt #8 is one <b>transaction</b>. The items on it form the itemset {set("Bread", "Eggs")}.</>, eq: "#8 = {Bread, Eggs}", say: "One customer, one basket: bread and eggs." },
+      { text: <>In the 0/1 table, row #8 has a 1 under Bread and Eggs, and a 0 everywhere else.</>, eq: "Bread 1 · Butter 0 · Milk 0 · Eggs 1 · Coffee 0 · Cookies 0", say: "Same receipt, written the way a computer stores it." },
       { text: <>Turn the itemset into a rule: if a customer buys Bread, then they buy Eggs.</>, eq: "{Bread} → {Eggs}: antecedent {Bread}, consequent {Eggs}", say: "The antecedent comes before the arrow, the consequent after it.", highlight: { lit: ["Bread"], both: ["Eggs"] } },
     ],
     remember: [
       "One receipt = one transaction = one customer's basket.",
       "An itemset is a group of items. {Bread, Eggs} is the same itemset as {Eggs, Bread}.",
       "In the 0/1 table, each row is a receipt and each column is an item: 1 = bought, 0 = not bought.",
-      "The support count of an itemset is the number of receipts that contain all of its items.",
       "A rule reads antecedent → consequent: if X, then Y.",
     ],
-    says: ["Let's start with the vocabulary.", "Here's how a computer stores my receipts.", "Watch the receipts light up.", "Ready? Let's count some receipts."],
+    says: ["Let's start with the vocabulary.", "Here's how a computer stores my receipts.", "Let's follow one receipt.", "Ready? Let's read some receipts."],
   },
   explore: { goal: "See the receipts as a 0/1 table, then build a rule.", Component: ExploreReceipts },
   questions: [
@@ -64,7 +63,7 @@ const m1: MissionDef = {
     {
       id: "m1-tap", type: "tap", prompt: "Tap every receipt that contains both Bread and Butter.", items: ["Bread", "Butter"],
       ladder: ["A receipt needs both tokens, Br and Bu. Bread on its own isn't enough.", "Bread and butter are together on #1, #2, #4, #6 and #10."],
-      explain: "Five receipts have both, so the support count of {Bread, Butter} is 5.",
+      explain: "#1, #2, #4, #6 and #10 have both. Each of those transactions contains the itemset {Bread, Butter}.",
       highlight: { lit: ["Bread", "Butter"] },
     },
     {
@@ -90,12 +89,15 @@ const m1: MissionDef = {
       explain: "{Coffee} is the consequent: if a customer buys milk and cookies, then they buy coffee.",
     },
     {
-      id: "m1-count", type: "num", kind: "count", prompt: "What is the support count of {Coffee, Cookies}?", answer: 2,
-      traps: [{ value: 3, hint: "3 is coffee on its own, or cookies on its own. The receipt needs both." }],
-      first: "Count receipts that have coffee and cookies together.",
-      ladder: ["Coffee is on #3, #7 and #9. Which of those also have cookies?", "#3 and #7 have both. #9 has coffee but no cookies."],
-      explain: "Only #3 and #7 have both, so the count is 2.",
-      highlight: { lit: ["Coffee"], both: ["Cookies"], only: true },
+      id: "m1-read", type: "mc", prompt: "Which sentence matches the rule {Bread} → {Butter}?", layout: "list",
+      options: [
+        { text: "If a customer buys butter, then they also buy bread", hint: "That's {Butter} → {Bread}. The antecedent comes first, before the arrow." },
+        { text: "Every customer buys bread and butter", hint: "A rule is an if–then statement, not a claim about every customer." },
+        { text: "If a customer buys bread, then they also buy butter", correct: true },
+        { text: "Bread and butter are never bought together", hint: "The rule links them: if bread, then butter." },
+      ],
+      ladder: ["The antecedent is before the arrow and the consequent after it.", "Read it as: if {Bread}, then {Butter}."],
+      explain: "{Bread} is the antecedent and {Butter} the consequent: if a customer buys bread, then they also buy butter.",
     },
   ],
 };
@@ -121,7 +123,7 @@ const m2: MissionDef = {
     how: (
       <>
         <div className="formula">support(X) = <Frac top="receipts containing X" bottom="total receipts" /></div>
-        <p>For a combination like {set("Bread", "Butter")}, a receipt only counts if it has <b>every</b> item. Multiply by 100 for a percentage.</p>
+        <p>The top number, how many receipts contain X, is the <b>support count</b>. For a combination like {set("Bread", "Butter")}, a receipt only counts if it has <b>every</b> item. Multiply by 100 for a percentage.</p>
       </>
     ),
     exampleTitle: "Support of {Bread, Butter}",

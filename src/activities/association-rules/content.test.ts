@@ -8,7 +8,6 @@ const W = (a: string[], b: string[]) => ruleStats(WEEK, { if: a, then: b });
 
 // Every numeric checkpoint answer, recomputed from the receipts.
 const expected: Record<string, number> = {
-  "m1-count": count(SATURDAY, ["Coffee", "Cookies"]),
   "m2-supp": support(SATURDAY, ["Coffee", "Cookies"]),
   "m2-triple": support(SATURDAY, ["Bread", "Butter", "Milk"]),
   "m3-bb": S(["Bread"], ["Butter"]).confidence,
