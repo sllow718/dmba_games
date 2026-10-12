@@ -139,16 +139,14 @@ input.num.bad { border-color: var(--brand); }
 .badge { display: inline-grid; place-items: center; width: 68px; height: 68px; border-radius: 50%; background: #f3cf4a; color: var(--ink); font-family: var(--display); font-weight: 800; font-size: 0.72rem; text-align: center; line-height: 1.05; padding: 6px; box-shadow: 0 0 0 4px var(--paper), 0 0 0 6px #f3cf4a; }
 
 /* hub */
-.street { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
-.shop { background: var(--paper); border-radius: 6px 6px 12px 12px; box-shadow: 0 3px 0 rgba(35,48,42,.12); overflow: hidden; display: flex; flex-direction: column; text-decoration: none; color: inherit; min-width: 0; }
-a.shop:hover .sign { text-decoration: underline; text-underline-offset: 3px; }
-.awning { height: 32px; background: repeating-linear-gradient(90deg, var(--brand) 0 18px, #fff 18px 36px);
-  -webkit-mask: radial-gradient(circle 9px at 9px 100%, transparent 98%, #000) 0 0 / 18px 100% repeat-x;
-          mask: radial-gradient(circle 9px at 9px 100%, transparent 98%, #000) 0 0 / 18px 100% repeat-x; }
-.shop .in { padding: 12px 14px 16px; display: grid; gap: 2px; flex: 1; }
-.shop .sign { font-family: var(--display); font-weight: 800; font-size: 1.25rem; line-height: 1.1; }
-.shop .topic { color: var(--sub); font-size: 0.92rem; }
-.shop .st { font-size: 0.88rem; font-weight: 700; margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.topics { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; }
+.topic-card { background: var(--paper); border-radius: 14px; border-top: 6px solid var(--brand); box-shadow: 0 3px 0 rgba(35,48,42,.12); display: flex; flex-direction: column; text-decoration: none; color: inherit; min-width: 0; }
+a.topic-card:hover .name { text-decoration: underline; text-underline-offset: 3px; }
+.topic-card .in { padding: 14px 16px 16px; display: grid; gap: 4px; flex: 1; align-content: start; }
+.topic-card .k { font-family: var(--display); font-weight: 700; color: var(--sub); font-size: 0.88rem; }
+.topic-card .name { font-family: var(--display); font-weight: 800; font-size: 1.35rem; line-height: 1.15; }
+.topic-card .sum { color: var(--sub); font-size: 0.92rem; }
+.topic-card .st { font-size: 0.88rem; font-weight: 700; margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
 
 /* mission map */
 .aisles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px 16px; padding-top: 12px; }
@@ -319,6 +317,49 @@ a.shop:hover .sign { text-decoration: underline; text-underline-offset: 3px; }
 .mini thead th { color: var(--sub); font-weight: 800; }
 .mini tbody th { font-weight: 700; white-space: nowrap; }
 .mini td { font-variant-numeric: tabular-nums; font-weight: 800; }
+
+/* K-means: scatter plot, guided steps and elbow chart */
+.kplot-wrap { background: var(--paper); border-radius: 14px; padding: 8px; box-shadow: 0 3px 0 rgba(35,48,42,.1); }
+.kplot { width: 100%; height: auto; display: block; max-height: 460px; }
+.kplot .gridline { stroke: var(--edge); stroke-width: 1; }
+.kplot .axes text { font-size: 10px; fill: var(--sub); font-family: var(--body); }
+.kplot .axes .axis-title { font-weight: 800; font-size: 10.5px; }
+.kplot .kp { stroke: #fff; stroke-width: 1; transition: fill .35s; }
+.kplot .link-line { stroke-width: 1; stroke-opacity: .35; }
+.kplot .trail { stroke-width: 2; stroke-dasharray: 4 3; }
+.kplot .centroid { transition: transform .6s ease; }
+.kplot .centroid text { font-family: var(--display); font-weight: 800; font-size: 12px; }
+.kplot .mpt circle { stroke: #fff; stroke-width: 1.5; transition: fill .3s, opacity .3s; }
+.kplot .mpt text { fill: #fff; font-size: 9px; font-weight: 800; font-family: var(--body); pointer-events: none; }
+.kplot .mpt.dim { opacity: .3; }
+.kplot .mpt.sel circle { stroke: var(--ink); stroke-width: 3; }
+.kplot .mpt.miss circle, .kplot .mpt.extra circle { stroke: var(--brand); stroke-width: 3; stroke-dasharray: 3 2; }
+.kplot .tap { cursor: pointer; }
+.kplot .tap:focus { outline: none; }
+.kplot .tap:focus-visible circle { stroke: var(--lit); stroke-width: 3; }
+.kcontrols { display: grid; gap: 12px; margin-top: 4px; }
+.kfield { display: grid; gap: 4px; font-size: 0.92rem; }
+.num-pick { padding: 3px 14px; min-width: 40px; justify-content: center; }
+.ksteps { margin: 6px 0 0; padding-left: 0; list-style: none; counter-reset: ks; display: grid; gap: 4px; }
+.ksteps li { counter-increment: ks; display: grid; grid-template-columns: 26px minmax(0, 1fr); column-gap: 8px; padding: 6px 8px; border-radius: 10px; }
+.ksteps li::before { content: counter(ks); grid-row: span 2; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--edge); font-weight: 800; font-size: 0.8rem; }
+.ksteps li span { color: var(--sub); font-size: 0.86rem; }
+.ksteps li.on { background: var(--hl); }
+.ksteps li.on::before { background: var(--brand); color: #fff; }
+.ksteps li.past::before { background: var(--ok); color: #fff; }
+.ksteps.static li::before { background: var(--hl); }
+.kstats { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--sub); }
+.kstats b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.elbow { display: flex; gap: 6px; align-items: stretch; margin-top: 8px; }
+.ebar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: 0; padding: 0; color: var(--ink); font: inherit; min-width: 0; }
+button.ebar { cursor: pointer; }
+button.ebar:disabled { cursor: default; opacity: .5; }
+.ebar .val { font-size: 0.74rem; font-weight: 800; font-variant-numeric: tabular-nums; min-height: 1.1em; }
+.ebar .bar { width: 100%; height: 90px; display: flex; align-items: flex-end; background: var(--counter); border-radius: 6px; overflow: hidden; }
+.ebar .bar i { display: block; width: 100%; background: var(--ink); border-radius: 6px 6px 0 0; transition: height .3s; }
+.ebar.on .bar i { background: var(--brand); }
+.ebar .kk { font-size: 0.78rem; font-weight: 700; color: var(--sub); }
+.elbow.static { max-width: 340px; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

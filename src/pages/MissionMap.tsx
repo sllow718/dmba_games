@@ -25,7 +25,7 @@ export function MissionMap({ activity }: { activity: AnyActivity }) {
         <span>Done <b>{s.done} / {s.total}</b></span>
         <span>Stars <b>{s.stars} / {s.maxStars}</b></span>
         <a className="link" href={`#/${activity.id}/cards`}>Formula cards</a>
-        <a className="link" href="#/">Street</a>
+        <a className="link" href="#/">All topics</a>
       </TopBar>
       <main>
         <div className="page-head">

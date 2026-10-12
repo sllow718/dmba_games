@@ -120,17 +120,15 @@ export interface DataView<R> {
   has: (row: R, tag: string) => boolean;
 }
 
-/** The words and character that make each shop its own place. */
+/** The words and character that give each topic its setting. */
 export interface Theme {
   owner: { name: string; initials: string };
-  /** What one mission is called in this shop: "Aisle", "Counter". */
+  /** What one mission is called in this topic: "Aisle", "Counter". */
   stop: string;
   /** One row of data, singular and plural: ["receipt", "receipts"]. */
   rows: [string, string];
   /** Lead paragraph on the mission map. */
   intro: string;
-  /** The owner's hello on the street page. */
-  greeting: string;
   /** The owner's line after the final mission. */
   finale: string;
 }
@@ -140,6 +138,8 @@ export interface ActivityDef<R = Transaction> {
   shop: string;
   title: string;
   topic: string;
+  /** One line on the home page saying what students will learn. */
+  summary: string;
   theme: Theme;
   view: DataView<R>;
   missions: MissionDef<R>[];

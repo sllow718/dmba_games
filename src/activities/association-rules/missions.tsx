@@ -551,12 +551,12 @@ export const basketDetective: ActivityDef = {
   shop: "Corner Mart",
   title: "Basket Detective",
   topic: "Association rules",
+  summary: "Find out which products customers buy together, using support, confidence and lift.",
   theme: {
     owner: { name: "Mrs Tan", initials: "MT" },
     stop: "Aisle",
     rows: ["receipt", "receipts"],
     intro: "Association rules at Mrs Tan's minimart. Each aisle is one mission: a quick review, a hands-on task and a checkpoint.",
-    greeting: "Hello! I'm Mrs Tan, and I run Corner Mart. I've got a week of receipts and no idea what my customers buy together. That's where you come in.",
     finale: "That's every aisle done. You're a proper basket detective now. My Monday meeting is sorted.",
   },
   view: { Grid: Slips, has: (t, item) => t.includes(item) },

@@ -222,12 +222,12 @@ export const loanOfficer: ActivityDef<Applicant> = {
   shop: "Neighbourhood Bank",
   title: "Loan Officer",
   topic: "Decision trees",
+  summary: "Read a decision tree and judge how pure its groups are with Gini and entropy.",
   theme: {
     owner: { name: "Mr Lim", initials: "ML" },
     stop: "Counter",
     rows: ["applicant", "applicants"],
     intro: "Decision trees at Mr Lim's bank branch. Each counter is one mission: a quick review, a hands-on task and a checkpoint.",
-    greeting: "Hi, I'm Mr Lim, manager at Neighbourhood Bank. I've got a decision tree built from twelve past loans and a queue of new applicants. Help me read it and understand what it's telling me.",
     finale: "That's every counter done. You can read my tree and tell how sure each leaf is. You're my new loan officer.",
   },
   view: { Grid: Applicants, has },

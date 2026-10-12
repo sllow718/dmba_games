@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ACTIVITIES } from "../activities";
 import { resetProgress, useProgress } from "../core/progress";
 import { activitySummary } from "../core/unlock";
-import { Owner, Stars, TopBar } from "../components/ui";
+import { Stars, TopBar } from "../components/ui";
 
 export function Hub() {
   const p = useProgress();
@@ -10,26 +10,23 @@ export function Hub() {
   const total = ACTIVITIES.reduce((s, a) => s + activitySummary(p, a).xp, 0);
   return (
     <>
-      <TopBar title="DMBA Learn" sub="Data mining, one shop at a time">
+      <TopBar title="DMBA Learn" sub="Data mining for business analytics">
         <span>XP <b>{total}</b></span>
       </TopBar>
       <main>
         <div className="page-head">
-          <h1>Pick a shop</h1>
-          <p>Each shop on the street teaches one data-mining technique through short missions.</p>
+          <h1>Pick a topic</h1>
+          <p>DMBA Learn is a learning app for data mining in business analytics. Each topic is a short set of guided missions: a quick review, a hands-on activity and a checkpoint with hints. Start with any topic and explore at your own pace.</p>
         </div>
-        <div className="stack" style={{ marginBottom: 26 }}>
-          {ACTIVITIES.map((a) => <Owner key={a.id} who={a.theme.owner}>{a.theme.greeting}</Owner>)}
-        </div>
-        <div className="street">
+        <div className="topics">
           {ACTIVITIES.map((a) => {
             const s = activitySummary(p, a);
             return (
-              <a key={a.id} className="shop" href={`#/${a.id}`}>
-                <div className="awning" />
+              <a key={a.id} className="topic-card" href={`#/${a.id}`}>
                 <div className="in">
-                  <span className="sign">{a.shop}</span>
-                  <span className="topic">{a.title} · {a.topic.toLowerCase()}</span>
+                  <span className="k">{a.missions.length} missions · {a.title}</span>
+                  <span className="name">{a.topic}</span>
+                  <span className="sum">{a.summary}</span>
                   <span className="st">
                     {s.done === s.total ? "All missions done" : s.done ? `Mission ${s.next} of ${s.total}` : "Start here →"}
                     {s.done > 0 && <Stars n={Math.round(s.stars / s.done)} size="1rem" />}

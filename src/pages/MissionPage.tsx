@@ -192,7 +192,7 @@ function Results({ mission, last, best, next, activity, onReplay }: {
           {next ? (
             <button type="button" className="btn" onClick={() => leave(`/${activity.id}/mission-${next.n}`)}>Go to Mission {next.n} →</button>
           ) : (
-            <button type="button" className="btn" onClick={() => leave("/")}>Back to the street</button>
+            <button type="button" className="btn" onClick={() => leave("/")}>Back to all topics</button>
           )}
         </div>
       </section>

@@ -1,6 +1,6 @@
 # DMBA Learn
 
-Browser games that teach data mining for business analytics to polytechnic students. Each activity is a shop on one street.
+A learning app that teaches data mining for business analytics to polytechnic students. The home page lists the topics; each topic is a short set of guided missions with its own setting and guide character.
 
 **Basket Detective** (association rules): students help Mrs Tan, who runs the Corner Mart minimart, find out what her customers buy together. There are six missions, and each one unlocks after the previous one is complete.
 
@@ -19,6 +19,13 @@ Browser games that teach data mining for business analytics to polytechnic stude
 | --- | --- | --- |
 | 1 | Read the Tree | root, branches, leaves, classifying an applicant, leaf confidence |
 | 2 | Pure or Mixed? | interpreting impurity: what Gini and entropy values say about a group (no calculation) |
+
+**Customer Tribes** (k-means clustering): students help Coach Ana at the Gym & Juice café group members by visits per month and spend per visit. The hands-on lab lets them set the number of points (n) and clusters (k), then step through place → assign → move until k-means converges, with each step explained as it happens.
+
+| Mission | Teaches |
+| --- | --- |
+| 1 · Step Through K-Means | clusters, centroids, the assign/move loop, convergence |
+| 2 · Choosing k | total within-cluster distance (WCSS), the elbow, sensitivity to starting centroids, describing segments |
 
 Each mission is its own page and has four stages:
 
@@ -71,6 +78,12 @@ src/
       missions.tsx      review cards, briefs and checkpoint questions for all six missions
       explores.tsx      the hands-on task for each mission
       ui.tsx            applicant cards, the drawn tree, impurity meters
+    kmeans/
+      engine.ts         seeded data, starting centroids, assign, move, WCSS, step-by-step state
+      data.ts           the 12 gym members used in the lessons
+      missions.tsx      review cards, briefs and checkpoint questions for both missions
+      explores.tsx      the guided k-means lab (n, k, step, run) and the elbow chart
+      ui.tsx            scatter plot, centroids and the member chart
 docs/                   design proposal and visual directions
 ```
 
