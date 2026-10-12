@@ -46,7 +46,7 @@ const m1: MissionDef = {
     ],
     says: ["Let's start with the vocabulary.", "Here's how a computer stores my receipts.", "Watch the receipts light up.", "Ready? Let's count some receipts."],
   },
-  explore: { goal: "Tap the bread receipts, see them as a 0/1 table, count an itemset and build a rule.", Component: ExploreReceipts },
+  explore: { goal: "See the receipts as a 0/1 table, then build a rule.", Component: ExploreReceipts },
   questions: [
     {
       id: "m1-table", type: "mc", prompt: "This is receipt #5 as a row of the 0/1 table. What did customer #5 buy?", layout: "list",

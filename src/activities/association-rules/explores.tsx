@@ -27,16 +27,10 @@ function ItemPicker({ items, value, onChange, label }: { items: readonly string[
   );
 }
 
-/* Mission 1: tap the Bread receipts, see them as a 0/1 table, count an itemset, then build a rule. */
+/* Mission 1: see the receipts as a 0/1 table, then build a rule. */
 export function ExploreReceipts({ data, onDone, done }: ExploreProps) {
-  const target = data.map((t, i) => (t.includes("Bread") ? i : -1)).filter((i) => i >= 0);
-  const [picked, setPicked] = useState<Set<number>>(new Set());
-  const [msg, setMsg] = useState<string | null>(null);
-  const [tries, setTries] = useState(0);
-  const [tapped, setTapped] = useState(done);
   const [view, setView] = useState<"receipts" | "table">(done ? "table" : "receipts");
-  const [t, setT] = useState({ table: done, itemset: done, rule: done });
-  const [free, setFree] = useState<string[]>(["Bread"]);
+  const [t, setT] = useState({ table: done, rule: done });
   const [ante, setAnte] = useState<string[]>([]);
   const [cons, setCons] = useState<string[]>([]);
 
@@ -44,55 +38,19 @@ export function ExploreReceipts({ data, onDone, done }: ExploreProps) {
     if (t[k]) return;
     const nt = { ...t, [k]: true };
     setT(nt);
-    if (nt.table && nt.itemset && nt.rule && !done) onDone();
+    if (nt.table && nt.rule && !done) onDone();
   };
-
-  const check = () => {
-    const missed = target.filter((i) => !picked.has(i));
-    const extra = [...picked].filter((i) => !target.includes(i));
-    if (!missed.length && !extra.length) { setMsg(null); setTapped(true); return; }
-    setTries(tries + 1);
-    const bits = [];
-    if (missed.length) bits.push(tries ? `Look again at ${missed.map((i) => "#" + (i + 1)).join(", ")}.` : `You've missed ${missed.length}.`);
-    if (extra.length) bits.push(`${extra.map((i) => "#" + (i + 1)).join(", ")} ${extra.length > 1 ? "have" : "has"} no bread.`);
-    setMsg(bits.join(" "));
-  };
-
-  if (!tapped) {
-    return (
-      <div className="split">
-        <div className="stack">
-          <p className="data-label">{SAT_LABEL} · tap to select</p>
-          <Slips data={data} selected={picked} label="Receipts: tap the ones with bread"
-            onToggle={(i) => { const s = new Set(picked); s.has(i) ? s.delete(i) : s.add(i); setPicked(s); }} />
-          <ItemKey items={SATURDAY_ITEMS} />
-        </div>
-        <div className="stack">
-          <section className="card">
-            <span className="k">Task</span>
-            <h2>Tap every receipt that has <Token item="Bread" /> Bread</h2>
-            <p>Each receipt is one customer's basket, which is one <b>transaction</b>. Each token is one <b>item</b>.</p>
-            <div className="row"><button type="button" className="btn" disabled={!picked.size} onClick={check}>Check my picks</button><span className="worth" style={{ marginTop: 0 }}>{picked.size} selected</span></div>
-          </section>
-          <Owner level={msg ? "Try again" : undefined}>{msg ?? "I want to know how many of Saturday's customers bought bread. Tap their receipts."}</Owner>
-        </div>
-      </div>
-    );
-  }
-
-  const c = count(data, free);
   const pickRule = (side: "A" | "B", v: string[]) => {
     const [a, b] = side === "A" ? [v, cons.filter((x) => !v.includes(x))] : [ante.filter((x) => !v.includes(x)), v];
     setAnte(a); setCons(b);
     if (a.length && b.length) tick("rule");
   };
+  const lit = [...ante, ...cons];
   const say: ReactNode = !t.table
-    ? <>Six bread buyers. Now press <b>0/1 table</b>: it's how a computer stores these same receipts.</>
-    : !t.itemset
-      ? <>Each row is a receipt and each column is an item: 1 means bought, 0 means not. Now pick two or more items to count an <b>itemset</b>.</>
-      : !t.rule
-        ? <>A receipt counts only if it has a 1 in every column you picked. Last job: build a <b>rule</b>. Pick an antecedent and a consequent.</>
-        : <>That's a rule: <b>if</b> a customer buys the antecedent, <b>then</b> they also buy the consequent. Whether it's a <i>good</i> rule comes in Aisles 2 to 4.</>;
+    ? <>Each receipt is one customer's basket: one <b>transaction</b>. Press <b>0/1 table</b> to see how a computer stores these same receipts.</>
+    : !t.rule
+      ? <>Each row is a receipt and each column is an item: 1 means bought, 0 means not. Now build a <b>rule</b>: pick an antecedent and a consequent.</>
+      : <>That's a rule: <b>if</b> a customer buys the antecedent, <b>then</b> they also buy the consequent. Whether it's a <i>good</i> rule comes in Aisles 2 to 4.</>;
 
   return (
     <div className="split">
@@ -104,28 +62,19 @@ export function ExploreReceipts({ data, onDone, done }: ExploreProps) {
         <p className="data-label">{SAT_LABEL}{view === "table" ? " · 1 = bought, 0 = not bought" : ""}</p>
         {view === "receipts" ? (
           <>
-            <Slips data={data} highlight={free.length ? { lit: free } : null} />
+            <Slips data={data} highlight={lit.length ? { lit } : null} />
             <ItemKey items={SATURDAY_ITEMS} />
           </>
         ) : (
-          <OneHot data={data} items={SATURDAY_ITEMS} lit={free} />
+          <OneHot data={data} items={SATURDAY_ITEMS} lit={lit} />
         )}
       </div>
       <div className="stack">
         <Tasks items={[
-          { text: "Tap every receipt with bread", done: true },
           { text: "Switch to the 0/1 table", done: t.table },
-          { text: "Count an itemset of two or more items", done: t.itemset },
           { text: "Build a rule: pick an antecedent (if) and a consequent (then)", done: t.rule },
         ]} />
         <Owner tone="ok">{say}</Owner>
-        <section className="card">
-          <ItemPicker items={SATURDAY_ITEMS} value={free} onChange={(v) => { setFree(v); if (v.length >= 2) tick("itemset"); }} label="Count an itemset" />
-          <p style={{ marginTop: 12 }}>
-            {free.length ? <>Receipts with <b>{free.join(" and ")}</b>: <span className="eq" style={{ display: "inline", fontSize: "1.3rem" }}>{c}</span></> : "Pick one or more items."}
-          </p>
-          <p className="worth">That number is the <b>support count</b>. A receipt only counts if it has every item in the itemset.</p>
-        </section>
         <section className="card rulepick">
           <span className="k">Build a rule</span>
           <ItemPicker items={SATURDAY_ITEMS} value={ante} onChange={(v) => pickRule("A", v)} label="If a customer buys… (antecedent)" />
