@@ -411,3 +411,22 @@ a.topic-card:hover .name { text-decoration: underline; text-underline-offset: 3p
   * { transition: none !important; }
   .slip { transform: none !important; }
 }
+
+/* receipts as a 0/1 table (association rules) */
+.onehot-wrap { overflow-x: auto; background: var(--paper); border: 2px solid var(--edge); border-radius: 12px; }
+.onehot { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+.onehot th, .onehot td { text-align: center; padding: 5px 4px; border-bottom: 1px solid var(--edge); }
+.onehot thead th { font-size: 0.75rem; color: var(--sub); font-weight: 800; vertical-align: bottom; }
+.onehot thead th .tok { display: flex; margin: 0 auto 2px; width: 26px; height: 26px; }
+.onehot thead th .nm { display: block; }
+.onehot tbody th { font-weight: 700; color: var(--sub); white-space: nowrap; }
+.onehot td.one { font-weight: 800; color: var(--ink); }
+.onehot td.zero { color: #a3ab9f; }
+.onehot .on { background: var(--hl); }
+.onehot tr.hit th, .onehot tr.hit td { background: var(--ok-bg); }
+.onehot tr.hit td.on { box-shadow: inset 0 0 0 2px var(--ok); }
+.onehot.compact th, .onehot.compact td { padding: 3px 2px; font-size: 0.82rem; }
+@media (max-width: 420px) { .onehot thead th .nm { display: none; } }
+.rulepick { display: grid; gap: 10px; }
+.rule-say { font-weight: 700; margin: 10px 0 0; }
+.rule-say .tag { display: inline-block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--sub); margin-left: 4px; }

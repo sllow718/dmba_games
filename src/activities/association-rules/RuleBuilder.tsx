@@ -70,14 +70,14 @@ export function RuleBuilder({ data, items, initial, compact, dataLabel, threshol
           <p className="data-label">{dataLabel}</p>
           <Slips data={data} highlight={highlight} compact={compact} />
           <div className="key">
-            <span><i className="sw" style={{ outline: "3px solid var(--lit)", outlineOffset: -3 }} />has the "if" items</span>
-            <span><i className="sw" style={{ background: "var(--ok-bg)", outline: "3px solid var(--ok)", outlineOffset: -3 }} />has the "if" and "then" items</span>
+            <span><i className="sw" style={{ outline: "3px solid var(--lit)", outlineOffset: -3 }} />has the antecedent ("if") items</span>
+            <span><i className="sw" style={{ background: "var(--ok-bg)", outline: "3px solid var(--ok)", outlineOffset: -3 }} />has the antecedent and consequent items</span>
           </div>
           <ItemKey items={items} />
         </div>
         <div className="stack">
           <div role="group" aria-label="If a customer buys">
-            <span className="lbl">If a customer buys…</span>
+            <span className="lbl">If a customer buys… (antecedent)</span>
             <div className="picks">
               {items.map((it) => (
                 <button key={it} type="button" className="pick" aria-pressed={A.includes(it)} disabled={B.includes(it)} onClick={() => toggle("A", it)}>
@@ -87,7 +87,7 @@ export function RuleBuilder({ data, items, initial, compact, dataLabel, threshol
             </div>
           </div>
           <div role="group" aria-label="Then they also buy">
-            <span className="lbl">…then they also buy</span>
+            <span className="lbl">…then they also buy (consequent)</span>
             <div className="picks">
               {items.map((it) => (
                 <button key={it} type="button" className="pick" aria-pressed={B.includes(it)} disabled={A.includes(it)} onClick={() => toggle("B", it)}>
@@ -113,20 +113,20 @@ export function RuleBuilder({ data, items, initial, compact, dataLabel, threshol
             <div className="meter">
               <div className="m">Confidence {s && t && <Pass ok={s.confidence >= t.minConfidence - 1e-9} />}</div>
               <div className="v">{s && s.countIf ? pct(s.confidence) : "–"}</div>
-              <div className="w">{s ? `${s.count} of ${s.countIf} "if" receipts` : " "}</div>
+              <div className="w">{s ? `${s.count} of ${s.countIf} antecedent receipts` : " "}</div>
               <div className="bar"><i style={{ width: s ? `${s.confidence * 100}%` : 0 }} /></div>
             </div>
             <div className="meter">
               <div className="m">Lift {s && t && <Pass ok={s.lift > t.minLift} />}</div>
               <div className="v">{s && s.countIf && s.countThen ? s.lift.toFixed(2) : "–"}</div>
-              <div className="w">{s ? `${pct(s.confidence)} vs ${pct(base)} usual` : " "}</div>
+              <div className="w">{s ? `${pct(s.confidence)} vs ${pct(base)} expected` : " "}</div>
               <div className="bar"><i style={{ width: s ? `${Math.min(s.lift / 3, 1) * 100}%` : 0 }} /></div>
             </div>
           </div>
           {compare && s && (
             <div className="card compare" aria-label="Confidence compared with the usual rate">
               <div className="line"><span>{A.join(" + ")} buyers who buy {B.join(" + ")}</span><span className="track"><i style={{ width: `${s.confidence * 100}%`, background: "var(--brand)" }} /></span><b>{pct(s.confidence)}</b></div>
-              <div className="line"><span>All customers who buy {B.join(" + ")}</span><span className="track"><i style={{ width: `${base * 100}%`, background: "var(--sub)" }} /></span><b>{pct(base)}</b></div>
+              <div className="line"><span>All customers who buy {B.join(" + ")} (expected confidence)</span><span className="track"><i style={{ width: `${base * 100}%`, background: "var(--sub)" }} /></span><b>{pct(base)}</b></div>
               <div className="w" style={{ fontSize: ".85rem" }}>Lift = {pct(s.confidence)} ÷ {pct(base)} = <b>{s.lift.toFixed(2)}</b></div>
             </div>
           )}

@@ -16,7 +16,6 @@ const expected: Record<string, number> = {
   "m4-base": support(SATURDAY, ["Milk"]),
   "m4-lift": S(["Bread"], ["Milk"]).lift,
   "m5-count": count(SATURDAY, ["Bread", "Butter", "Milk"]),
-  "m6-conf": W(["Pasta", "Tomato"], ["Cheese"]).confidence,
 };
 
 describe("mission content", () => {

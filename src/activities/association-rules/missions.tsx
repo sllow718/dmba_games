@@ -1,6 +1,7 @@
 import type { ActivityDef, MissionDef } from "../../core/types";
 import { Frac, Slips, Token } from "../../components/ui";
-import { SATURDAY, WEEK } from "./data";
+import { SATURDAY, SATURDAY_ITEMS, WEEK } from "./data";
+import { OneHot } from "./table";
 import { ExploreApriori, ExploreLift, ExploreReceipts, ExploreReport, ExploreRules, ExploreSupport } from "./explores";
 
 const SAT = "Corner Mart · Saturday morning · 10 receipts";
@@ -9,7 +10,7 @@ const set = (...xs: string[]) => `{${xs.join(", ")}}`;
 const m1: MissionDef = {
   n: 1,
   title: "Read the Receipts",
-  concept: "Transactions & itemsets",
+  concept: "Transactions, itemsets & rules",
   badge: "Receipt Reader",
   data: SATURDAY,
   dataLabel: SAT,
@@ -19,41 +20,46 @@ const m1: MissionDef = {
     title: "Receipts, items and itemsets",
     what: (
       <>
-        <p>A <b>transaction</b> is one customer's receipt. An <b>item</b> is one product on it.</p>
-        <p>An <b>itemset</b> is any group of items, like {set("Bread", "Butter")}. The order doesn't matter.</p>
+        <p><b>Association rule mining</b>, also called <b>market basket analysis</b>, is an unsupervised learning method. It finds items that are bought together.</p>
+        <p>A <b>transaction</b> is one customer's receipt. An <b>item</b> is one product on it. An <b>itemset</b> is any group of items, like {set("Bread", "Butter")}. The order doesn't matter.</p>
+        <p>A <b>rule</b> is an if–then statement between itemsets, like {set("Bread")} → {set("Eggs")}. The "if" part is the <b>antecedent</b> and the "then" part is the <b>consequent</b>.</p>
       </>
     ),
     how: (
       <>
+        <p>The data is a <b>0/1 table</b>: one row per transaction, one column per item. 1 means the item was bought, 0 means it wasn't.</p>
         <div className="formula">support count of X = number of receipts that contain <u>every</u> item in X</div>
-        <p>A receipt counts once, and only if every item in the itemset is on it.</p>
       </>
     ),
     exampleTitle: "Count {Bread}, then {Bread, Eggs}",
     steps: [
       { text: <>Look for <b>Bread</b> on every receipt.</>, eq: "count({Bread}) = 6", say: "Six of my ten customers bought bread.", highlight: { lit: ["Bread"] } },
       { text: <>Now keep only receipts with <b>Bread and Eggs</b>.</>, eq: "count({Bread, Eggs}) = 3", say: "#4, #8 and #10 have both. Bread on its own doesn't count.", highlight: { lit: ["Bread"], both: ["Eggs"], only: true } },
+      { text: <>Turn the itemset into a rule: if a customer buys Bread, then they buy Eggs.</>, eq: "{Bread} → {Eggs}: antecedent {Bread}, consequent {Eggs}", say: "The antecedent comes before the arrow, the consequent after it.", highlight: { lit: ["Bread"], both: ["Eggs"] } },
     ],
     remember: [
       "One receipt = one transaction = one customer's basket.",
       "An itemset is a group of items. {Bread, Eggs} is the same itemset as {Eggs, Bread}.",
+      "In the 0/1 table, each row is a receipt and each column is an item: 1 = bought, 0 = not bought.",
       "The support count of an itemset is the number of receipts that contain all of its items.",
+      "A rule reads antecedent → consequent: if X, then Y.",
     ],
-    says: ["Let's start with the vocabulary.", "Counting is all you need for this aisle.", "Watch the receipts light up.", "Ready? Let's count some receipts."],
+    says: ["Let's start with the vocabulary.", "Here's how a computer stores my receipts.", "Watch the receipts light up.", "Ready? Let's count some receipts."],
   },
-  explore: { goal: "Tap the bread receipts, then count your own itemsets.", Component: ExploreReceipts },
+  explore: { goal: "Tap the bread receipts, see them as a 0/1 table, count an itemset and build a rule.", Component: ExploreReceipts },
   questions: [
     {
-      id: "m1-milk", type: "mc", prompt: "How many receipts contain Milk?",
+      id: "m1-table", type: "mc", prompt: "This is receipt #5 as a row of the 0/1 table. What did customer #5 buy?", layout: "list",
+      figure: <OneHot data={SATURDAY.slice(4, 5)} items={SATURDAY_ITEMS} from={5} compact />,
       options: [
-        { text: "4", hint: "More than that. Check every receipt, including the long ones." },
-        { text: "5", hint: "Close. Did you check #9? Milk and coffee." },
-        { text: "6", correct: true },
-        { text: "7", hint: "Too many. #2 is just bread and butter." },
+        { text: "Bread, Butter, Coffee and Cookies", hint: "Those are the 0s. A 0 means the item was not bought." },
+        { text: "Milk and Eggs", correct: true },
+        { text: "Two milks and two eggs", hint: "The table only says bought (1) or not bought (0), not how many." },
+        { text: "Nothing: most of the row is 0", hint: "Look for the 1s. Each 1 is an item in the basket." },
       ],
-      ladder: ["Milk is on #1, #3 and #5. Keep going from #6. I've outlined the milk receipts.", "Milk is on #1, #3, #5, #6, #9 and #10. How many is that?"],
-      explain: "Milk is on 6 of the 10 receipts, so the support count of {Milk} is 6.",
-      highlight: { lit: ["Milk"] },
+      ladder: ["In the 0/1 table, 1 means bought and 0 means not bought.", "The 1s are under Milk and Eggs."],
+      explain: "The 1s are under Milk and Eggs, so receipt #5 is {Milk, Eggs}.",
+      highlight: { lit: ["Milk", "Eggs"] },
     },
     {
       id: "m1-tap", type: "tap", prompt: "Tap every receipt that contains both Bread and Butter.", items: ["Bread", "Butter"],
@@ -66,11 +72,22 @@ const m1: MissionDef = {
       options: [
         { text: "Receipt #4", hint: "A receipt is a transaction: one customer's basket. An itemset is a group of items." },
         { text: "{Bread, Butter}", correct: true },
-        { text: "Bread → Butter", hint: "That's a rule, with an \"if\" side and a \"then\" side. Rules come in Aisle 3." },
+        { text: "Bread → Butter", hint: "That's a rule, with an antecedent (if) and a consequent (then)." },
         { text: "6", hint: "That's a count, not a group of items." },
       ],
       ladder: ["Itemsets are written in curly brackets.", "Look for the option that is just a group of products."],
       explain: "{Bread, Butter} is an itemset: a group of items, with no direction.",
+    },
+    {
+      id: "m1-cons", type: "mc", prompt: "In the rule {Milk, Cookies} → {Coffee}, what is the consequent?", layout: "list",
+      options: [
+        { text: "{Milk, Cookies}", hint: "That's the antecedent: the \"if\" part, before the arrow." },
+        { text: "{Coffee}", correct: true },
+        { text: "{Milk, Cookies, Coffee}", hint: "That's every item in the rule. The consequent is only one side of it." },
+        { text: "Receipt #3", hint: "A receipt is a transaction. The consequent is an itemset in the rule." },
+      ],
+      ladder: ["A rule reads: if antecedent, then consequent.", "The consequent is the \"then\" part, after the arrow."],
+      explain: "{Coffee} is the consequent: if a customer buys milk and cookies, then they buy coffee.",
     },
     {
       id: "m1-count", type: "num", kind: "count", prompt: "What is the support count of {Coffee, Cookies}?", answer: 2,
@@ -98,7 +115,7 @@ const m2: MissionDef = {
       <>
         <p>Support tells you <b>how common</b> an item, or a combination of items, is across all the receipts.</p>
         <p>In shop terms: out of all customers, what share bought this?</p>
-        <p style={{ color: "var(--sub)" }}>High support means lots of customers buy it. Low support means it's rare.</p>
+        <p style={{ color: "var(--sub)" }}>High support means lots of customers buy it. Low support means it's rare. The support of a rule X → Y is the support of {set("X", "Y")}: how often the two are bought together.</p>
       </>
     ),
     how: (
@@ -118,7 +135,7 @@ const m2: MissionDef = {
       "Support is always between 0% and 100%.",
       "A combination is never more common than any single item in it: {Bread, Butter} 50% ≤ Bread 60%.",
       <>Common mistake: counting receipts with Bread <em>or</em> Butter. It has to be both.</>,
-      <>In this aisle, Mrs Tan only wants itemsets with support of <b>at least 30%</b>.</>,
+      <>Only itemsets common enough to affect profit matter. That cut-off is the <b>minimum support threshold</b>: here, <b>30%</b>.</>,
     ],
     says: ["Before we start: one idea, one formula, one example.", "This is the only formula you need for this aisle.", "Let's try it on Saturday's receipts.", "That's it. Ready when you are."],
   },
@@ -183,26 +200,26 @@ const m3: MissionDef = {
     title: "Rules and confidence",
     what: (
       <>
-        <p>A <b>rule</b> X → Y reads "if a customer buys X, they also buy Y". X is the <b>if</b> side and Y is the <b>then</b> side.</p>
-        <p><b>Confidence</b> answers: of the customers who bought X, what share also bought Y?</p>
+        <p>A <b>rule</b> X → Y reads "if a customer buys X, they also buy Y". X is the <b>antecedent</b> (if) and Y is the <b>consequent</b> (then).</p>
+        <p><b>Confidence</b> answers: of the customers who bought X, what share also bought Y? It's a conditional probability: P(Y given X).</p>
       </>
     ),
     how: (
       <>
         <div className="formula">confidence(X → Y) = <Frac top="receipts with X and Y" bottom="receipts with X" /></div>
-        <p>The bottom is only the "if" customers, not everyone. That's the difference from support.</p>
+        <p>The bottom is only the antecedent customers, not everyone. That's the difference from support.</p>
       </>
     ),
     exampleTitle: "Confidence of Bread → Butter",
     steps: [
-      { text: <>Find the <b>if</b> customers: receipts with Bread.</>, eq: "6 receipts", say: "These six are the only customers this rule is about.", highlight: { lit: ["Bread"] } },
+      { text: <>Find the antecedent customers: receipts with <b>Bread</b>.</>, eq: "6 receipts", say: "These six are the only customers this rule is about.", highlight: { lit: ["Bread"] } },
       { text: <>Of those, count the ones that <b>also</b> have Butter.</>, eq: "5 receipts", say: "Five of the six took butter. #8 didn't.", highlight: { lit: ["Bread"], both: ["Butter"] } },
-      { text: "Divide by the if customers, not all 10.", eq: "conf(Bread → Butter) = 5 ÷ 6 = 83%", say: "So 83% of my bread buyers take butter.", highlight: { lit: ["Bread"], both: ["Butter"] } },
+      { text: "Divide by the antecedent customers, not all 10.", eq: "conf(Bread → Butter) = 5 ÷ 6 = 83%", say: "So 83% of my bread buyers take butter.", highlight: { lit: ["Bread"], both: ["Butter"] } },
     ],
     remember: [
-      "Confidence divides by the receipts on the if side, not by all receipts.",
+      "Confidence divides by the receipts with the antecedent, not by all receipts.",
       "Direction matters: Bread → Butter and Butter → Bread usually have different confidence.",
-      "Confidence is between 0% and 100%. 100% means every if customer also bought the then item.",
+      "Confidence is between 0% and 100%. 100% means every antecedent customer also bought the consequent.",
     ],
     says: ["Now we start making rules.", "Watch the bottom of the fraction. That's where people slip up.", "Let's work out bread then butter.", "Got it? Let's build some rules."],
   },
@@ -214,7 +231,7 @@ const m3: MissionDef = {
         { value: 0.5, hint: "That's 5 out of all 10 customers, which is the support. For confidence I only want the bread buyers." },
         { value: 1, hint: "That's Butter → Bread. Here bread comes first, so divide by the bread receipts." },
       ],
-      first: "Confidence only looks at the customers who bought the \"if\" item: bread.",
+      first: "Confidence only looks at the customers who bought the antecedent: bread.",
       ladder: ["6 receipts have bread. I've lit them up. How many of those also have butter?", "5 of the 6 bread receipts have butter. So 5 ÷ 6 is…?"],
       explain: "5 ÷ 6 ≈ 83%. Most of my bread buyers take butter too.",
       highlight: { lit: ["Bread"], both: ["Butter"] },
@@ -225,7 +242,7 @@ const m3: MissionDef = {
         { value: 5 / 6, hint: "That's Bread → Butter. Now butter comes first, so divide by the butter receipts." },
         { value: 0.5, hint: "That's the support. Divide by the butter receipts only." },
       ],
-      first: "This time the \"if\" customers are the butter buyers.",
+      first: "This time the antecedent is butter, so look at the butter buyers.",
       ladder: ["Butter is on 5 receipts. How many of those also have bread?", "All 5 butter receipts have bread. So 5 ÷ 5 is…?"],
       explain: "5 ÷ 5 = 100%. Every butter buyer also bought bread.",
       highlight: { lit: ["Butter"], both: ["Bread"] },
@@ -269,29 +286,30 @@ const m4: MissionDef = {
     title: "Lift",
     what: (
       <>
-        <p>Confidence alone can fool you. If Y is popular anyway, lots of X buyers will buy Y by chance.</p>
-        <p><b>Lift</b> compares the rule's confidence with the <b>baseline</b>: how often anyone buys Y.</p>
+        <p>Confidence alone can fool you. It ignores how popular Y is. If Y is popular anyway, lots of X buyers will buy Y by chance, which inflates confidence.</p>
+        <p>The <b>expected confidence</b> of X → Y is how often anyone buys Y, whether or not they bought X: that's just support(Y).</p>
+        <p><b>Lift</b> compares the rule's confidence with its expected confidence.</p>
       </>
     ),
     how: (
       <>
-        <div className="formula">lift(X → Y) = <Frac top="confidence(X → Y)" bottom="support(Y)" /></div>
+        <div className="formula">lift(X → Y) = <Frac top="confidence(X → Y)" bottom="expected confidence = support(Y)" /></div>
         <ul>
-          <li><b>Above 1:</b> X buyers are more likely than usual to buy Y. Useful.</li>
-          <li><b>Exactly 1:</b> no effect.</li>
-          <li><b>Below 1:</b> X buyers are less likely than usual to buy Y.</li>
+          <li><b>Above 1:</b> X buyers are more likely than usual to buy Y. The rule is useful and you can act on it.</li>
+          <li><b>Exactly 1:</b> no association. X and Y are independent.</li>
+          <li><b>Below 1:</b> X buyers are less likely than usual to buy Y. The items act like substitutes.</li>
         </ul>
       </>
     ),
     exampleTitle: "Lift of Coffee → Cookies",
     steps: [
       { text: "Confidence: of the coffee buyers, how many took cookies?", eq: "2 ÷ 3 = 67%", say: "Two of my three coffee buyers took cookies.", highlight: { lit: ["Coffee"], both: ["Cookies"] } },
-      { text: "Baseline: of all customers, how many took cookies?", eq: "3 ÷ 10 = 30%", say: "Normally only 30% of customers buy cookies.", highlight: { lit: ["Cookies"] } },
-      { text: "Divide confidence by the baseline.", eq: "lift = 67% ÷ 30% = 2.22", say: "Coffee buyers are more than twice as likely to take cookies. That's a real tip.", highlight: { lit: ["Coffee"], both: ["Cookies"] } },
+      { text: "Expected confidence: of all customers, how many took cookies?", eq: "supp({Cookies}) = 3 ÷ 10 = 30%", say: "Normally only 30% of customers buy cookies.", highlight: { lit: ["Cookies"] } },
+      { text: "Divide confidence by the expected confidence.", eq: "lift = 67% ÷ 30% = 2.22", say: "Coffee buyers are more than twice as likely to take cookies. That's a real tip.", highlight: { lit: ["Coffee"], both: ["Cookies"] } },
     ],
     remember: [
-      "High confidence isn't enough. Always compare it with how popular the then item is anyway.",
-      "Lift above 1 is useful, 1 means no effect, and below 1 means less likely.",
+      "High confidence isn't enough. Always compare it with the expected confidence: how popular the consequent is anyway.",
+      "Lift above 1 is useful, 1 means independent (no association), and below 1 means the items act like substitutes.",
       "Lift is a ratio, not a percentage: 2.22 means 2.22 times as likely.",
     ],
     says: ["Time to check my nephew's idea.", "One more division, and it changes everything.", "Coffee and cookies first.", "Now let's look at that bread and milk."],
@@ -299,22 +317,22 @@ const m4: MissionDef = {
   explore: { goal: "Check the nephew's rule, compare it with Coffee → Cookies, and find a rule with lift 1.", Component: ExploreLift },
   questions: [
     {
-      id: "m4-base", type: "num", kind: "proportion", prompt: "What share of all customers buy Milk?", answer: 0.6,
+      id: "m4-base", type: "num", kind: "proportion", prompt: "What is the expected confidence of Bread → Milk? That's the share of all customers who buy Milk.", answer: 0.6,
       traps: [{ value: 0.5, hint: "50% is milk among bread buyers. I mean all customers." }, { value: 0.06, hint: "That looks like the count, 6. Divide by 10 receipts." }],
       first: "Count every receipt with milk and divide by all 10.",
       ladder: ["Milk is lit up now. How many receipts is that?", "Milk is on 6 of the 10 receipts. So 6 ÷ 10 is…?"],
-      explain: "6 ÷ 10 = 60%. That's the baseline for milk.",
+      explain: "6 ÷ 10 = 60%. That's the expected confidence: how often anyone buys milk.",
       highlight: { lit: ["Milk"] },
     },
     {
       id: "m4-lift", type: "num", kind: "ratio", prompt: "Bread → Milk has 50% confidence. What is its lift?", answer: 5 / 6,
       traps: [
-        { value: 1.2, hint: "You've divided the wrong way round. Lift is confidence ÷ baseline: 50% ÷ 60%." },
-        { value: 0.5, hint: "That's the confidence. Now divide it by the milk baseline." },
-        { value: 0.3, hint: "That's the support. Lift uses confidence ÷ baseline." },
+        { value: 1.2, hint: "You've divided the wrong way round. Lift is confidence ÷ expected confidence: 50% ÷ 60%." },
+        { value: 0.5, hint: "That's the confidence. Now divide it by the expected confidence of milk." },
+        { value: 0.3, hint: "That's the support. Lift uses confidence ÷ expected confidence." },
       ],
       first: "Lift = confidence ÷ how often anyone buys milk.",
-      ladder: ["The confidence is 50% and the milk baseline is 60%.", "50% ÷ 60% = 0.5 ÷ 0.6 = ?"],
+      ladder: ["The confidence is 50% and the expected confidence (milk's support) is 60%.", "50% ÷ 60% = 0.5 ÷ 0.6 = ?"],
       explain: "0.5 ÷ 0.6 ≈ 0.83. Bread buyers are a little less likely than average to buy milk.",
       highlight: { lit: ["Bread"], both: ["Milk"] },
     },
@@ -326,7 +344,7 @@ const m4: MissionDef = {
         { text: "No. Bread buyers buy milk less often than customers overall", correct: true },
         { text: "No. A rule needs 100% confidence to be useful", hint: "Hardly any rule hits 100%. The question is whether 50% beats the usual milk rate." },
       ],
-      ladder: ["Compare the 50% with the milk baseline you just worked out.", "Bread buyers: 50%. Everyone: 60%. Lift 0.83 is below 1."],
+      ladder: ["Compare the 50% with the expected confidence you just worked out.", "Bread buyers: 50%. Everyone: 60%. Lift 0.83 is below 1."],
       explain: "Lift is 0.83, below 1. Moving the milk won't sell more of it. Sorry, nephew.",
       highlight: { lit: ["Milk"] },
     },
@@ -336,10 +354,10 @@ const m4: MissionDef = {
         { text: "Buying bread and butter makes no difference to buying milk", correct: true },
         { text: "Every bread-and-butter buyer buys milk", hint: "That would be 100% confidence, not lift 1." },
         { text: "It's the strongest rule in the shop", hint: "Lift 1 is neither strong nor weak. It's the no-effect point." },
-        { text: "The rule has a mistake in it", hint: "No mistake: 60% confidence ÷ 60% baseline = 1." },
+        { text: "The rule has a mistake in it", hint: "No mistake: 60% confidence ÷ 60% expected confidence = 1." },
       ],
-      ladder: ["Lift compares confidence with the baseline. What if they're equal?", "60% of bread-and-butter buyers buy milk, and 60% of everyone does."],
-      explain: "Lift 1 means independence: the if side doesn't change how likely the then side is.",
+      ladder: ["Lift compares confidence with the expected confidence. What if they're equal?", "60% of bread-and-butter buyers buy milk, and 60% of everyone does."],
+      explain: "Lift 1 means independence: the antecedent doesn't change how likely the consequent is.",
     },
     {
       id: "m4-best", type: "mc", prompt: "Which rule is the best tip for Mrs Tan?", layout: "list",
@@ -368,6 +386,7 @@ const m5: MissionDef = {
     title: "The Apriori principle",
     what: (
       <>
+        <p>Listing every itemset is brute force: with N products there are 2<sup>N</sup> − 1 of them, which quickly becomes far too many to count.</p>
         <p>Apriori finds every <b>frequent itemset</b> (support at or above the minimum) one level at a time: single items, then pairs, then triples.</p>
         <p>The shortcut: <b>if an itemset is rare, every bigger itemset that contains it is rare too</b>, so we never need to count those.</p>
       </>
@@ -392,6 +411,7 @@ const m5: MissionDef = {
       "Frequent means support at or above the minimum. Rare means below it.",
       "A bigger itemset can never be more common than a smaller one inside it.",
       "Only combine frequent itemsets, and skip any candidate that contains a rare one.",
+      "The same idea prunes rules with low confidence. Even so, mining is still expensive, so tools also cap the itemset size.",
     ],
     says: ["This is how real tools cope with thousands of products.", "It's the support rule from Aisle 2, used as a shortcut.", "Here's one skip in action.", "Let's stock the shelves."],
   },
@@ -457,9 +477,9 @@ const m6: MissionDef = {
       <>
         <p>A useful rule must pass three checks:</p>
         <ul>
-          <li><b>Support</b>: common enough to matter.</li>
-          <li><b>Confidence</b>: reliable for the if customers.</li>
-          <li><b>Lift above 1</b>: better than the then item's normal rate.</li>
+          <li><b>Support</b>: does the rule apply to enough customers?</li>
+          <li><b>Confidence</b>: how certain is the rule for the antecedent customers?</li>
+          <li><b>Lift above 1</b>: is the rule valuable, not just trivial?</li>
         </ul>
       </>
     ),
@@ -467,6 +487,7 @@ const m6: MissionDef = {
       <>
         <div className="formula">supp = <Frac top="count(X and Y)" bottom="N" /> · conf = <Frac top="count(X and Y)" bottom="count(X)" /> · lift = <Frac top="conf" bottom="supp(Y)" /></div>
         <p>Mrs Tan's thresholds: support ≥ 20%, confidence ≥ 60%, lift &gt; 1.</p>
+        <p style={{ color: "var(--sub)" }}>There's no single correct threshold. Too low gives lots of trivial rules; too high can throw away useful ones. Common starting points: minimum support 5–20%, minimum confidence 60–80%.</p>
       </>
     ),
     exampleTitle: "Fries → Soda on this week's receipts",
@@ -479,6 +500,7 @@ const m6: MissionDef = {
       "Check all three: support, confidence and lift.",
       "Strong but rare rules (low support) aren't worth a shelf change.",
       "Rules into very popular items, like milk here, often have lift below 1.",
+      "Lower thresholds give more rules; higher thresholds give fewer. Balance them using what you know about the shop.",
       "End with an action: a bundle, a shelf placement or a promotion.",
     ],
     says: ["One last job before my Monday meeting.", "Three numbers, three checks.", "Here's one rule checked end to end.", "Find me three good ones."],
@@ -506,19 +528,20 @@ const m6: MissionDef = {
         { text: "None, it passes", hint: "17% < 20%, 56% < 60% and 0.88 ≤ 1." },
       ],
       ladder: ["Compare 17% with 20%, 56% with 60%, and 0.88 with 1.", "Every one of them falls short."],
-      explain: "It fails all three. Milk is in 63% of baskets, so rules into milk rarely beat its baseline.",
+      explain: "It fails all three. Milk is in 63% of baskets, so rules into milk rarely beat its expected confidence.",
       highlight: { lit: ["Pasta"], both: ["Milk"] },
     },
     {
-      id: "m6-conf", type: "num", kind: "proportion", prompt: "What is the confidence of {Pasta, Tomato} → Cheese?", answer: 0.75,
-      traps: [
-        { value: 0.2, hint: "That's the support: 6 of all 30 receipts." },
-        { value: 2 / 3, hint: "That's Pasta → Cheese. The if side needs both pasta and tomato." },
+      id: "m6-lower", type: "mc", prompt: "Mrs Tan lowers her minimum support from 20% to 10%. What happens to the rules that pass?", layout: "list",
+      options: [
+        { text: "Fewer rules pass", hint: "A lower bar is easier to clear, so more itemsets get through." },
+        { text: "More rules pass, including rarer ones like Wine → Cheese", correct: true },
+        { text: "The same rules pass, with higher lift", hint: "Thresholds don't change any rule's lift. They only decide which rules are kept." },
+        { text: "Every rule's confidence goes up", hint: "Confidence comes from the receipts. The threshold is only a cut-off." },
       ],
-      first: "The if customers are the ones with both pasta and tomato.",
-      ladder: ["Pasta and tomato are together on 8 receipts. How many of those have cheese?", "6 of those 8 have cheese. So 6 ÷ 8 is…?"],
-      explain: "6 ÷ 8 = 75% of pasta-and-tomato buyers also took cheese.",
-      highlight: { lit: ["Pasta", "Tomato"], both: ["Cheese"] },
+      ladder: ["Is a lower bar easier or harder to clear?", "Wine → Cheese has 10% support. Does it pass a 10% minimum?"],
+      explain: "A lower minimum support lets more rules through, including rare ones. Too low and the list fills up with rules that aren't worth acting on.",
+      highlight: { lit: ["Wine"], both: ["Cheese"] },
     },
     {
       id: "m6-action", type: "mc", prompt: "{Pasta, Tomato} → Cheese passes every check (support 20%, confidence 75%, lift 3.21). What should Corner Mart do?", layout: "list",
@@ -528,7 +551,7 @@ const m6: MissionDef = {
         { text: "Stop stocking tomatoes", hint: "Tomato is part of the pattern. Removing it would lose sales." },
         { text: "Nothing, because the rule isn't reliable", hint: "It passes all three thresholds, so it's reliable enough to act on." },
       ],
-      ladder: ["The rule says pasta-and-tomato buyers are very likely to want cheese.", "Put the then item where the if customers already are."],
+      ladder: ["The rule says pasta-and-tomato buyers are very likely to want cheese.", "Put the consequent where the antecedent customers already are."],
       explain: "Placing cheese beside pasta and tomato reminds exactly the customers who are most likely to buy it.",
     },
     {
@@ -539,7 +562,7 @@ const m6: MissionDef = {
         { text: "Soda is 3.28 times more popular than fries", hint: "Lift compares soda among fries buyers with soda among everyone." },
         { text: "3.28 customers bought soda", hint: "Lift is a ratio, not a count." },
       ],
-      ladder: ["Lift = confidence ÷ the normal rate of the then item.", "88% of fries buyers take soda, against 27% of all customers."],
+      ladder: ["Lift = confidence ÷ expected confidence (how often anyone buys the consequent).", "88% of fries buyers take soda, against 27% of all customers."],
       explain: "88% ÷ 27% ≈ 3.28: fries buyers are over three times as likely to take soda.",
       highlight: { lit: ["Fries"], both: ["Soda"] },
     },

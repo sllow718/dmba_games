@@ -5,6 +5,7 @@ import { ItemKey, Owner, Slips, Tasks, Token, pct } from "../../components/ui";
 import { SATURDAY_ITEMS, WEEK } from "./data";
 import { apriori, combinations, count, itemsOf } from "./engine";
 import { RuleBuilder, ruleName } from "./RuleBuilder";
+import { OneHot } from "./table";
 import type { Thresholds } from "./RuleBuilder";
 
 const SAT_LABEL = "Corner Mart · Saturday morning · 10 receipts";
@@ -26,18 +27,30 @@ function ItemPicker({ items, value, onChange, label }: { items: readonly string[
   );
 }
 
-/* Mission 1: tap the Bread receipts, then count anything. */
+/* Mission 1: tap the Bread receipts, see them as a 0/1 table, count an itemset, then build a rule. */
 export function ExploreReceipts({ data, onDone, done }: ExploreProps) {
   const target = data.map((t, i) => (t.includes("Bread") ? i : -1)).filter((i) => i >= 0);
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const [msg, setMsg] = useState<string | null>(null);
   const [tries, setTries] = useState(0);
-  const [free, setFree] = useState<string[]>(["Eggs"]);
+  const [tapped, setTapped] = useState(done);
+  const [view, setView] = useState<"receipts" | "table">(done ? "table" : "receipts");
+  const [t, setT] = useState({ table: done, itemset: done, rule: done });
+  const [free, setFree] = useState<string[]>(["Bread"]);
+  const [ante, setAnte] = useState<string[]>([]);
+  const [cons, setCons] = useState<string[]>([]);
+
+  const tick = (k: keyof typeof t) => {
+    if (t[k]) return;
+    const nt = { ...t, [k]: true };
+    setT(nt);
+    if (nt.table && nt.itemset && nt.rule && !done) onDone();
+  };
 
   const check = () => {
     const missed = target.filter((i) => !picked.has(i));
     const extra = [...picked].filter((i) => !target.includes(i));
-    if (!missed.length && !extra.length) { setMsg(null); onDone(); return; }
+    if (!missed.length && !extra.length) { setMsg(null); setTapped(true); return; }
     setTries(tries + 1);
     const bits = [];
     if (missed.length) bits.push(tries ? `Look again at ${missed.map((i) => "#" + (i + 1)).join(", ")}.` : `You've missed ${missed.length}.`);
@@ -45,7 +58,7 @@ export function ExploreReceipts({ data, onDone, done }: ExploreProps) {
     setMsg(bits.join(" "));
   };
 
-  if (!done) {
+  if (!tapped) {
     return (
       <div className="split">
         <div className="stack">
@@ -66,22 +79,62 @@ export function ExploreReceipts({ data, onDone, done }: ExploreProps) {
       </div>
     );
   }
+
   const c = count(data, free);
+  const pickRule = (side: "A" | "B", v: string[]) => {
+    const [a, b] = side === "A" ? [v, cons.filter((x) => !v.includes(x))] : [ante.filter((x) => !v.includes(x)), v];
+    setAnte(a); setCons(b);
+    if (a.length && b.length) tick("rule");
+  };
+  const say: ReactNode = !t.table
+    ? <>Six bread buyers. Now press <b>0/1 table</b>: it's how a computer stores these same receipts.</>
+    : !t.itemset
+      ? <>Each row is a receipt and each column is an item: 1 means bought, 0 means not. Now pick two or more items to count an <b>itemset</b>.</>
+      : !t.rule
+        ? <>A receipt counts only if it has a 1 in every column you picked. Last job: build a <b>rule</b>. Pick an antecedent and a consequent.</>
+        : <>That's a rule: <b>if</b> a customer buys the antecedent, <b>then</b> they also buy the consequent. Whether it's a <i>good</i> rule comes in Aisles 2 to 4.</>;
+
   return (
     <div className="split">
       <div className="stack">
-        <p className="data-label">{SAT_LABEL}</p>
-        <Slips data={data} highlight={free.length ? { lit: free } : null} />
-        <ItemKey items={SATURDAY_ITEMS} />
+        <div className="seg-row" role="group" aria-label="Show the receipts as">
+          <button type="button" className="pick" aria-pressed={view === "receipts"} onClick={() => setView("receipts")}>Receipts</button>
+          <button type="button" className="pick" aria-pressed={view === "table"} onClick={() => { setView("table"); tick("table"); }}>0/1 table</button>
+        </div>
+        <p className="data-label">{SAT_LABEL}{view === "table" ? " · 1 = bought, 0 = not bought" : ""}</p>
+        {view === "receipts" ? (
+          <>
+            <Slips data={data} highlight={free.length ? { lit: free } : null} />
+            <ItemKey items={SATURDAY_ITEMS} />
+          </>
+        ) : (
+          <OneHot data={data} items={SATURDAY_ITEMS} lit={free} />
+        )}
       </div>
       <div className="stack">
-        <Owner tone="ok">Six bread buyers. That number is the <b>support count</b> of {"{Bread}"}. Now try a few itemsets of your own.</Owner>
+        <Tasks items={[
+          { text: "Tap every receipt with bread", done: true },
+          { text: "Switch to the 0/1 table", done: t.table },
+          { text: "Count an itemset of two or more items", done: t.itemset },
+          { text: "Build a rule: pick an antecedent (if) and a consequent (then)", done: t.rule },
+        ]} />
+        <Owner tone="ok">{say}</Owner>
         <section className="card">
-          <ItemPicker items={SATURDAY_ITEMS} value={free} onChange={setFree} label="Build an itemset" />
+          <ItemPicker items={SATURDAY_ITEMS} value={free} onChange={(v) => { setFree(v); if (v.length >= 2) tick("itemset"); }} label="Count an itemset" />
           <p style={{ marginTop: 12 }}>
             {free.length ? <>Receipts with <b>{free.join(" and ")}</b>: <span className="eq" style={{ display: "inline", fontSize: "1.3rem" }}>{c}</span></> : "Pick one or more items."}
           </p>
-          <p className="worth">A receipt only counts if it has every item in the itemset.</p>
+          <p className="worth">That number is the <b>support count</b>. A receipt only counts if it has every item in the itemset.</p>
+        </section>
+        <section className="card rulepick">
+          <span className="k">Build a rule</span>
+          <ItemPicker items={SATURDAY_ITEMS} value={ante} onChange={(v) => pickRule("A", v)} label="If a customer buys… (antecedent)" />
+          <ItemPicker items={SATURDAY_ITEMS} value={cons} onChange={(v) => pickRule("B", v)} label="…then they also buy (consequent)" />
+          {ante.length > 0 && cons.length > 0 && (
+            <p className="rule-say" aria-live="polite">
+              {`{${ante.join(", ")}}`}<span className="tag">antecedent</span> → {`{${cons.join(", ")}}`}<span className="tag">consequent</span>
+            </p>
+          )}
         </section>
       </div>
     </div>
