@@ -200,7 +200,7 @@ function Results({ mission, last, best, next, activity, onReplay }: {
       <div className="stack">
         <Owner tone="ok">
           {next
-            ? last?.unlocked ? <>Nice work. <b>{activity.theme.stop} {next.n}: {next.title}</b> is open now.</> : <>Good practice. {activity.theme.stop} {next.n} is already open.</>
+            ? <>Nice work. Up next: <b>{activity.theme.stop} {next.n}: {next.title}</b>.</>
             : activity.theme.finale}
         </Owner>
       </div>

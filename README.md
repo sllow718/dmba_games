@@ -2,7 +2,7 @@
 
 A learning app that teaches data mining for business analytics to polytechnic students. The home page lists the topics; each topic is a short set of guided missions with its own setting and guide character.
 
-**Basket Detective** (association rules): students help Mrs Tan, who runs the Corner Mart minimart, find out what her customers buy together. There are six missions, and each one unlocks after the previous one is complete.
+**Basket Detective** (association rules): students help Mrs Tan, who runs the Corner Mart minimart, find out what her customers buy together. There are six missions, all open from the start.
 
 | Aisle | Mission | Teaches |
 | --- | --- | --- |
@@ -41,7 +41,7 @@ Each mission is its own page and has four stages:
 1. **Review:** four short cards with a step-by-step worked example on the data.
 2. **Explore:** a hands-on task that must be finished before the checkpoint opens.
 3. **Checkpoint:** 3–5 questions. A wrong answer gets a hint from the shop owner, and the hints get more specific: a targeted nudge, then pointing to the data, then a worked step. Students retry until they're right.
-4. **Results:** stars, a badge and a formula card. The next mission unlocks.
+4. **Results:** stars, a badge and a formula card.
 
 Progress is saved in the browser (`localStorage`). There are no accounts and no server.
 

@@ -4,8 +4,8 @@ import { getMission, missionKey } from "./progress";
 
 export const isDone = (p: Progress, a: AnyActivity, n: number) => getMission(p, missionKey(a.id, n)).completed;
 
-/** Mission n is open when it is the first one or the one before it is complete. */
-export const isOpen = (p: Progress, a: AnyActivity, n: number) => n === 1 || isDone(p, a, n - 1);
+/** Every mission is open: students can start anywhere and in any order. */
+export const isOpen = (_p: Progress, _a: AnyActivity, _n: number) => true;
 
 export function activitySummary(p: Progress, a: AnyActivity) {
   const ms = a.missions.map((m) => getMission(p, missionKey(a.id, m.n)));

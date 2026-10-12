@@ -16,7 +16,7 @@ export function MissionMap({ activity }: { activity: AnyActivity }) {
   const say = msg ?? (s.done === s.total
     ? `Every ${lo} is done. Replay any of them to beat your score, or flip through your formula cards.`
     : s.done === 0
-      ? `${WORDS[activity.missions.length] ?? activity.missions.length} ${lo}s, one idea each. Start with ${stop} 1. The next ${lo} opens when you finish the one before.`
+      ? `${WORDS[activity.missions.length] ?? activity.missions.length} ${lo}s, one idea each. Every ${lo} is open. Start with ${stop} 1, or jump to any ${lo} you like.`
       : `${stop} ${s.next} is next. Pick up where you left off.`);
 
   return (
