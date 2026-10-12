@@ -363,6 +363,11 @@ a.topic-card:hover .name { text-decoration: underline; text-underline-offset: 3p
 .ksteps.static li::before { background: var(--hl); }
 .kstats { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--sub); }
 .kstats b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.kplot .seen-note rect { fill: var(--hl); stroke: var(--lit); stroke-width: 1.5; }
+.kplot .seen-note text { font-family: var(--body); font-size: 11px; fill: var(--ink); }
+.kplot .seen-note text.hd { font-family: var(--display); font-weight: 800; font-size: 12px; }
+.kplot .seen-note .arrow { fill: none; stroke: var(--brand-dk); stroke-width: 1.5; }
+.kplot .seen-note marker path { fill: var(--brand-dk); }
 .seg-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .seg-row .pick { padding: 3px 12px; }
 .toggle { display: flex; gap: 10px; align-items: flex-start; font-size: 0.95rem; cursor: pointer; }

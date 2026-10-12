@@ -109,6 +109,33 @@ export function ShopperPlot({ data, highlight, label }: GridProps<Shopper>) {
 
 /* Hands-on lab */
 
+/** Callout inside the raw-distance view, shown before k-means runs: why the model can't tell visits apart. */
+function SeenNote({ place }: { place: (p: Pt) => [number, number] }) {
+  const [x0, y0] = place({ x: 330, y: 1960 });
+  const [x1] = place({ x: 1960, y: 0 });
+  const [ax, ay] = place({ x: 40, y: 1100 });
+  const lines = [
+    "1 visit counts the same as $1,",
+    "so visits (0 to 30) shrink into",
+    "this thin strip. It can't tell",
+    "3 visits from 25 visits: only",
+    "yearly spend makes a difference.",
+  ];
+  return (
+    <g className="seen-note" role="note" aria-label={`How k-means will read this data: ${lines.join(" ")}`}>
+      <rect x={x0} y={y0} width={x1 - x0} height={112} rx={8} />
+      <text x={x0 + 10} y={y0 + 19} className="hd">How k-means will read this data</text>
+      {lines.map((l, i) => <text key={i} x={x0 + 10} y={y0 + 38 + i * 15}>{l}</text>)}
+      <path d={`M ${x0} ${y0 + 46} Q ${ax + 30} ${y0 + 46} ${ax + 6} ${ay}`} className="arrow" markerEnd="url(#seen-arrow)" />
+      <defs>
+        <marker id="seen-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" />
+        </marker>
+      </defs>
+    </g>
+  );
+}
+
 /** Average visits and spend of each cluster, in the members' real units. */
 function profiles(points: readonly Pt[], labels: readonly number[]) {
   return [0, 1].map((k) => {
@@ -162,10 +189,15 @@ export function ExploreNormalise({ onDone, done }: ExploreProps<Shopper>) {
           ]} />
           <div className="kplot-wrap">
             <Frame view={effView} label={`${n} members, ${scaled ? "normalised" : "raw numbers"}, ${labels ? "clustered" : "not clustered yet"}`}>
-              {(place) => points.map((p, i) => {
-                const [x, y] = place(p, normed[i]);
-                return <circle key={i} cx={x} cy={y} r={4.5} className="kp" fill={labels ? COLORS[labels[i]] : "#9aa69a"} />;
-              })}
+              {(place) => (
+                <>
+                  {points.map((p, i) => {
+                    const [x, y] = place(p, normed[i]);
+                    return <circle key={i} cx={x} cy={y} r={4.5} className="kp" fill={labels ? COLORS[labels[i]] : "#9aa69a"} />;
+                  })}
+                  {effView === "seen" && !labels && <SeenNote place={place} />}
+                </>
+              )}
             </Frame>
             <p className="worth" style={{ margin: "6px 4px 0" }}>{VIEW_NOTE[effView]}</p>
           </div>
