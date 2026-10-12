@@ -153,16 +153,13 @@ export function ExploreNormalise({ onDone, done }: ExploreProps<Shopper>) {
 
   return (
     <>
-      <div className="split" style={{ marginBottom: 16 }}>
-        <Tasks items={[
-          { text: "Run k-means on the raw numbers", done: t.raw },
-          { text: "Switch to “How k-means measures distance” to see why", done: t.seen },
-          { text: "Turn on normalising and run k-means again", done: t.norm },
-        ]} />
-        <Owner>{say}</Owner>
-      </div>
       <div className="split">
         <div className="stack">
+          <Tasks items={[
+            { text: "Run k-means on the raw numbers", done: t.raw },
+            { text: "Switch to “How k-means measures distance” to see why", done: t.seen },
+            { text: "Turn on normalising and run k-means again", done: t.norm },
+          ]} />
           <div className="kplot-wrap">
             <Frame view={effView} label={`${n} members, ${scaled ? "normalised" : "raw numbers"}, ${labels ? "clustered" : "not clustered yet"}`}>
               {(place) => points.map((p, i) => {
@@ -178,6 +175,7 @@ export function ExploreNormalise({ onDone, done }: ExploreProps<Shopper>) {
           </div>
         </div>
         <div className="stack">
+          <Owner>{say}</Owner>
           <section className="card kcontrols">
             <span className="k">Settings</span>
             <label className="toggle">

@@ -44,7 +44,8 @@ function narrate(s: KState, k: number): ReactNode {
 }
 
 /** Guided k-means: pick n and k, then step through place → assign → move until it converges. */
-export function KMeansLab({ onEvent }: { onEvent?: (e: RunEvent) => void }) {
+/** `top` sits above the chart, so the right-hand cards line up with it. */
+export function KMeansLab({ onEvent, top }: { onEvent?: (e: RunEvent) => void; top?: ReactNode }) {
   const [n, setN] = useState(30);
   const [k, setK] = useState(3);
   const [dataSeed, setDataSeed] = useState(7);
@@ -72,6 +73,7 @@ export function KMeansLab({ onEvent }: { onEvent?: (e: RunEvent) => void }) {
   return (
     <div className="split">
       <div className="stack">
+        {top}
         <div className="kplot-wrap">
           <Plot label={`k-means on ${n} gym members with k = ${k}, ${s.phase === "done" ? "converged" : "step: " + STEPS[current].title}`}>
             {s.phase === "assigned" && points.map((p, i) => {
@@ -135,16 +137,6 @@ export function KMeansLab({ onEvent }: { onEvent?: (e: RunEvent) => void }) {
   );
 }
 
-/** Tasks on top, with Coach Ana's feedback beside them when there is any. */
-function Header({ tasks, say }: { tasks: { text: string; done: boolean }[]; say?: ReactNode }) {
-  return (
-    <div className="split" style={{ marginBottom: 16 }}>
-      <Tasks items={tasks} />
-      {say && <Owner>{say}</Owner>}
-    </div>
-  );
-}
-
 /* Mission 1: step through the algorithm. */
 export function ExploreSteps({ onDone, done }: ExploreProps<Member>) {
   const [t, setT] = useState({ placed: false, round: false, converged: false, changed: false });
@@ -162,14 +154,11 @@ export function ExploreSteps({ onDone, done }: ExploreProps<Member>) {
     if (!done && nt.placed && nt.round && nt.converged && nt.changed) onDone();
   };
   return (
-    <>
-      <Header tasks={[
-        { text: "Place the starting centroids", done: t.placed },
-        { text: "Step through one full round: assign, then move", done: t.round },
-        { text: "Keep stepping until it converges", done: t.converged },
-        { text: "Change n or k, then run it again to the end", done: t.changed },
-      ]} />
-      <KMeansLab onEvent={onEvent} />
-    </>
+    <KMeansLab onEvent={onEvent} top={<Tasks items={[
+      { text: "Place the starting centroids", done: t.placed },
+      { text: "Step through one full round: assign, then move", done: t.round },
+      { text: "Keep stepping until it converges", done: t.converged },
+      { text: "Change n or k, then run it again to the end", done: t.changed },
+    ]} />} />
   );
 }
