@@ -95,13 +95,15 @@ export function ExploreSupport({ data, onDone, done }: ExploreProps) {
   const [sel, setSel] = useState<string[]>(["Bread", "Butter"]);
   const [triedPair, setTriedPair] = useState(false);
   const [min, setMin] = useState(50);
+  const [cutSet, setCutSet] = useState(false);
   const sets = useMemo(() => {
     const out: { items: string[]; c: number }[] = [];
     for (const k of [1, 2]) for (const s of combinations(SATURDAY_ITEMS, k)) { const c = count(data, s); if (c) out.push({ items: s, c }); }
     return out;
   }, [data]);
   const c = count(data, sel);
-  const finish = (pair: boolean, m: number) => { if (pair && m === 30 && !done) onDone(); };
+  // The two tasks can be done in either order; the slider task ticks as soon as it reaches 30%.
+  const finish = (pair: boolean, cut: boolean) => { if (pair && cut && !done) onDone(); };
 
   return (
     <div className="split">
@@ -110,7 +112,7 @@ export function ExploreSupport({ data, onDone, done }: ExploreProps) {
         <Slips data={data} highlight={sel.length ? { lit: sel } : null} />
         <section className="card">
           <span className="k">Support calculator</span>
-          <ItemPicker items={SATURDAY_ITEMS} value={sel} onChange={(v) => { setSel(v); if (v.length >= 2) { setTriedPair(true); finish(true, min); } }} label="Pick an itemset" />
+          <ItemPicker items={SATURDAY_ITEMS} value={sel} onChange={(v) => { setSel(v); if (v.length >= 2) { setTriedPair(true); finish(true, cutSet); } }} label="Pick an itemset" />
           {sel.length > 0 && (
             <p style={{ marginTop: 12, fontWeight: 700 }}>
               support({"{"}{sel.join(", ")}{"}"}) = {c} ÷ {data.length} = <span className="eq" style={{ display: "inline", fontSize: "1.25rem" }}>{pct(c / data.length)}</span>
@@ -121,11 +123,11 @@ export function ExploreSupport({ data, onDone, done }: ExploreProps) {
       <div className="stack">
         <Tasks items={[
           { text: "Work out the support of a different pair with the calculator", done: triedPair },
-          { text: "Set the minimum support to 30%, Mrs Tan's cut-off", done: min === 30 && triedPair },
+          { text: "Set the minimum support to 30%, Mrs Tan's cut-off", done: cutSet },
         ]} />
         <section className="card">
           <label className="lbl" htmlFor="minsup">Minimum support: {min}% ({Math.ceil(min / 10)} of 10 receipts)</label>
-          <input id="minsup" className="slider" type="range" min={10} max={60} step={10} value={min} onChange={(e) => { const m = Number(e.target.value); setMin(m); finish(triedPair, m); }} />
+          <input id="minsup" className="slider" type="range" min={10} max={60} step={10} value={min} onChange={(e) => { const m = Number(e.target.value); setMin(m); if (m === 30) { setCutSet(true); finish(triedPair, true); } }} />
           <p className="worth" style={{ marginTop: 6 }}>Itemsets below the line fade out.</p>
           <div className="setlist" style={{ marginTop: 10 }}>
             {sets.map((s) => (
