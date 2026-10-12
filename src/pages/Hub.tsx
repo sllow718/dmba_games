@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ACTIVITIES } from "../activities";
+import { ACTIVITIES, HOME, isUpcoming } from "../activities";
 import { resetProgress, useProgress } from "../core/progress";
 import { activitySummary } from "../core/unlock";
 import { Stars, TopBar } from "../components/ui";
@@ -19,7 +19,19 @@ export function Hub() {
           <p>DMBA Learn is a learning app for data mining in business analytics. Each topic is a short set of guided missions: a quick review, a hands-on activity and a checkpoint with hints. Start with any topic and explore at your own pace.</p>
         </div>
         <div className="topics">
-          {ACTIVITIES.map((a) => {
+          {HOME.map((a) => {
+            if (isUpcoming(a)) {
+              return (
+                <div key={a.id} className="topic-card soon" aria-disabled="true" aria-label={`${a.topic}: work in progress, not available yet`}>
+                  <div className="in">
+                    <span className="k">Coming soon</span>
+                    <span className="name">{a.topic}</span>
+                    <span className="sum">{a.summary}</span>
+                    <span className="st"><span className="wip">Work in progress</span></span>
+                  </div>
+                </div>
+              );
+            }
             const s = activitySummary(p, a);
             return (
               <a key={a.id} className="topic-card" href={`#/${a.id}`}>

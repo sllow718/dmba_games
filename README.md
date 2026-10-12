@@ -20,19 +20,21 @@ A learning app that teaches data mining for business analytics to polytechnic st
 | 1 · Step Through K-Means | clusters, centroids, the assign/move loop, convergence |
 | 2 · Scale Matters | why variables on different scales distort k-means, and how normalising fixes it |
 
-**Loan Officer** (decision trees): students help Mr Lim, manager of Neighbourhood Bank, read the loan-approval tree he built from 12 past loans and interpret what its numbers mean.
-
-| Counter | Mission | Teaches |
-| --- | --- | --- |
-| 1 | Read the Tree | root, branches, leaves, classifying an applicant, leaf confidence |
-| 2 | Pure or Mixed? | interpreting impurity: what Gini and entropy values say about a group (no calculation) |
-
 **Price Predictor** (linear regression): students help Ms Wong, a property agent, predict flat prices from floor area.
 
 | Mission | Teaches |
 | --- | --- |
 | 1 · Fit the Line | the regression line, slope and intercept, residuals, least squares (a guided walkthrough from a flat first guess to the least-squares line, with notes in the chart at each step) |
 | 2 · Read the Model | interpreting the slope, predicting from the line, R², and the danger of extrapolating outside the data |
+
+**Logistic regression** is listed on the home page as work in progress and can't be opened yet.
+
+**Loan Officer** (decision trees): students help Mr Lim, manager of Neighbourhood Bank, read the loan-approval tree he built from 12 past loans and interpret what its numbers mean.
+
+| Counter | Mission | Teaches |
+| --- | --- | --- |
+| 1 | Read the Tree | root, branches, leaves, classifying an applicant, leaf confidence |
+| 2 | Pure or Mixed? | interpreting impurity: what Gini and entropy values say about a group (no calculation) |
 
 Each mission is its own page and has four stages:
 
