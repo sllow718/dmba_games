@@ -185,7 +185,7 @@ export function ExploreNormalise({ onDone, done }: ExploreProps<Shopper>) {
           <Tasks items={[
             { text: "Run k-means on the raw numbers", done: t.raw },
             { text: "Switch to “How k-means measures distance” to see why", done: t.seen },
-            { text: "Turn on normalising and run k-means again", done: t.norm },
+            { text: "In that view, tick “Normalise first” and run k-means again", done: t.norm },
           ]} />
           <div className="kplot-wrap">
             <Frame view={effView} label={`${n} members, ${scaled ? "normalised" : "raw numbers"}, ${labels ? "clustered" : "not clustered yet"}`}>
@@ -210,10 +210,16 @@ export function ExploreNormalise({ onDone, done }: ExploreProps<Shopper>) {
           <Owner>{say}</Owner>
           <section className="card kcontrols">
             <span className="k">Settings</span>
-            <label className="toggle">
-              <input type="checkbox" checked={scaled} onChange={(e) => toggleScale(e.target.checked)} />
-              <span><b>Normalise first</b> (rescale visits and spend to 0–1)</span>
-            </label>
+            {view === "chart" ? (
+              <p className="worth" style={{ margin: 0 }}>
+                Normalising is <b>{scaled ? "on" : "off"}</b>. Switch to “How k-means measures distance” to change it.
+              </p>
+            ) : (
+              <label className="toggle">
+                <input type="checkbox" checked={scaled} onChange={(e) => toggleScale(e.target.checked)} />
+                <span><b>Normalise first</b> (rescale visits and spend to 0–1)</span>
+              </label>
+            )}
             <label className="kfield">
               <span>Number of members <b>n = {n}</b></span>
               <input type="range" className="slider" min={10} max={150} step={10} value={n} onChange={(e) => reset(() => setN(Number(e.target.value)))} />
